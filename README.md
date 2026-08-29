@@ -57,13 +57,13 @@ máquina no primeiro dia e para atualizar tudo depois de um tempo longe.
 
 Quem não usa IA nenhuma roda `-f nenhuma` e tem o workspace montado do mesmo jeito.
 
-### Duas coisas que o script vai te avisar
+### O que o script pode te avisar
 
-- **`dev` ainda não existe nos remotos.** O `CONTRIBUTING.md` descreve o gitflow
-  alvo (`main` ← `dev` ← branch de tarefa), mas hoje os repos só têm `main`. O script
-  clona a branch padrão e avisa; quando a `dev` for criada, ele passa a usá-la sozinho.
 - **Python mais novo que 3.12.** O projeto tem alvo `py312`; versões bem mais novas
   podem não ter wheel para algum pacote. O script avisa e segue.
+- **Branch preferida ausente.** Hoje os três repos têm `dev`, e é nela que você cai.
+  Se um repo novo entrar em `repos.conf` sem a `dev` criada, o script clona a branch
+  padrão do remoto e avisa — não inventa branch.
 
 ## Estrutura do workspace
 
@@ -101,6 +101,7 @@ das próximas vezes basta rodar sem argumento. Dá para usar a variável de ambi
 |---|---|
 | `-f, --ferramentas` · `-Ferramentas` | `claude,codex,copilot,cursor` ou `todas`. Padrão: env → `.creed-ia.local` → `todas` |
 | `-r, --repos` · `-Repos` | limita a repos específicos |
+| `--workspace` · `-Workspace` | onde escrever; padrão é a pasta que contém este repo |
 | `--sem-raiz` · `-SemRaiz` | não escreve na raiz do workspace |
 | `--ignorar <modo>` · `-Ignorar <modo>` | `local` (padrão) · `repo` · `nao` |
 | `--lembrar` · `-Lembrar` | grava a preferência de ferramentas |
