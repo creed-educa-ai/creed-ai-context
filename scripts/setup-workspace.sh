@@ -112,6 +112,55 @@ venv_bin() {
   echo "$1/bin"
 }
 
+# formata segundos: 95 -> "1m35s"
+desde() {
+  local s=$(( SECONDS - $1 ))
+  [ "$s" -ge 60 ] && echo "$((s/60))m$((s%60))s" || echo "${s}s"
+}
+
+# com_progresso <dir> <regex-do-que-vale-mostrar> <comando...>
+#
+# Instalar dependencia demora minutos; sem sinal de vida o dev nao sabe se
+# travou. Roda o comando em segundo plano e vai imprimindo, conforme saem, so
+# as linhas que dizem alguma coisa — mais um tique de tempo quando o comando
+# fica quieto. Se falhar, mostra o fim da saida (o erro de verdade).
+com_progresso() {
+  local dir="$1" filtro="$2"; shift 2
+  local log pid st novas n vistas=0 ultimo=0 t0=$SECONDS
+  log="$(mktemp 2>/dev/null || echo "${TMPDIR:-/tmp}/creed-setup.$$.log")"
+
+  ( cd "$dir" && "$@" ) >"$log" 2>&1 &
+  pid=$!
+
+  mostrar_novas() {
+    novas="$(grep -aE "$filtro" "$log" 2>/dev/null | tail -n "+$((vistas+1))")"
+    [ -n "$novas" ] || return 1
+    n="$(printf '%s\n' "$novas" | wc -l)"
+    printf '%s\n' "$novas" | cut -c1-96 | sed 's/^/         /'
+    vistas=$((vistas + n))
+    return 0
+  }
+
+  while kill -0 "$pid" 2>/dev/null; do
+    sleep 2
+    if mostrar_novas; then
+      ultimo=$(( SECONDS - t0 ))
+    elif [ $(( SECONDS - t0 - ultimo )) -ge 15 ]; then
+      ultimo=$(( SECONDS - t0 ))
+      printf '         · %ss…\n' "$ultimo"
+    fi
+  done
+
+  wait "$pid"; st=$?
+  mostrar_novas || true
+  if [ "$st" -ne 0 ]; then
+    echo "         ─ fim da saida ─"
+    tail -n 20 "$log" | sed 's/^/         /'
+  fi
+  rm -f "$log"
+  return "$st"
+}
+
 url_repo() {
   if [ "$PROTOCOLO" = 'ssh' ]; then echo "git@github.com:$1.git"; else echo "https://github.com/$1.git"; fi
 }
@@ -242,16 +291,16 @@ if [ "$DEPS" = 1 ]; then
     if [ "$SIMULAR" = 1 ]; then
       passo "[simular] pip install -e \".[dev]\""
     elif [ -x "$BIN/python" ] || [ -x "$BIN/python.exe" ]; then
-      passo "instalando dependencias (pode demorar)…"
-      saida="$( cd "$BACK" \
-                && "$BIN/python" -m pip install --quiet --upgrade pip 2>&1 \
-                && "$BIN/python" -m pip install --quiet -e ".[dev]" 2>&1 )"
-      status=$?
-      # o filtro tira so o ruido conhecido do cache do pip; erro real continua visivel
-      echo "$saida" | grep -v 'Cache entry deserialization failed, entry ignored' \
-                    | sed '/^[[:space:]]*$/d; s/^/         /'
-      if [ "$status" -eq 0 ]; then
-        passo "dependencias instaladas"
+      passo "instalando dependencias (pacote a pacote, abaixo)…"
+      t_pip=$SECONDS
+      re_pip='Collecting |Building wheel|Installing collected|Successfully installed|Successfully built|^ERROR'
+      PIP=(-m pip install --disable-pip-version-check --progress-bar off)
+      # sem buffer, o pip sai linha a linha mesmo quando nao ha terminal do outro lado
+      export PYTHONUNBUFFERED=1
+      com_progresso "$BACK" "$re_pip" "$BIN/python" "${PIP[@]}" --upgrade pip \
+        && com_progresso "$BACK" "$re_pip" "$BIN/python" "${PIP[@]}" -e ".[dev]"
+      if [ $? -eq 0 ]; then
+        passo "dependencias instaladas ($(desde $t_pip))"
       else
         erro "pip install falhou — rode manualmente em creed-backend"
       fi
@@ -284,8 +333,10 @@ if [ "$DEPS" = 1 ]; then
       passo "[simular] npm install"
     else
       passo "npm install (pode demorar)…"
-      if ( cd "$FRONT" && npm install --silent ); then
-        passo "dependencias instaladas (husky junto, via \"prepare\")"
+      t_npm=$SECONDS
+      if com_progresso "$FRONT" 'added |removed |changed |up to date|packages are looking|npm error' \
+           npm install --no-fund; then
+        passo "dependencias instaladas ($(desde $t_npm)) (husky junto, via \"prepare\")"
       else
         erro "npm install falhou — rode manualmente em creed-frontend"
       fi
@@ -312,7 +363,9 @@ elif [ -z "$FERRAMENTAS" ]; then
   echo "         bash creed-ai-context/scripts/instalar-adaptadores.sh -f codex --lembrar"
   echo "         (opcoes: claude, codex, copilot, cursor, todas)"
 else
-  ARGS=(--ignorar "$IGNORAR")
+  # --workspace: sem ele o instalador cai na pasta que contem o harness, que nem
+  # sempre e o workspace escolhido aqui
+  ARGS=(--ignorar "$IGNORAR" --workspace "$WORKSPACE")
   [ "$FERRAMENTAS" = '(preferencia salva)' ] || ARGS+=(-f "$FERRAMENTAS" --lembrar)
   [ "$SIMULAR" = 1 ] && ARGS+=(-n)
   bash "$SCRIPT_DIR/instalar-adaptadores.sh" "${ARGS[@]}" | sed 's/^/  /'
@@ -320,7 +373,7 @@ fi
 
 # ------------------------------------------------------------------- 5. resumo
 
-titulo "Pronto"
+titulo "Pronto" "(em $(desde 0))"
 
 if [ ${#AVISOS[@]} -gt 0 ]; then
   echo

@@ -25,6 +25,8 @@ uso: instalar-adaptadores.sh [opcoes]
                              padrao: $CREED_IA_FERRAMENTAS, senao .creed-ia.local,
                              senao "todas"
   -r, --repos <lista>        padrao: todos os repos presentes no workspace
+      --workspace <caminho>  onde escrever os adaptadores
+                             padrao: a pasta que contem o creed-ai-context
       --sem-raiz             nao escreve na raiz do workspace
       --ignorar <modo>       local (padrao) | repo | nao
                                local -> .git/info/exclude de cada repo (nao sobe)
@@ -63,6 +65,7 @@ FIM
 
 FERRAMENTAS=''
 REPOS_ARG=''
+WORKSPACE_ARG=''
 RAIZ=1
 IGNORAR='local'
 LEMBRAR=0
@@ -73,6 +76,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     -f|--ferramentas) FERRAMENTAS="${2:?lista de ferramentas}"; shift 2 ;;
     -r|--repos)       REPOS_ARG="${2:?lista de repos}";         shift 2 ;;
+    --workspace)      WORKSPACE_ARG="${2:?caminho do workspace}"; shift 2 ;;
     --sem-raiz)       RAIZ=0;      shift ;;
     --ignorar)        IGNORAR="${2:?local|repo|nao}";           shift 2 ;;
     --lembrar)        LEMBRAR=1;   shift ;;
@@ -87,6 +91,13 @@ case "$IGNORAR" in
   local|repo|nao) ;;
   *) echo "--ignorar aceita: local | repo | nao" >&2; exit 1 ;;
 esac
+
+# o padrao (a pasta que contem o harness) so vale quando ninguem disse outra coisa
+if [ -n "$WORKSPACE_ARG" ]; then
+  WS="$(cd "$WORKSPACE_ARG" 2>/dev/null && pwd)" \
+    || { echo "workspace nao encontrado: $WORKSPACE_ARG" >&2; exit 1; }
+  CONFIG="$WS/.creed-ia.local"
+fi
 
 # ferramentas: argumento > variavel de ambiente > arquivo local > todas
 if [ -z "$FERRAMENTAS" ]; then

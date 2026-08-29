@@ -10,6 +10,9 @@ senao .creed-ia.local, senao "todas".
 .PARAMETER Repos
 Padrao: todos os repos presentes no workspace.
 
+.PARAMETER Workspace
+Onde escrever os adaptadores. Padrao: a pasta que contem o creed-ai-context.
+
 .PARAMETER SemRaiz
 Nao escreve na raiz do workspace.
 
@@ -42,6 +45,7 @@ Mostra o que faria, sem escrever.
 param(
     [Alias('f')][string[]] $Ferramentas,
     [Alias('r')][string[]] $Repos,
+    [string] $Workspace,
     [switch] $SemRaiz,
     [ValidateSet('local', 'repo', 'nao')][string] $Ignorar = 'local',
     [switch] $Lembrar,
@@ -52,7 +56,12 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $Harness  = Split-Path -Parent $PSScriptRoot
-$WS       = Split-Path -Parent $Harness
+if ($Workspace) {
+    if (-not (Test-Path $Workspace)) { throw "workspace nao encontrado: $Workspace" }
+    $WS = (Resolve-Path $Workspace).Path
+} else {
+    $WS = Split-Path -Parent $Harness
+}
 $Adp      = Join-Path $Harness 'adaptadores'
 $Config   = Join-Path $WS '.creed-ia.local'
 $Marca    = 'GERADO por'
@@ -72,7 +81,9 @@ if (-not $Ferramentas) {
     }
 }
 if (-not $Ferramentas) { $Ferramentas = @('todas') }
-$Ferramentas = $Ferramentas | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+# chamado com -File, o PowerShell entrega "claude,codex" como UMA string: separa aqui
+$Ferramentas = $Ferramentas | ForEach-Object { $_ -split ',' } |
+               ForEach-Object { $_.Trim() } | Where-Object { $_ }
 if ($Ferramentas -contains 'todas') { $Ferramentas = $TodasFerramentas }
 foreach ($f in $Ferramentas) {
     if ($TodasFerramentas -notcontains $f) {
@@ -80,6 +91,7 @@ foreach ($f in $Ferramentas) {
     }
 }
 if (-not $Repos) { $Repos = $TodosRepos }
+else { $Repos = $Repos | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ } }
 
 function Rel($Caminho) { $Caminho.Replace($WS + '\', '').Replace($WS + '/', '') }
 

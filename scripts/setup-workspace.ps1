@@ -61,6 +61,11 @@ $ScriptDir = $PSScriptRoot
 $Harness   = Split-Path -Parent $ScriptDir
 $Conf      = Join-Path $ScriptDir 'repos.conf'
 if ($SemAdaptadores) { $Ferramentas = @('nenhuma') }
+# chamado com -File, o PowerShell entrega "claude,codex" como UMA string: separa aqui
+if ($Ferramentas) {
+    $Ferramentas = $Ferramentas | ForEach-Object { $_ -split ',' } |
+                   ForEach-Object { $_.Trim() } | Where-Object { $_ }
+}
 if (-not $Workspace) { $Workspace = Split-Path -Parent $Harness }
 if (-not (Test-Path $Workspace)) { New-Item -ItemType Directory -Force -Path $Workspace | Out-Null }
 $Workspace = (Resolve-Path $Workspace).Path
@@ -72,6 +77,72 @@ function Titulo($t)  { Write-Host ''; Write-Host "-- $t" }
 function Passo($t)   { Write-Host "  $t" }
 function Erro($t)    { Write-Host "  ERRO   $t"; $script:Falhas++ }
 function Aviso($t)   { Write-Host "  aviso  $t"; $script:Avisos += $t }
+
+$script:Inicio = Get-Date
+
+# Desde $t0 -> "1m35s"
+function Desde($T0) {
+    $s = [int]((Get-Date) - $T0).TotalSeconds
+    if ($s -ge 60) { return ('{0}m{1}s' -f [int]($s / 60), ($s % 60)) }
+    return "${s}s"
+}
+
+# ComProgresso <dir> <regex-do-que-vale-mostrar> <exe> <argumentos>
+#
+# Instalar dependencia demora minutos; sem sinal de vida o dev nao sabe se
+# travou. Roda o comando em segundo plano e vai imprimindo, conforme saem, so
+# as linhas que dizem alguma coisa - mais um tique de tempo quando o comando
+# fica quieto. Se falhar, mostra o fim da saida (o erro de verdade). Devolve o
+# codigo de saida do processo.
+function ComProgresso($Dir, $Filtro, $Exe, $Argumentos) {
+    $out = [System.IO.Path]::GetTempFileName()
+    $err = [System.IO.Path]::GetTempFileName()
+    $p = Start-Process -FilePath $Exe -ArgumentList $Argumentos -WorkingDirectory $Dir `
+                       -NoNewWindow -PassThru -RedirectStandardOutput $out -RedirectStandardError $err
+    # sem isto o Windows PowerShell 5.1 devolve ExitCode nulo quando nao se usa
+    # -Wait, e nulo -ne 0 daria comando bem-sucedido como falho
+    $p.EnableRaisingEvents = $true
+    $t0 = Get-Date; $vistas = 0; $ultimo = 0
+
+    while ($true) {
+        $terminou = $p.HasExited
+        if (-not $terminou) { Start-Sleep -Seconds 2 }
+
+        $linhas = @()
+        foreach ($f in @($out, $err)) {
+            try { $linhas += @(Get-Content -LiteralPath $f -ErrorAction Stop) } catch { }
+        }
+        $linhas = @($linhas | Where-Object { "$_" -match $Filtro })
+
+        if ($linhas.Count -gt $vistas) {
+            foreach ($l in $linhas[$vistas..($linhas.Count - 1)]) {
+                $t = "$l"
+                if ($t.Length -gt 96) { $t = $t.Substring(0, 96) }
+                Write-Host ('         ' + $t)
+            }
+            $vistas = $linhas.Count
+            $ultimo = [int]((Get-Date) - $t0).TotalSeconds
+        } elseif (-not $terminou -and (([int]((Get-Date) - $t0).TotalSeconds) - $ultimo) -ge 15) {
+            $ultimo = [int]((Get-Date) - $t0).TotalSeconds
+            Write-Host ('         . {0}s...' -f $ultimo)
+        }
+
+        if ($terminou) { break }
+    }
+
+    $p.WaitForExit()
+    $codigo = $p.ExitCode
+    if ($codigo -ne 0) {
+        Write-Host '         - fim da saida -'
+        $fim = @()
+        foreach ($f in @($out, $err)) {
+            try { $fim += @(Get-Content -LiteralPath $f -ErrorAction Stop) } catch { }
+        }
+        $fim | Select-Object -Last 20 | ForEach-Object { Write-Host ('         ' + $_) }
+    }
+    Remove-Item $out, $err -Force -ErrorAction SilentlyContinue
+    return $codigo
+}
 
 # MaiorOuIgual "20.11.0" "20"
 function MaiorOuIgual($Versao, $Minima) {
@@ -245,16 +316,15 @@ if (-not $SemDeps) {
         if ($Simular) {
             Passo '[simular] pip install -e ".[dev]"'
         } elseif (Test-Path $vpy) {
-            Passo 'instalando dependencias (pode demorar)...'
-            Push-Location $Back
-            $saida = & $vpy -m pip install --quiet --upgrade pip 2>&1
-            if ($LASTEXITCODE -eq 0) { $saida = & $vpy -m pip install --quiet -e '.[dev]' 2>&1 }
-            $st = $LASTEXITCODE
-            Pop-Location
-            # o filtro tira so o ruido conhecido do cache do pip; erro real continua visivel
-            $saida | Where-Object { $_ -notmatch 'Cache entry deserialization failed' -and "$_".Trim() } |
-                     ForEach-Object { Write-Host ("         " + $_) }
-            if ($st -eq 0) { Passo 'dependencias instaladas' }
+            Passo 'instalando dependencias (pacote a pacote, abaixo)...'
+            $tPip  = Get-Date
+            $rePip = 'Collecting |Building wheel|Installing collected|Successfully installed|Successfully built|^ERROR'
+            $pipBase = @('-m', 'pip', 'install', '--disable-pip-version-check', '--progress-bar', 'off')
+            # sem buffer, o pip sai linha a linha mesmo sem terminal do outro lado
+            $env:PYTHONUNBUFFERED = '1'
+            $st = ComProgresso $Back $rePip $vpy ($pipBase + @('--upgrade', 'pip'))
+            if ($st -eq 0) { $st = ComProgresso $Back $rePip $vpy ($pipBase + @('-e', '.[dev]')) }
+            if ($st -eq 0) { Passo ('dependencias instaladas ({0})' -f (Desde $tPip)) }
             else { Erro 'pip install falhou - rode manualmente em creed-backend' }
         }
 
@@ -285,11 +355,11 @@ if (-not $SemDeps) {
             Passo '[simular] npm install'
         } else {
             Passo 'npm install (pode demorar)...'
-            Push-Location $Front
-            npm install --silent
-            $st = $LASTEXITCODE
-            Pop-Location
-            if ($st -eq 0) { Passo 'dependencias instaladas (husky junto, via "prepare")' }
+            $tNpm = Get-Date
+            # npm e um .cmd: precisa do cmd.exe para virar processo proprio
+            $st = ComProgresso $Front 'added |removed |changed |up to date|packages are looking|npm error' `
+                               $env:ComSpec @('/c', 'npm', 'install', '--no-fund')
+            if ($st -eq 0) { Passo ('dependencias instaladas ({0}) (husky junto, via "prepare")' -f (Desde $tNpm)) }
             else { Erro 'npm install falhou - rode manualmente em creed-frontend' }
         }
     } elseif (-not $SemClone -and -not $Simular) {
@@ -313,7 +383,9 @@ if ($Ferramentas -and $Ferramentas -contains 'nenhuma') {
     Write-Host '         powershell -ExecutionPolicy Bypass -File creed-ai-context\scripts\instalar-adaptadores.ps1 -Ferramentas codex -Lembrar'
     Write-Host '         (opcoes: claude, codex, copilot, cursor, todas)'
 } else {
-    $args_ = @{ Ignorar = $Ignorar }
+    # -Workspace: sem ele o instalador cai na pasta que contem o harness, que nem
+    # sempre e o workspace escolhido aqui
+    $args_ = @{ Ignorar = $Ignorar; Workspace = $Workspace }
     if ($Ferramentas) { $args_['Ferramentas'] = $Ferramentas; $args_['Lembrar'] = $true }
     if ($Simular)     { $args_['Simular'] = $true }
     & $instalador @args_ | ForEach-Object { Write-Host ("  " + $_) }
@@ -321,7 +393,7 @@ if ($Ferramentas -and $Ferramentas -contains 'nenhuma') {
 
 # ------------------------------------------------------------------- resumo
 
-Titulo 'Pronto'
+Titulo ('Pronto (em {0})' -f (Desde $script:Inicio))
 
 if ($script:Avisos.Count -gt 0) {
     Write-Host ''
