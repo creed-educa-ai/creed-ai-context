@@ -1,0 +1,16 @@
+# Fim de linha LF no repositório E no working tree, em qualquer sistema.
+# Sem isto, um checkout no Windows com core.autocrlf=true traz CRLF — e os
+# scripts .sh deste repo quebram ao rodar no Git Bash ("bad interpreter").
+# Tem precedência sobre core.autocrlf, então não depende da config de cada dev.
+* text=auto eol=lf
+
+# .ps1 é lido pelo PowerShell no Windows, que aceita LF sem problema —
+# mantido em LF junto com o resto para o diff não depender de plataforma.
+
+# Binários: nunca converter.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary

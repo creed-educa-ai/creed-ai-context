@@ -1,0 +1,29 @@
+---
+description: Contexto e padrões do CREED.ai Educa
+alwaysApply: true
+---
+
+<!-- GERADO por creed-ai-context/scripts/instalar-adaptadores — não edite. -->
+<!-- Fonte: creed-ai-context/adaptadores/cursor-rules.mdc -->
+
+O contexto normativo deste projeto está em `creed-ai-context/` (workspace `ages/`),
+compartilhado com Claude Code, Codex e Copilot.
+
+Ao começar qualquer tarefa, leia nesta ordem:
+1. `creed-ai-context/CONTEXT.md`
+2. `creed-ai-context/context/trabalho-com-ia.md`
+3. `creed-ai-context/catalogo.md`
+4. O molde: `creed-backend/app/domains/respondentes/` ou
+   `creed-frontend/src/features/respondentes/`
+
+Princípios inegociáveis: agregação no banco, cálculo no backend, renderização no
+front · migration nunca no startup e sempre revisada linha a linha por humano · CI
+obrigatório · estrutura por domínio (back) espelhada por feature (front).
+
+Restrições: não versione por conta própria (nada de `git add`/`commit`/`push`/PR sem
+pedido explícito) · escopo fechado, só o que a task pede · nunca rode `alembic upgrade`
+fora do banco local nem `kubectl`/`helm`/`aws` em ambiente real · nunca inclua
+credencial ou dado pessoal real.
+
+Lacuna de produto vira premissa registrada em `creed-ai-context/decisoes/premissas.md`,
+não bloqueio — a cliente só é acessível em reunião marcada.

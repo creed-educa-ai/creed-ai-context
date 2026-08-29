@@ -1,0 +1,11 @@
+# Nada de dado real de respondente, credencial ou anexo pesado no harness.
+*.env
+*.pem
+*.key
+.DS_Store
+
+# Evidência pesada de teste não entra na árvore — vai como anexo no PR ou no ClickUp.
+*.png
+*.jpg
+*.pdf
+*.mp4
