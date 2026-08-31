@@ -1,6 +1,7 @@
 ---
 description: Decompõe a spec em tasks incrementais e testáveis
 argument-hint: <id-clickup>
+model: sonnet
 ---
 <!-- GERADO por creed-ai-context/scripts/instalar-adaptadores — não edite. -->
 

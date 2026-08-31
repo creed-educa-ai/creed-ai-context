@@ -21,6 +21,9 @@ webhook assíncrono. Tudo em EKS, banco fora do cluster.
    rename vira drop+create e perde dados.
 4. **CI é obrigatório.**
 5. **Estrutura por domínio (back) e por feature (front), com o mesmo nome.**
+6. **O código precisa ser defensável por quem entrega.** Toda implementação encerra
+   explicando abordagem e alternativas descartadas; bifurcação técnica real vira
+   pergunta, não escolha silenciosa. Projeto acadêmico: quem entrega precisa entender.
 
 ## Backend — `app/domains/<nome>/`
 
@@ -58,6 +61,27 @@ contrato. Frontend: slice direto, View por interação.
 backend:  ruff check . && ruff format --check . && mypy app && pytest
 frontend: npm run check
 ```
+
+## Nível do código
+
+Nível de líder técnico é **código que o time mantém**, não código esperto. Um colega
+entende o arquivo em uma passada. Não entram sem justificativa escrita: abstração para
+um caso de uso só, factory/strategy com uma opção, metaprogramação, genérico TS com 3+
+parâmetros, herança onde composição resolve, `any`/`# type: ignore`/`except: pass`,
+padrão que nenhum arquivo do repo usa ainda, dependência nova.
+Tipagem completa, função pequena com nome do domínio e early return **não** contam
+como complexidade — são o esperado.
+
+## Ao terminar uma implementação
+
+Explique, nesta ordem: o que a task pedia · abordagem e por que esta · **o que você
+descartou e por quê** · mapa do diff (arquivo → papel) · o que os testes provam e o que
+**não** provam · onde pode quebrar depois · 3 perguntas que eu deveria saber responder
+sobre este diff, com `arquivo:linha` — sem respondê-las por mim.
+
+Antes de escrever, se houver bifurcação técnica real (efeito visível no código, sem
+resposta no molde ou nas convenções): **pare, dê 2 opções com trade-off e a sua
+recomendação**. Dúvida de produto não para — vira premissa.
 
 ## Git 🔒
 

@@ -1,6 +1,7 @@
 ---
 description: Transforma uma tarefa do ClickUp em spec (tarefas/<ID>/spec.md)
 argument-hint: <id-clickup> [descrição da tarefa]
+model: sonnet
 ---
 <!-- GERADO por creed-ai-context/scripts/instalar-adaptadores — não edite. -->
 

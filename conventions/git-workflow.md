@@ -49,6 +49,8 @@ Motivo: com 1 aprovação obrigatória por PR, o revisor é a única revisão do
 commit que o autor não leu transfere para o revisor um trabalho que era do autor.
 
 Quando o usuário **pedir explicitamente** para versionar, siga `../playbooks/abrir-pr.md`.
+O comando `/pr <id-clickup>` é esse pedido — e ele ainda assim faz todo o pré-voo em
+modo leitura e só escreve depois de uma aprovação inequívoca do dev.
 
 ## Merge
 

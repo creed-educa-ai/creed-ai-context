@@ -1,5 +1,6 @@
 ---
 description: Monta a pauta da próxima reunião a partir das premissas abertas
+model: haiku
 ---
 <!-- GERADO por creed-ai-context/scripts/instalar-adaptadores — não edite. -->
 

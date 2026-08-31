@@ -7,6 +7,10 @@
 - [ ] `git diff dev...HEAD` lido **inteiro** pelo autor
 - [ ] Suíte local verde
 - [ ] Nada fora do escopo da tarefa no diff
+- [ ] Defesa respondida — você sabe explicar cada decisão do diff sem abrir o chat
+      (`defesa-do-codigo.md`)
+- [ ] Tier Sensível? Escalada cumprida — passada com modelo pesado **e** segunda
+      leitura humana (`revisao-de-codigo.md`)
 
 ## Descrição
 
@@ -23,6 +27,9 @@
 
 ## Premissas
 - 🟡 P-007 — <interpretação adotada>   (ou "nenhuma")
+
+## Decisões de design
+- <bifurcação> → <opção>, por @fulano   (ou "nenhuma")
 
 ## Migration
 - <arquivo> — revisado linha a linha por @fulano   (ou "nenhuma")

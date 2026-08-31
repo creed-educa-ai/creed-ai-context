@@ -18,7 +18,15 @@ Ao começar qualquer tarefa, leia nesta ordem:
 
 Princípios inegociáveis: agregação no banco, cálculo no backend, renderização no
 front · migration nunca no startup e sempre revisada linha a linha por humano · CI
-obrigatório · estrutura por domínio (back) espelhada por feature (front).
+obrigatório · estrutura por domínio (back) espelhada por feature (front) · código
+entregue por IA precisa ser defensável por quem entrega
+(`creed-ai-context/context/aprendizado.md`).
+
+Ao implementar: nível do time e não código esperto
+(`creed-ai-context/conventions/nivel-de-codigo.md`) · bifurcação técnica real vira
+parada de decisão com 2 opções e recomendação, máx. 2 por task · encerre no formato de
+`creed-ai-context/templates/entrega-didatica.md`, com as alternativas descartadas e o
+que os testes não provam.
 
 Restrições: não versione por conta própria (nada de `git add`/`commit`/`push`/PR sem
 pedido explícito) · escopo fechado, só o que a task pede · nunca rode `alembic upgrade`

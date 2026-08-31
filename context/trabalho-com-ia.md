@@ -4,7 +4,7 @@ Vale para **qualquer** modelo e ferramenta: Claude Code, Codex, Copilot, Cursor,
 avulso. Se uma regra daqui conflita com o comportamento padrão da ferramenta, esta
 ganha.
 
-## 1. As cinco regras
+## 1. As seis regras
 
 1. **Ler antes de escrever.** Domínio novo? Abra `app/domains/respondentes/` inteiro
    primeiro. Feature nova? `src/features/respondentes/`. Eles são o molde — copie a
@@ -18,6 +18,10 @@ ganha.
    "aproveitar para arrumar". Achou problema fora do escopo? Anote no fim da resposta.
 5. **O humano é o portão.** Nada entra em PR sem alguém do time ter lido o diff inteiro
    e rodado a suíte local. Ver `../checklists/definition-of-done.md`.
+6. **Entender é parte da entrega.** A IA encerra explicando abordagem, alternativas
+   descartadas e riscos (`../templates/entrega-didatica.md`), e **para** nas
+   bifurcações de design para o humano decidir. Quem não sabe explicar o diff não
+   abre o PR. Ver `aprendizado.md`.
 
 ## 2. Modo agente × modo copiloto
 
@@ -27,7 +31,8 @@ ganha.
 | Lê o repo | sim | só o que você colar |
 | Escreve arquivo | sim | você aplica |
 | Roda testes | sim | você roda |
-| Passos humanos obrigatórios | rodar suíte, ler diff, abrir PR | idem |
+| Decide nas bifurcações | **você** | **você** |
+| Passos humanos obrigatórios | rodar suíte, ler diff, responder à defesa, abrir PR | idem |
 
 Todo workflow deste harness declara o que muda entre os dois modos. Nenhum deles
 dispensa os passos humanos — a diferença é só quem digita.
@@ -81,3 +86,10 @@ Se precisar colar um erro que contém segredo, mascare antes.
 Padrão de erro que se repete = falha do harness, não do modelo. Abra PR corrigindo
 o arquivo de contexto que faltou — é assim que este diretório melhora.
 Ver `../CONTRIBUTING.md`.
+
+## 7. Ao criar uma automação nova
+
+Comando, skill, subagente ou workflow novo segue `../conventions/skills-e-comandos.md`:
+modelo leve declarado no próprio arquivo (peso é exceção justificada) e passos
+determinísticos — caminho literal, comando exato, critério explícito, saída em
+template. Automação roda muitas vezes; prosa vaga aqui custa dez vezes.

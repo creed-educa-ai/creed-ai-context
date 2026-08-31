@@ -13,10 +13,19 @@ ferramentas de IA do time (Codex, Copilot, Cursor).
 ## Ao começar qualquer tarefa
 
 1. `creed-ai-context/CONTEXT.md` — princípios, pipeline, prioridade em conflitos
-2. `creed-ai-context/context/trabalho-com-ia.md` — as cinco regras
+2. `creed-ai-context/context/trabalho-com-ia.md` — as seis regras
 3. `creed-ai-context/catalogo.md` — o que é cada repo, domínio e feature
 4. O **molde**: `creed-backend/app/domains/respondentes/` ou
    `creed-frontend/src/features/respondentes/`
+
+## Ao implementar
+
+- Nível do time, não código esperto —
+  `creed-ai-context/conventions/nivel-de-codigo.md`.
+- Bifurcação técnica real: **pare e pergunte** (máx. 2 por task) —
+  `creed-ai-context/workflows/tasks-to-code.md` → "Parada de decisão".
+- Encerre no formato de `creed-ai-context/templates/entrega-didatica.md`:
+  abordagem, **o que foi descartado**, mapa do diff, o que os testes não provam.
 
 ## Nunca
 
@@ -27,7 +36,8 @@ ferramentas de IA do time (Codex, Copilot, Cursor).
 - Dizer que rodou a suíte sem ter rodado.
 - Preencher lacuna de produto em silêncio — vira premissa
   (`creed-ai-context/conventions/premissas-e-duvidas.md`).
+- Entregar código sem explicar a abordagem e as alternativas descartadas.
 
 ## Comandos
 
-`/spec` · `/tasks` · `/implementar` · `/revisar` · `/premissa` · `/pauta`
+`/spec` · `/tasks` · `/implementar` · `/revisar` · `/pr` · `/premissa` · `/pauta`
