@@ -6,9 +6,10 @@ pre-requisitos -> clone dos repos -> dependencias -> adaptadores de IA.
 .DESCRIPTION
 1. confere pre-requisitos (git, python, node, npm, docker, gh)
 2. clona os repos de repos.conf - ou atualiza os que ja existem
-3. backend:  .venv + pip install -e ".[dev]" + .env + pre-commit
-4. frontend: npm install (o husky se instala junto, via "prepare")
-5. instala os adaptadores de IA das ferramentas escolhidas
+3. confere a identidade que os commits de cada repo levariam
+4. backend:  .venv + pip install -e ".[dev]" + .env + pre-commit
+5. frontend: npm install (o husky se instala junto, via "prepare")
+6. instala os adaptadores de IA das ferramentas escolhidas
 
 E seguro rodar de novo: nada e sobrescrito sem necessidade.
 
@@ -31,6 +32,10 @@ Atalho para -Ferramentas nenhuma.
 .PARAMETER Ignorar
 Repassado ao instalar-adaptadores: local (padrao) | repo | nao.
 
+.PARAMETER Identidade
+Fixa user.name/user.email locais nos repos que ainda nao tem, no formato
+"Nome <email>". Sem isto o script so avisa qual identidade os commits levariam.
+
 .PARAMETER Ssh
 Clona por SSH (padrao: https).
 
@@ -51,6 +56,7 @@ param(
     [switch] $SemDeps,
     [switch] $SemAdaptadores,
     [ValidateSet('local', 'repo', 'nao')][string] $Ignorar = 'local',
+    [string] $Identidade,
     [switch] $Ssh,
     [Alias('n')][switch] $Simular
 )
@@ -188,6 +194,77 @@ function LerRepos {
     }
 }
 
+# Separa "Nome <email>"; devolve $null se o formato nao bate.
+function PartirIdentidade($Texto) {
+    if ($Texto -match '^\s*(.+?)\s*<\s*([^<>@\s]+@[^<>\s]+)\s*>\s*$') {
+        return [pscustomobject]@{ Nome = $Matches[1]; Email = $Matches[2] }
+    }
+    return $null
+}
+
+# Sem user.name/user.email locais, o commit herda o config global - e estes
+# repos sao publicos, entao e essa identidade que fica registrada la. Em varias
+# maquinas do time o global e uma conta corporativa. O script nao adivinha qual
+# voce quer: fixa a que veio em -Identidade, ou mostra a que seria usada.
+function IdentidadeDosRepos($Ident) {
+    $pendentes = @()
+
+    # O harness tambem recebe commits (PR de harness) e tambem e publico, mas
+    # nao esta no repos.conf - entra na lista na mao.
+    $lista = @([pscustomobject]@{ Nome = 'creed-ai-context'; Destino = $Harness })
+    $lista += LerRepos | ForEach-Object {
+        [pscustomobject]@{ Nome = $_.Nome; Destino = (Join-Path $Workspace $_.Pasta) }
+    }
+
+    foreach ($r in $lista) {
+        $destino = $r.Destino
+        if (-not (Test-Path (Join-Path $destino '.git'))) { continue }
+
+        $nLocal = git -C $destino config --local --get user.name 2>$null
+        $eLocal = git -C $destino config --local --get user.email 2>$null
+
+        if ($nLocal -and $eLocal) {
+            Passo ($r.Nome + " - $nLocal <$eLocal>")
+            continue
+        }
+
+        if ($Ident) {
+            if ($Simular) {
+                Passo ($r.Nome + ' - [simular] git config user.name/user.email')
+            } else {
+                git -C $destino config user.name  $Ident.Nome
+                git -C $destino config user.email $Ident.Email
+                Passo ($r.Nome + " - fixada: $($Ident.Nome) <$($Ident.Email)>")
+            }
+            continue
+        }
+
+        $nEfet = git -C $destino config --get user.name 2>$null
+        $eEfet = git -C $destino config --get user.email 2>$null
+        if (-not $nEfet) { $nEfet = '?' }
+        if (-not $eEfet) { $eEfet = '?' }
+        Passo ($r.Nome + " - sem identidade local; o commit sairia como $nEfet <$eEfet>")
+        $pendentes += $r.Nome
+    }
+
+    if ($pendentes.Count -eq 0) { return }
+
+    Aviso ("$($pendentes.Count) repo(s) sem identidade local - o commit leva o seu git config global, e estes repos sao publicos")
+    Write-Host '         para fixar nos que faltam:'
+    Write-Host '           powershell -ExecutionPolicy Bypass -File creed-ai-context\scripts\setup-workspace.ps1 `'
+    Write-Host '                -SemClone -SemDeps -SemAdaptadores -Identidade "Fulano <fulano@users.noreply.github.com>"'
+}
+
+$Ident = $null
+if ($Identidade) {
+    $Ident = PartirIdentidade $Identidade
+    if (-not $Ident) {
+        Write-Host "identidade fora do formato: $Identidade"
+        Write-Host 'esperado: -Identidade "Nome <email>"'
+        exit 1
+    }
+}
+
 Write-Host 'CREED.ai Educa - setup do workspace'
 Write-Host "workspace: $Workspace"
 if ($Simular) { Write-Host 'modo:      simulacao (nada e executado)' }
@@ -290,14 +367,19 @@ if (-not $SemClone) {
     }
 }
 
-# --------------------------------------------------------- 3-4. dependencias
+# ------------------------------------------------- 3. identidade dos commits
+
+Titulo '3. Identidade dos commits'
+IdentidadeDosRepos $Ident
+
+# --------------------------------------------------------- 4-5. dependencias
 
 if (-not $SemDeps) {
     $Back  = Join-Path $Workspace 'creed-backend'
     $Front = Join-Path $Workspace 'creed-frontend'
 
     if (Test-Path (Join-Path $Back 'pyproject.toml')) {
-        Titulo '3. Backend (creed-backend)'
+        Titulo '4. Backend (creed-backend)'
         $venv = Join-Path $Back '.venv'
         if (Test-Path $venv) {
             Passo '.venv ja existe'
@@ -350,7 +432,7 @@ if (-not $SemDeps) {
     }
 
     if (Test-Path (Join-Path $Front 'package.json')) {
-        Titulo '4. Front-end (creed-frontend)'
+        Titulo '5. Front-end (creed-frontend)'
         if ($Simular) {
             Passo '[simular] npm install'
         } else {
@@ -367,9 +449,9 @@ if (-not $SemDeps) {
     }
 }
 
-# ------------------------------------------------------ 5. adaptadores de IA
+# ------------------------------------------------------ 6. adaptadores de IA
 
-Titulo '5. Ferramentas de IA'
+Titulo '6. Ferramentas de IA'
 
 $instalador = Join-Path $ScriptDir 'instalar-adaptadores.ps1'
 $prefSalva  = Test-Path (Join-Path $Workspace '.creed-ia.local')

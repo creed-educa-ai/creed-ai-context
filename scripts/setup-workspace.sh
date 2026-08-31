@@ -16,6 +16,7 @@ CLONE=1
 DEPS=1
 IGNORAR='local'
 PROTOCOLO='https'
+IDENTIDADE=''
 SIMULAR=0
 FALHAS=0
 AVISOS=()
@@ -32,6 +33,10 @@ uso: setup-workspace.sh [opcoes]
       --sem-deps             nao instala dependencias dos projetos
       --sem-adaptadores      atalho para -f nenhuma
       --ignorar <modo>       repassado ao instalar-adaptadores: local|repo|nao
+      --identidade <ident>   fixa user.name/user.email locais nos repos que
+                             ainda nao tem, no formato "Nome <email>". Sem
+                             isto o script so avisa qual identidade os seus
+                             commits levariam
       --ssh                  clona por SSH (padrao: https)
   -n, --simular              mostra o que faria, sem executar
   -h, --ajuda
@@ -40,9 +45,10 @@ o que ele faz, em ordem
 
   1. confere pre-requisitos (git, python, node, npm, docker, gh)
   2. clona os repos de repos.conf — ou atualiza os que ja existem
-  3. backend:  .venv + pip install -e ".[dev]" + .env + pre-commit
-  4. frontend: npm install (o husky se instala junto, via "prepare")
-  5. instala os adaptadores de IA das ferramentas que voce escolheu
+  3. confere a identidade que os commits de cada repo levariam
+  4. backend:  .venv + pip install -e ".[dev]" + .env + pre-commit
+  5. frontend: npm install (o husky se instala junto, via "prepare")
+  6. instala os adaptadores de IA das ferramentas que voce escolheu
 
 E seguro rodar de novo: nada e sobrescrito sem necessidade.
 
@@ -63,6 +69,7 @@ while [ $# -gt 0 ]; do
     --sem-deps)        DEPS=0;    shift ;;
     --sem-adaptadores) FERRAMENTAS='nenhuma'; shift ;;
     --ignorar)         IGNORAR="${2:?}";     shift 2 ;;
+    --identidade)      IDENTIDADE="${2:?}";  shift 2 ;;
     --ssh)             PROTOCOLO='ssh';      shift ;;
     -n|--simular)      SIMULAR=1; shift ;;
     -h|--ajuda)        ajuda; exit 0 ;;
@@ -172,7 +179,73 @@ ler_repos() {
   done
 }
 
+# Separa "Nome <email>" em IDENT_NOME e IDENT_EMAIL; 1 se o formato nao bate.
+IDENT_NOME=''
+IDENT_EMAIL=''
+partir_identidade() {
+  case "$1" in *'<'*'>'*) ;; *) return 1 ;; esac
+  IDENT_NOME="$(echo "${1%%<*}" | xargs)"
+  IDENT_EMAIL="$(echo "${1#*<}" | cut -d'>' -f1 | xargs)"
+  [ -n "$IDENT_NOME" ] && [ -n "$IDENT_EMAIL" ]
+}
+
+# Sem user.name/user.email locais, o commit herda o config global — e estes
+# repos sao publicos, entao e essa identidade que fica registrada la. Em varias
+# maquinas do time o global e uma conta corporativa. O script nao adivinha qual
+# voce quer: fixa a que veio em --identidade, ou mostra a que seria usada.
+identidade_dos_repos() {
+  local nome destino n_local e_local n_efet e_efet
+  local pendentes=()
+
+  # O harness tambem recebe commits (PR de harness) e tambem e publico, mas nao
+  # esta no repos.conf — entra na lista na mao.
+  local lista
+  lista="$(printf 'creed-ai-context|%s
+' "$HARNESS"; ler_repos | while IFS='|' read -r n _ pa _ _; do
+    [ -n "$n" ] && printf '%s|%s
+' "$n" "$WORKSPACE/$pa"
+  done)"
+
+  while IFS='|' read -r nome destino; do
+    [ -n "$nome" ] || continue
+    [ -d "$destino/.git" ] || continue
+
+    n_local="$(git -C "$destino" config --local --get user.name  2>/dev/null || true)"
+    e_local="$(git -C "$destino" config --local --get user.email 2>/dev/null || true)"
+
+    if [ -n "$n_local" ] && [ -n "$e_local" ]; then
+      passo "$nome — $n_local <$e_local>"
+      continue
+    fi
+
+    if [ -n "$IDENTIDADE" ]; then
+      rodar git -C "$destino" config user.name  "$IDENT_NOME"
+      rodar git -C "$destino" config user.email "$IDENT_EMAIL"
+      passo "$nome — fixada: $IDENT_NOME <$IDENT_EMAIL>"
+      continue
+    fi
+
+    n_efet="$(git -C "$destino" config --get user.name  2>/dev/null || true)"
+    e_efet="$(git -C "$destino" config --get user.email 2>/dev/null || true)"
+    passo "$nome — sem identidade local; o commit sairia como ${n_efet:-?} <${e_efet:-?}>"
+    pendentes+=("$nome")
+  done <<< "$lista"
+
+  [ ${#pendentes[@]} -gt 0 ] || return 0
+
+  aviso "${#pendentes[@]} repo(s) sem identidade local — o commit leva o seu git config global, e estes repos sao publicos"
+  echo "         para fixar nos que faltam:"
+  echo "           bash creed-ai-context/scripts/setup-workspace.sh --sem-clone --sem-deps \\"
+  echo "                --sem-adaptadores --identidade \"Fulano <fulano@users.noreply.github.com>\""
+}
+
 # --------------------------------------------------------- 1. pre-requisitos
+
+if [ -n "$IDENTIDADE" ] && ! partir_identidade "$IDENTIDADE"; then
+  echo "identidade fora do formato: $IDENTIDADE" >&2
+  echo 'esperado: --identidade "Nome <email>"' >&2
+  exit 1
+fi
 
 echo "CREED.ai Educa — setup do workspace"
 echo "workspace: $WORKSPACE"
@@ -271,14 +344,19 @@ if [ "$CLONE" = 1 ]; then
   done <<< "$(ler_repos)"
 fi
 
-# ------------------------------------------------------------- 3. dependencias
+# ------------------------------------------------- 3. identidade dos commits
+
+titulo "3. Identidade dos commits"
+identidade_dos_repos
+
+# ------------------------------------------------------------- 4. dependencias
 
 if [ "$DEPS" = 1 ]; then
   BACK="$WORKSPACE/creed-backend"
   FRONT="$WORKSPACE/creed-frontend"
 
   if [ -f "$BACK/pyproject.toml" ]; then
-    titulo "3. Backend" "(creed-backend)"
+    titulo "4. Backend" "(creed-backend)"
     VENV="$BACK/.venv"
     if [ -d "$VENV" ]; then
       passo ".venv ja existe"
@@ -328,7 +406,7 @@ if [ "$DEPS" = 1 ]; then
   fi
 
   if [ -f "$FRONT/package.json" ]; then
-    titulo "4. Front-end" "(creed-frontend)"
+    titulo "5. Front-end" "(creed-frontend)"
     if [ "$SIMULAR" = 1 ]; then
       passo "[simular] npm install"
     else
@@ -346,9 +424,9 @@ if [ "$DEPS" = 1 ]; then
   fi
 fi
 
-# --------------------------------------------------------- 4. adaptadores de IA
+# --------------------------------------------------------- 6. adaptadores de IA
 
-titulo "5. Ferramentas de IA"
+titulo "6. Ferramentas de IA"
 
 if [ -z "$FERRAMENTAS" ] && [ -f "$WORKSPACE/.creed-ia.local" ]; then
   FERRAMENTAS='(preferencia salva)'
@@ -371,7 +449,7 @@ else
   bash "$SCRIPT_DIR/instalar-adaptadores.sh" "${ARGS[@]}" | sed 's/^/  /'
 fi
 
-# ------------------------------------------------------------------- 5. resumo
+# ------------------------------------------------------------------- 7. resumo
 
 titulo "Pronto" "(em $(desde 0))"
 
