@@ -33,9 +33,10 @@ da pasta que vai ser o workspace.
 |---|---|
 | 1. Pré-requisitos | confere git, python 3.12+, node 20+, npm, docker e gh. Falta de obrigatório **para** o script, com o comando de instalação por sistema |
 | 2. Repositórios | clona os três repos de [`scripts/repos.conf`](scripts/repos.conf); os que já existem, atualiza com `pull --ff-only` |
-| 3. Backend | cria o `.venv`, roda `pip install -e ".[dev]"`, copia `.env.example` → `.env`, instala os hooks de `pre-commit` e `pre-push` |
-| 4. Front-end | `npm install` (o husky se instala junto, pelo `prepare`) |
-| 5. IA | instala os adaptadores da ferramenta escolhida e grava a preferência |
+| 3. Identidade | mostra, repo a repo, a identidade que os seus commits levariam; fixa a local se você passar `--identidade` |
+| 4. Backend | cria o `.venv`, roda `pip install -e ".[dev]"`, copia `.env.example` → `.env`, instala os hooks de `pre-commit` e `pre-push` |
+| 5. Front-end | `npm install` (o husky se instala junto, pelo `prepare`) |
+| 6. IA | instala os adaptadores da ferramenta escolhida e grava a preferência |
 
 **É seguro rodar de novo.** Repo com alteração local não é tocado; `.venv` e `.env`
 existentes são preservados; adaptador é regerado. É o mesmo comando para montar a
@@ -51,6 +52,7 @@ máquina no primeiro dia e para atualizar tudo depois de um tempo longe.
 | `--sem-deps` · `-SemDeps` | pula as dependências dos projetos |
 | `--sem-adaptadores` · `-SemAdaptadores` | não instala nada de IA |
 | `--ignorar` · `-Ignorar` | `local` (padrão) · `repo` · `nao` — repassado ao instalador de adaptadores |
+| `--identidade` · `-Identidade` | `"Nome <email>"` — fixa `user.name`/`user.email` **locais** nos repos que ainda não têm |
 | `--ssh` · `-Ssh` | clona por SSH |
 | `-n, --simular` · `-Simular` | mostra o que faria, sem executar |
 | `-h, --ajuda` · `Get-Help` | ajuda completa |
@@ -61,6 +63,11 @@ Quem não usa IA nenhuma roda `-f nenhuma` e tem o workspace montado do mesmo je
 
 - **Python mais novo que 3.12.** O projeto tem alvo `py312`; versões bem mais novas
   podem não ter wheel para algum pacote. O script avisa e segue.
+- **Repo sem identidade git local.** O commit herda o seu `git config --global`, e
+  estes repos são **públicos** — se o global for uma conta corporativa, é ela que
+  fica registrada no histórico. O script não adivinha qual identidade você quer:
+  mostra a que seria usada e, com `--identidade "Nome <email>"`, fixa a local.
+  Identidade local já existente nunca é sobrescrita.
 - **Branch preferida ausente.** Hoje os três repos têm `dev`, e é nela que você cai.
   Se um repo novo entrar em `repos.conf` sem a `dev` criada, o script clona a branch
   padrão do remoto e avisa — não inventa branch.
