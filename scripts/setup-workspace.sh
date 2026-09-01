@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Setup completo do workspace CREED.ai Educa:
-# pré-requisitos -> clone dos repos -> dependências -> adaptadores de IA.
+# pré-requisitos -> clone dos repos -> dependências -> adaptadores de IA -> MCP.
 #
 #   bash creed-ai-context/scripts/setup-workspace.sh --ajuda
 #
@@ -17,6 +17,9 @@ DEPS=1
 IGNORAR='local'
 PROTOCOLO='https'
 IDENTIDADE=''
+MCP=1
+MCP_NOME='clickup'
+MCP_URL='https://mcp.clickup.com/mcp'
 SIMULAR=0
 FALHAS=0
 AVISOS=()
@@ -33,6 +36,7 @@ uso: setup-workspace.sh [opcoes]
       --sem-deps             nao instala dependencias dos projetos
       --sem-adaptadores      atalho para -f nenhuma
       --ignorar <modo>       repassado ao instalar-adaptadores: local|repo|nao
+      --sem-mcp              nao registra o MCP do ClickUp no Claude Code
       --identidade <ident>   fixa user.name/user.email locais nos repos que
                              ainda nao tem, no formato "Nome <email>". Sem
                              isto o script so avisa qual identidade os seus
@@ -49,6 +53,7 @@ o que ele faz, em ordem
   4. backend:  .venv + pip install -e ".[dev]" + .env + pre-commit
   5. frontend: npm install (o husky se instala junto, via "prepare")
   6. instala os adaptadores de IA das ferramentas que voce escolheu
+  7. registra o MCP do ClickUp no Claude Code (a autenticacao e sua, no /mcp)
 
 E seguro rodar de novo: nada e sobrescrito sem necessidade.
 
@@ -69,6 +74,7 @@ while [ $# -gt 0 ]; do
     --sem-deps)        DEPS=0;    shift ;;
     --sem-adaptadores) FERRAMENTAS='nenhuma'; shift ;;
     --ignorar)         IGNORAR="${2:?}";     shift 2 ;;
+    --sem-mcp)         MCP=0;     shift ;;
     --identidade)      IDENTIDADE="${2:?}";  shift 2 ;;
     --ssh)             PROTOCOLO='ssh';      shift ;;
     -n|--simular)      SIMULAR=1; shift ;;
@@ -177,6 +183,17 @@ ler_repos() {
   grep -vE '^[[:space:]]*(#|$)' "$CONF" | while IFS='|' read -r nome slug pasta branch tipo; do
     echo "$(echo "$nome"|xargs)|$(echo "$slug"|xargs)|$(echo "$pasta"|xargs)|$(echo "$branch"|xargs)|$(echo "$tipo"|xargs)"
   done
+}
+
+# Ferramentas de IA que valem para esta rodada: o -f de agora, ou a preferencia
+# que o instalador gravou em .creed-ia.local. So o MCP precisa saber disso.
+ferramentas_efetivas() {
+  if [ -n "$FERRAMENTAS" ] && [ "$FERRAMENTAS" != '(preferencia salva)' ]; then
+    echo "$FERRAMENTAS"; return 0
+  fi
+  [ -f "$WORKSPACE/.creed-ia.local" ] || return 0
+  grep -E '^ferramentas=' "$WORKSPACE/.creed-ia.local" 2>/dev/null \
+    | tail -1 | cut -d= -f2- | tr -d '[:space:]'
 }
 
 # Separa "Nome <email>" em IDENT_NOME e IDENT_EMAIL; 1 se o formato nao bate.
@@ -449,7 +466,41 @@ else
   bash "$SCRIPT_DIR/instalar-adaptadores.sh" "${ARGS[@]}" | sed 's/^/  /'
 fi
 
-# ------------------------------------------------------------------- 7. resumo
+
+# ---------------------------------------------------------- 7. ClickUp (MCP)
+
+titulo "7. ClickUp (MCP)"
+
+# Sem MCP o pipeline nao muda: o /spec continua aceitando a descricao colada
+# (workflows/tarefa-to-spec.md). Por isso nenhuma falha aqui e ERRO — no pior
+# caso o time trabalha como trabalhava.
+FERR_EFETIVAS="$(ferramentas_efetivas)"
+
+if [ "$MCP" = 0 ]; then
+  passo "pulado (--sem-mcp)"
+elif [ -z "$FERR_EFETIVAS" ]; then
+  passo "nenhuma ferramenta de IA escolhida — nada a registrar"
+elif ! echo ",$FERR_EFETIVAS," | grep -qE ',(claude|todas),'; then
+  passo "por enquanto so o Claude Code recebe MCP por este script (voce escolheu: $FERR_EFETIVAS)"
+elif ! command -v claude >/dev/null 2>&1; then
+  aviso "claude nao encontrado no PATH — MCP do ClickUp nao registrado"
+  echo "         depois de instalar o Claude Code, rode dentro do workspace:"
+  echo "           claude mcp add --transport http $MCP_NOME $MCP_URL"
+elif [ "$SIMULAR" = 1 ]; then
+  passo "[simular] claude mcp add --transport http $MCP_NOME $MCP_URL"
+elif ( cd "$WORKSPACE" && claude mcp get "$MCP_NOME" >/dev/null 2>&1 ); then
+  passo "$MCP_NOME ja registrado neste workspace"
+  passo "conferir a autenticacao: abra o claude aqui e rode /mcp"
+elif ( cd "$WORKSPACE" && claude mcp add --transport http "$MCP_NOME" "$MCP_URL" >/dev/null 2>&1 ); then
+  passo "$MCP_NOME registrado — escopo local, vale so neste workspace"
+  passo "falta autenticar UMA vez: abra o claude aqui, rode /mcp e escolha $MCP_NOME"
+  passo "e OAuth no navegador; nao da para fazer por script"
+else
+  aviso "falha ao registrar o MCP do ClickUp — o /spec segue funcionando com a descricao colada"
+fi
+
+
+# ------------------------------------------------------------------- 8. resumo
 
 titulo "Pronto" "(em $(desde 0))"
 

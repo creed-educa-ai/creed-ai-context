@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
 Setup completo do workspace CREED.ai Educa:
-pre-requisitos -> clone dos repos -> dependencias -> adaptadores de IA.
+pre-requisitos -> clone dos repos -> dependencias -> adaptadores de IA -> MCP.
 
 .DESCRIPTION
 1. confere pre-requisitos (git, python, node, npm, docker, gh)
@@ -10,6 +10,7 @@ pre-requisitos -> clone dos repos -> dependencias -> adaptadores de IA.
 4. backend:  .venv + pip install -e ".[dev]" + .env + pre-commit
 5. frontend: npm install (o husky se instala junto, via "prepare")
 6. instala os adaptadores de IA das ferramentas escolhidas
+7. registra o MCP do ClickUp no Claude Code (a autenticacao e sua, no /mcp)
 
 E seguro rodar de novo: nada e sobrescrito sem necessidade.
 
@@ -31,6 +32,9 @@ Atalho para -Ferramentas nenhuma.
 
 .PARAMETER Ignorar
 Repassado ao instalar-adaptadores: local (padrao) | repo | nao.
+
+.PARAMETER SemMcp
+Nao registra o MCP do ClickUp no Claude Code.
 
 .PARAMETER Identidade
 Fixa user.name/user.email locais nos repos que ainda nao tem, no formato
@@ -56,6 +60,7 @@ param(
     [switch] $SemDeps,
     [switch] $SemAdaptadores,
     [ValidateSet('local', 'repo', 'nao')][string] $Ignorar = 'local',
+    [switch] $SemMcp,
     [string] $Identidade,
     [switch] $Ssh,
     [Alias('n')][switch] $Simular
@@ -66,6 +71,8 @@ $ErrorActionPreference = 'Continue'
 $ScriptDir = $PSScriptRoot
 $Harness   = Split-Path -Parent $ScriptDir
 $Conf      = Join-Path $ScriptDir 'repos.conf'
+$McpNome   = 'clickup'
+$McpUrl    = 'https://mcp.clickup.com/mcp'
 if ($SemAdaptadores) { $Ferramentas = @('nenhuma') }
 # chamado com -File, o PowerShell entrega "claude,codex" como UMA string: separa aqui
 if ($Ferramentas) {
@@ -85,6 +92,18 @@ function Erro($t)    { Write-Host "  ERRO   $t"; $script:Falhas++ }
 function Aviso($t)   { Write-Host "  aviso  $t"; $script:Avisos += $t }
 
 $script:Inicio = Get-Date
+
+# Ferramentas de IA que valem para esta rodada: o -Ferramentas de agora, ou a
+# preferencia que o instalador gravou em .creed-ia.local. So o MCP precisa disso.
+function FerramentasEfetivas {
+    if ($Ferramentas) { return $Ferramentas }
+    $cfg = Join-Path $Workspace '.creed-ia.local'
+    if (-not (Test-Path $cfg)) { return @() }
+    $linha = Get-Content $cfg | Where-Object { $_ -match '^ferramentas=' } | Select-Object -Last 1
+    if (-not $linha) { return @() }
+    return (($linha -replace '^ferramentas=', '').Trim() -split ',' |
+            ForEach-Object { $_.Trim() } | Where-Object { $_ })
+}
 
 # Desde $t0 -> "1m35s"
 function Desde($T0) {
@@ -471,6 +490,50 @@ if ($Ferramentas -and $Ferramentas -contains 'nenhuma') {
     if ($Ferramentas) { $args_['Ferramentas'] = $Ferramentas; $args_['Lembrar'] = $true }
     if ($Simular)     { $args_['Simular'] = $true }
     & $instalador @args_ | ForEach-Object { Write-Host ("  " + $_) }
+}
+
+# ------------------------------------------------------- 7. ClickUp (MCP)
+
+Titulo '7. ClickUp (MCP)'
+
+# Sem MCP o pipeline nao muda: o /spec continua aceitando a descricao colada
+# (workflows/tarefa-to-spec.md). Por isso nenhuma falha aqui e Erro - no pior
+# caso o time trabalha como trabalhava.
+$ferrEfetivas = FerramentasEfetivas
+
+if ($SemMcp) {
+    Passo 'pulado (-SemMcp)'
+} elseif (-not $ferrEfetivas) {
+    Passo 'nenhuma ferramenta de IA escolhida - nada a registrar'
+} elseif (-not ($ferrEfetivas -contains 'claude' -or $ferrEfetivas -contains 'todas')) {
+    Passo ('por enquanto so o Claude Code recebe MCP por este script (voce escolheu: {0})' -f ($ferrEfetivas -join ','))
+} elseif (-not (Get-Command claude -ErrorAction SilentlyContinue)) {
+    Aviso 'claude nao encontrado no PATH - MCP do ClickUp nao registrado'
+    Write-Host '         depois de instalar o Claude Code, rode dentro do workspace:'
+    Write-Host ('           claude mcp add --transport http {0} {1}' -f $McpNome, $McpUrl)
+} elseif ($Simular) {
+    Passo ('[simular] claude mcp add --transport http {0} {1}' -f $McpNome, $McpUrl)
+} else {
+    Push-Location $Workspace
+    & claude mcp get $McpNome *> $null
+    $jaTem = ($LASTEXITCODE -eq 0)
+    $ok    = $false
+    if (-not $jaTem) {
+        & claude mcp add --transport http $McpNome $McpUrl *> $null
+        $ok = ($LASTEXITCODE -eq 0)
+    }
+    Pop-Location
+
+    if ($jaTem) {
+        Passo ('{0} ja registrado neste workspace' -f $McpNome)
+        Passo 'conferir a autenticacao: abra o claude aqui e rode /mcp'
+    } elseif ($ok) {
+        Passo ('{0} registrado - escopo local, vale so neste workspace' -f $McpNome)
+        Passo ('falta autenticar UMA vez: abra o claude aqui, rode /mcp e escolha {0}' -f $McpNome)
+        Passo 'e OAuth no navegador; nao da para fazer por script'
+    } else {
+        Aviso 'falha ao registrar o MCP do ClickUp - o /spec segue funcionando com a descricao colada'
+    }
 }
 
 # ------------------------------------------------------------------- resumo

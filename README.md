@@ -44,6 +44,7 @@ da pasta que vai ser o workspace.
 | 4. Backend | cria o `.venv`, roda `pip install -e ".[dev]"`, copia `.env.example` → `.env`, instala os hooks de `pre-commit` e `pre-push` |
 | 5. Front-end | `npm install` (o husky se instala junto, pelo `prepare`) |
 | 6. IA | instala os adaptadores da ferramenta escolhida e grava a preferência |
+| 7. ClickUp (MCP) | registra o servidor `clickup` no Claude Code, escopo local. A autenticação é sua, uma vez, no `/mcp` — ver [ADR-0002](decisoes/adrs/0002-mcp-do-clickup-no-setup.md) |
 
 **É seguro rodar de novo.** Repo com alteração local não é tocado; `.venv` e `.env`
 existentes são preservados; adaptador é regerado. É o mesmo comando para montar a
@@ -58,6 +59,7 @@ máquina no primeiro dia e para atualizar tudo depois de um tempo longe.
 | `--sem-clone` · `-SemClone` | pula a etapa de repositórios |
 | `--sem-deps` · `-SemDeps` | pula as dependências dos projetos |
 | `--sem-adaptadores` · `-SemAdaptadores` | não instala nada de IA |
+| `--sem-mcp` · `-SemMcp` | não registra o MCP do ClickUp |
 | `--ignorar` · `-Ignorar` | `local` (padrão) · `repo` · `nao` — repassado ao instalador de adaptadores |
 | `--identidade` · `-Identidade` | `"Nome <email>"` — fixa `user.name`/`user.email` **locais** nos repos que ainda não têm |
 | `--ssh` · `-Ssh` | clona por SSH |
@@ -182,11 +184,18 @@ Abra o workspace em `ages/`. O `CLAUDE.md` carrega sozinho. Slash commands:
 |---|---|
 | `/spec <ID>` | tarefa do ClickUp → `tarefas/<ID>/spec.md` |
 | `/tasks <ID>` | spec → lista de tasks incrementais |
+| `/atualizar-spec <ID>` | tarefa mudou no ClickUp → spec atualizada + impacto nas tasks |
 | `/implementar <ID> <N>` | implementa a task N |
 | `/revisar` | review do diff atual contra os checklists |
 | `/pr <ID>` | pré-voo da feature e, com sua aprovação, abre o PR |
 | `/premissa` | registra uma premissa no ledger |
 | `/pauta` | monta a pauta da próxima reunião com a cliente |
+
+**MCP do ClickUp.** O `setup-workspace` registra o servidor `clickup` (escopo local, só
+neste workspace). Falta autenticar **uma vez**: abra o Claude Code aqui, rode `/mcp` e
+escolha `clickup` — é OAuth no navegador, não dá para automatizar. Autenticado, o
+`/spec <ID>` busca a tarefa sozinho; sem autenticar, ele pede a descrição colada, como
+sempre fez. Nada mais no pipeline depende disso ([ADR-0002](decisoes/adrs/0002-mcp-do-clickup-no-setup.md)).
 
 ### Codex (CLI ou IDE)
 Lê o `AGENTS.md` da raiz do repo e sobe na árvore — funciona tanto abrindo `ages/`

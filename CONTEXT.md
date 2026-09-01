@@ -74,6 +74,7 @@ tarefa (ClickUp) → spec → tasks → código → defesa → review → PR
 |---|---|---|
 | Tarefa → spec | [`workflows/tarefa-to-spec.md`](workflows/tarefa-to-spec.md) | `tarefas/<ID>/spec.md` |
 | Spec → tasks | [`workflows/spec-to-tasks.md`](workflows/spec-to-tasks.md) | `tarefas/<ID>/tasks.md` + `N_task.md` |
+| Tarefa mudou → spec | [`workflows/atualizar-spec.md`](workflows/atualizar-spec.md) | `spec.md` atualizada + impacto nas tasks e nas premissas |
 | Tasks → código | [`workflows/tasks-to-code.md`](workflows/tasks-to-code.md) | código no repo, testes verdes, entrega didática |
 | Defesa (humano) | [`checklists/defesa-do-codigo.md`](checklists/defesa-do-codigo.md) | você sabe explicar o diff — ou volta ao estágio anterior |
 | Review | [`workflows/revisao.md`](workflows/revisao.md) | veredito + `review.md` quando aplicável |

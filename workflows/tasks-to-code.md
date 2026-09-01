@@ -17,6 +17,21 @@ Código no working tree, testes verdes, entrega didática, task marcada em `task
 - **Nível do time**, não código esperto (`../conventions/nivel-de-codigo.md`).
 - **Julgamento é humano**: bifurcação de design vira parada, não escolha silenciosa.
 
+## Portão de entrada
+
+Este workflow **não fala com o ClickUp**. Quem fala é a especificação, e é dela que
+saem necessidade e critério de aceite. Antes do passo 1, olhe `../tarefas/<ID>-<slug>/`:
+
+| O que existe lá | O que fazer |
+|---|---|
+| o `N_task.md` pedido | siga para o passo 1 |
+| `spec.md`, mas sem `tasks.md` | rode `spec-to-tasks.md` e volte |
+| nada, ou a pasta não existe | **pare**: peça o ID da tarefa no ClickUp, se não veio no comando, e rode `tarefa-to-spec.md` antes de escrever qualquer linha |
+
+Implementar por cima da descrição solta da tarefa é o que este portão existe para
+evitar: sem spec, não há critério de aceite escrito, e o que volta para o dev é
+adivinhação com cara de entrega.
+
 ## Passos
 
 | # | Passo | Modo agente | Modo copiloto |

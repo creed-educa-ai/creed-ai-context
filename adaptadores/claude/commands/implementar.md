@@ -10,6 +10,7 @@ Implemente a task indicada em **$ARGUMENTS**.
 Siga `creed-ai-context/workflows/tasks-to-code.md`, no papel de
 `creed-ai-context/roles/implementador.md`.
 
+<critical>PORTÃO DE ENTRADA (antes de tudo): olhe `creed-ai-context/tarefas/<id>-*/`. Sem `N_task.md` e sem `spec.md`, PARE — peça o ID da tarefa no ClickUp, se não veio, e rode o passo de especificação (`/spec <id>`) antes de escrever qualquer linha. Com spec e sem tasks, rode `/tasks <id>`. Este comando NÃO fala com o ClickUp: quem fala é a especificação.</critical>
 <critical>Leia ANTES de escrever: o `N_task.md`, a `spec.md`, e o MOLDE (`app/domains/respondentes/` ou `src/features/respondentes/`). Copie a forma do molde, não invente estrutura.</critical>
 <critical>Carregue o playbook aplicável de `creed-ai-context/playbooks/` (domínio backend, feature front, migration).</critical>
 <critical>PARADA DE DECISÃO: antes de escrever, classifique cada dúvida pela tabela de `workflows/tasks-to-code.md` → "Parada de decisão". Bifurcação TÉCNICA com efeito visível no diff e sem resposta no harness: PARE, apresente 2 opções com trade-off e a sua recomendação, e espere a resposta. Máximo 2 por task. Molde, convenção, estilo ou lacuna de produto NÃO param — seguem (lacuna de produto vira premissa).</critical>
