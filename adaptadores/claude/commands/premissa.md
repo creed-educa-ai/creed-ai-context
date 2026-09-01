@@ -1,6 +1,7 @@
 ---
 description: Registra uma premissa no ledger e marca o artefato
 argument-hint: <a interpretação adotada>
+model: haiku
 ---
 <!-- GERADO por creed-ai-context/scripts/instalar-adaptadores — não edite. -->
 

@@ -18,6 +18,7 @@ Três repositórios, um workspace:
 | `creed-infrastructure/` | Job de migration, notas de EKS | Kubernetes · Helm hooks |
 
 Detalhe por repo em [`catalogo.md`](catalogo.md). Termos do domínio em [`glossario.md`](glossario.md).
+Quem é quem — e quem revisa PR — em [`equipe.md`](equipe.md).
 
 ## Arquitetura em uma frase
 
@@ -36,6 +37,9 @@ assíncrono. Ver [`context/arquitetura.md`](context/arquitetura.md).
 6. **Sem contato com a cliente no meio do desenvolvimento**: dúvida vira
    **premissa registrada**, não bloqueio. Ver
    [`conventions/premissas-e-duvidas.md`](conventions/premissas-e-duvidas.md).
+7. **Código entregue por IA precisa ser defensável por quem entrega.** Quem não sabe
+   explicar o diff não abre o PR — a IA implementa, o julgamento continua humano.
+   Ver [`context/aprendizado.md`](context/aprendizado.md).
 
 ## Como a IA trabalha aqui
 
@@ -50,20 +54,28 @@ Regras que valem para **qualquer** modelo ou ferramenta:
   PR é decisão humana explícita (ver [`playbooks/abrir-pr.md`](playbooks/abrir-pr.md)).
 - **O humano é o portão.** Nenhuma saída de IA entra em PR sem alguém do time ter lido
   e rodado os testes localmente ([`checklists/definition-of-done.md`](checklists/definition-of-done.md)).
+- **Entender é parte da entrega.** Toda implementação encerra explicando abordagem e
+  alternativas descartadas ([`templates/entrega-didatica.md`](templates/entrega-didatica.md)),
+  e para nas bifurcações de design para o humano decidir. Código no nível do time,
+  não código esperto ([`conventions/nivel-de-codigo.md`](conventions/nivel-de-codigo.md)).
+- **Automação nova é leve e determinística.** Comando, skill ou workflow novo declara
+  o modelo mais barato que dá conta e descreve passos com entrada, ação e saída
+  verificável. Ver [`conventions/skills-e-comandos.md`](conventions/skills-e-comandos.md).
 
 ## Pipeline SDD
 
 ```
-tarefa (ClickUp) → spec → tasks → código → review → PR
-                     ↑                                ↓
-                  premissas ────────→ pauta da reunião com a cliente
+tarefa (ClickUp) → spec → tasks → código → defesa → review → PR
+                     ↑                        ↑                  ↓
+                  premissas           (passo humano)   pauta da reunião com a cliente
 ```
 
 | Estágio | Workflow | Saída |
 |---|---|---|
 | Tarefa → spec | [`workflows/tarefa-to-spec.md`](workflows/tarefa-to-spec.md) | `tarefas/<ID>/spec.md` |
 | Spec → tasks | [`workflows/spec-to-tasks.md`](workflows/spec-to-tasks.md) | `tarefas/<ID>/tasks.md` + `N_task.md` |
-| Tasks → código | [`workflows/tasks-to-code.md`](workflows/tasks-to-code.md) | código no repo, testes verdes |
+| Tasks → código | [`workflows/tasks-to-code.md`](workflows/tasks-to-code.md) | código no repo, testes verdes, entrega didática |
+| Defesa (humano) | [`checklists/defesa-do-codigo.md`](checklists/defesa-do-codigo.md) | você sabe explicar o diff — ou volta ao estágio anterior |
 | Review | [`workflows/revisao.md`](workflows/revisao.md) | veredito + `review.md` quando aplicável |
 | Dúvidas → reunião | [`workflows/duvidas-to-pauta.md`](workflows/duvidas-to-pauta.md) | `pauta/proxima-reuniao.md` |
 

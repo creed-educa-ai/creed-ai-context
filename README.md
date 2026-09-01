@@ -1,6 +1,6 @@
 # creed-ai-context
 
-Repositório de contexto do **CREED.ai Educa**. Faz duas coisas:
+Repositório de contexto do **CREED.ai Educa**. Faz três coisas:
 
 1. **Monta o workspace do zero** — clona os repos, confere os pré-requisitos da sua
    máquina, instala as dependências e deixa tudo pronto para desenvolver.
@@ -8,6 +8,13 @@ Repositório de contexto do **CREED.ai Educa**. Faz duas coisas:
    playbooks, **independentes de ferramenta**. Claude Code, Codex, Copilot e Cursor
    leem o mesmo conteúdo; cada um ganha um arquivo de entrada de ~20 linhas que aponta
    para cá. Um padrão muda em um lugar e vale para todo mundo.
+3. **Faz o time aprender com o que a IA entrega** — a implementação para nas
+   bifurcações para você decidir, encerra explicando abordagem e alternativas
+   descartadas, e o PR só abre depois que você consegue defender o diff.
+   Ver [`context/aprendizado.md`](context/aprendizado.md).
+
+Produtividade controlada **e** aprendizado. Se as duas brigarem, ganha a segunda —
+código que o time não entende é dívida, não entrega.
 
 ## Começando do zero
 
@@ -177,6 +184,7 @@ Abra o workspace em `ages/`. O `CLAUDE.md` carrega sozinho. Slash commands:
 | `/tasks <ID>` | spec → lista de tasks incrementais |
 | `/implementar <ID> <N>` | implementa a task N |
 | `/revisar` | review do diff atual contra os checklists |
+| `/pr <ID>` | pré-voo da feature e, com sua aprovação, abre o PR |
 | `/premissa` | registra uma premissa no ledger |
 | `/pauta` | monta a pauta da próxima reunião com a cliente |
 

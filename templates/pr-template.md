@@ -23,6 +23,12 @@
 
 <ou "nenhuma">
 
+## Decisões de design
+
+- <bifurcação> → <opção escolhida>, por @<pessoa> (ou "pelo agente, a meu pedido")
+
+<ou "nenhuma — o molde cobriu a task">
+
 ---
 
 IA: <ferramenta/modelo> — <o que fez> · revisão humana: @<pessoa>

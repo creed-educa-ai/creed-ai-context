@@ -24,6 +24,7 @@ Formato:
 
 ## Veredito: <Aprovado | Aprovado com ressalva | Mudanças necessárias>
 Tier: <...>
+Escalada: <exigida | não se aplica>
 ### Exigências     (arquivo:linha — problema, e o que fazer)
 ### Sugestões
 ### Verificado
@@ -31,3 +32,13 @@ Tier: <...>
 
 Não aprove por educação: qualquer item aberto em Corretude, Camadas, Dados ou
 Segurança significa "Mudanças necessárias".
+
+Se o tier for Sensível, pare no veredito e feche com:
+
+### Escalada exigida — tier Sensível
+Motivo do tier: <migration | autenticação | contrato de API | agregação | infra>
+- [ ] Passada com modelo pesado — este review não substitui
+- [ ] Segunda leitura humana — @<pessoa>
+
+Em modo copiloto a escolha do modelo é sua: refaça este mesmo prompt numa sessão com
+modelo pesado, começando pelo que ficou em "Não verificado".

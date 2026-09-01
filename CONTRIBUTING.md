@@ -29,6 +29,7 @@ certo não é "avisar no grupo": é o arquivo de contexto que faltava.
 | Sequência do pipeline (entrada → saída) | `workflows/` |
 | Postura de um papel | `roles/` |
 | Formato de um artefato | `templates/` |
+| Automação nova (comando, skill, subagente) | `conventions/skills-e-comandos.md` — leia antes |
 | Repo novo no workspace | `scripts/repos.conf` |
 | Decisão com trade-off | `decisoes/adrs/` |
 | Interpretação de produto sem a cliente | `decisoes/premissas.md` |

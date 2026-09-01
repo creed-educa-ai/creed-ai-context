@@ -8,9 +8,13 @@ O custo do review escala com o risco, não com a burocracia.
 |---|---|---|
 | **Trivial** | texto, estilo, config sem efeito, teste isolado | veredito inline, sem relatório |
 | **Padrão** | endpoint, componente, regra de negócio dentro do molde | checklist abaixo |
-| **Sensível** | migration, autenticação, contrato de API, agregação de indicador, infra | checklist + segunda leitura humana |
+| **Sensível** | migration, autenticação, contrato de API, agregação de indicador, infra | checklist + **passada com modelo pesado** + segunda leitura humana |
 
 Migration é **sempre** Sensível, mesmo que tenha uma linha.
+
+A passada com modelo pesado não é automática: a review em modelo médio vai até o
+veredito e **para**, dizendo o que falta. Como escalar:
+[`../workflows/revisao.md`](../workflows/revisao.md) → "Tier Sensível: pare e escale".
 
 ## Checklist
 
@@ -38,6 +42,14 @@ Migration é **sempre** Sensível, mesmo que tenha uma linha.
 
 ### Testes
 - [ ] Existem, no nível certo, e falhariam sem a mudança.
+
+### Legibilidade
+- [ ] Entendi cada arquivo em uma passada — sem precisar abrir outros três.
+- [ ] Nada da lista de [`../conventions/nivel-de-codigo.md`](../conventions/nivel-de-codigo.md)
+      §3 entrou sem justificativa escrita.
+- [ ] Complexidade inevitável está **isolada** e explicada, não espalhada pelo diff.
+
+"Não entendi este trecho" é **exigência**, não implicância.
 
 ## Vereditos
 

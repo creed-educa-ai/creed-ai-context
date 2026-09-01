@@ -11,6 +11,7 @@ Copilot Chat, ChatGPT, Gemini, Claude web, Codex sem workspace.
 | `03-implementar.md` | `/implementar` |
 | `04-revisar.md` | `/revisar` |
 | `05-premissa.md` | `/premissa` |
+| `06-pr.md` | `/pr` |
 
 ## Como usar
 

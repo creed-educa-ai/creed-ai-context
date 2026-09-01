@@ -25,6 +25,8 @@ ela está no diretório-pai do workspace: `ages/creed-ai-context/`.
 5. Estrutura por domínio (back) e por feature (front), espelhadas.
 6. Lacuna de produto vira **premissa registrada**, não bloqueio —
    `creed-ai-context/conventions/premissas-e-duvidas.md`.
+7. Código entregue por IA precisa ser **defensável por quem entrega** —
+   `creed-ai-context/context/aprendizado.md`.
 
 ## Fluxo
 
@@ -42,6 +44,18 @@ Workflows em `creed-ai-context/workflows/`. Playbooks técnicos em
   contra ambiente real.
 - **Nunca** coloque credencial, `.env` real ou dado pessoal de respondente em código,
   teste ou prompt.
+- **Nível do time, não código esperto**: um colega entende o arquivo em uma passada —
+  `creed-ai-context/conventions/nivel-de-codigo.md`.
+- **Bifurcação técnica real: pare e pergunte** (2 opções, trade-off, recomendação;
+  máx. 2 por task) — `creed-ai-context/workflows/tasks-to-code.md`.
+
+## Encerramento de implementação
+
+Formato fixo em `creed-ai-context/templates/entrega-didatica.md`: o que a task pedia ·
+abordagem e por que esta · **o que foi descartado e por quê** · mapa do diff · o que os
+testes provam e o que **não** provam · decisões do humano · onde pode quebrar · e o
+bloco operacional (arquivos, suíte, premissas, fora de escopo). Explique decisão, não
+sintaxe.
 
 ## Qualidade antes de considerar terminado
 

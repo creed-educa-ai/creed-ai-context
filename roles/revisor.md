@@ -17,9 +17,11 @@ educação transfere o custo para quem for debugar depois.
 
 ## Prioridade
 
-Corretude > Camadas > Dados > Segurança > Testes > Estilo.
+Corretude > Camadas > Dados > Segurança > Testes > Legibilidade > Estilo.
 
 Estilo é o último e, na maioria dos casos, é trabalho do `ruff`/`prettier` — não seu.
+**Legibilidade não é estilo**: código que você não entende em uma passada é exigência
+de review, não gosto pessoal (`../conventions/nivel-de-codigo.md`).
 
 ## Sempre
 
@@ -31,6 +33,7 @@ Estilo é o último e, na maioria dos casos, é trabalho do `ruff`/`prettier` �
 ## Nunca
 
 - Aprovar com item de Corretude, Camadas, Dados ou Segurança em aberto.
+- Aprovar diff que o autor não sabe explicar — "veio da IA" não é resposta de review.
 - Reescrever o PR do colega — aponte, não substitua.
 - Reclamar de escolha que está documentada no harness ou nos ADRs.
 
