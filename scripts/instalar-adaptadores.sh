@@ -39,7 +39,8 @@ uso: instalar-adaptadores.sh [opcoes]
 
 ferramenta -> arquivos que ela le
 
-  claude   <raiz>/CLAUDE.md · <raiz>/.claude/commands/*.md · <repo>/CLAUDE.md
+  claude   <raiz>/CLAUDE.md · <raiz>/.claude/commands/*.md ·
+           <raiz>/.claude/skills/*/SKILL.md · <repo>/CLAUDE.md
   codex    <raiz>/AGENTS.md · <repo>/AGENTS.md
   copilot  <repo>/.github/copilot-instructions.md
   cursor   <repo>/.cursor/rules/creed.mdc
@@ -229,10 +230,20 @@ if [ "$RAIZ" = 1 ]; then
   if [ "$REMOVER" = 1 ] || ! selecionada claude; then
     descartar "$WS/CLAUDE.md"
     for cmd in "$ADP/claude/commands"/*.md; do descartar "$WS/.claude/commands/$(basename "$cmd")"; done
+    for skill in "$ADP/claude/skills"/*/SKILL.md; do
+      [ -e "$skill" ] || continue
+      nome="$(basename "$(dirname "$skill")")"
+      descartar "$WS/.claude/skills/$nome/SKILL.md"
+    done
   else
     escrever "$ADP/CLAUDE.md" "$WS/CLAUDE.md"
     for cmd in "$ADP/claude/commands"/*.md; do
       escrever "$cmd" "$WS/.claude/commands/$(basename "$cmd")"
+    done
+    for skill in "$ADP/claude/skills"/*/SKILL.md; do
+      [ -e "$skill" ] || continue
+      nome="$(basename "$(dirname "$skill")")"
+      escrever "$skill" "$WS/.claude/skills/$nome/SKILL.md"
     done
   fi
   if [ "$REMOVER" = 1 ] || ! selecionada codex; then

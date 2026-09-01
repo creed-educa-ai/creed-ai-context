@@ -129,7 +129,7 @@ das próximas vezes basta rodar sem argumento. Dá para usar a variável de ambi
 
 | Ferramenta | Arquivos |
 |---|---|
-| `claude` | `<raiz>/CLAUDE.md` · `<raiz>/.claude/commands/*.md` · `<repo>/CLAUDE.md` |
+| `claude` | `<raiz>/CLAUDE.md` · `<raiz>/.claude/commands/*.md` · `<raiz>/.claude/skills/*/SKILL.md` · `<repo>/CLAUDE.md` |
 | `codex` | `<raiz>/AGENTS.md` · `<repo>/AGENTS.md` |
 | `copilot` | `<repo>/.github/copilot-instructions.md` |
 | `cursor` | `<repo>/.cursor/rules/creed.mdc` |
