@@ -13,6 +13,7 @@ Copilot Chat, ChatGPT, Gemini, Claude web, Codex sem workspace.
 | `05-premissa.md` | `/premissa` |
 | `06-pr.md` | `/pr` |
 | `07-atualizar-spec.md` | `/atualizar-spec` |
+| `08-calibrar.md` | `/calibrar` — **cole antes do `01-spec.md`** |
 
 ## Como usar
 
