@@ -27,6 +27,8 @@ o front tem `prismas` — não `prisma`, não `analises`.
 - **Tipos do backend** vivem em `src/types/` e acompanham os `schemas.py`. Divergiu →
   o backend é a fonte da verdade.
 - **i18n**: texto visível passa por `src/i18n/locales/`. Não hardcode string na View.
+- **Camadas, estado e contrato** têm regra própria: `../conventions/camadas-do-front.md`,
+  `../conventions/contrato-front-back.md` e `../conventions/formularios.md`.
 - **UI e responsividade** têm regra própria: `../conventions/ui-e-responsividade.md`
   (biblioteca fechada, mobile-first, tokens do tema). Componente novo segue
   `../playbooks/criar-componente-frontend.md`.

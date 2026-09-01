@@ -198,6 +198,16 @@ escolha `clickup` — é OAuth no navegador, não dá para automatizar. Autentic
 `/spec <ID>` busca a tarefa sozinho; sem autenticar, ele pede a descrição colada, como
 sempre fez. Nada mais no pipeline depende disso ([ADR-0002](decisoes/adrs/0002-mcp-do-clickup-no-setup.md)).
 
+Skills (carregam sozinhas, pelo assunto da tarefa):
+
+| Skill | Entra quando |
+|---|---|
+| `feature-front` | feature inteira: contrato → estado → tela → rota → i18n → teste |
+| `contrato-front` | integração com o backend, tipos, endpoints, erro HTTP |
+| `estado-front` | slice, thunk, store, o que é (e o que não é) estado global |
+| `formulario-front` | campos, validação com zod, erro de campo |
+| `componente-front` | componente, ajuste visual, responsividade |
+
 ### Codex (CLI ou IDE)
 Lê o `AGENTS.md` da raiz do repo e sobe na árvore — funciona tanto abrindo `ages/`
 quanto um repo isolado. Os "comandos" viram prompts: cole o conteúdo de
