@@ -4,6 +4,9 @@
 
 **Molde:** `src/features/respondentes/` — abra os quatro arquivos antes de começar.
 
+Para a peça de interface em si (componente compartilhado, primitivo, ajuste visual),
+o playbook é [`criar-componente-frontend.md`](criar-componente-frontend.md).
+
 ## Ordem
 
 1. **Nome** — igual ao domínio do backend. `prognosticos` no back, `prognosticos` no

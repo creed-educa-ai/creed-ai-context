@@ -205,6 +205,17 @@ if (-not $SemRaiz) {
             Escrever $_.FullName (Join-Path $cmdDir $_.Name) $null
         }
     }
+    $skillsOrigem = Join-Path $Adp 'claude\skills'
+    $skillsDir    = Join-Path $WS '.claude\skills'
+    if (Test-Path $skillsOrigem) {
+        Get-ChildItem $skillsOrigem -Directory | ForEach-Object {
+            $origem  = Join-Path $_.FullName 'SKILL.md'
+            $destino = Join-Path (Join-Path $skillsDir $_.Name) 'SKILL.md'
+            if (-not (Test-Path $origem)) { return }
+            if ($Remover -or ($Ferramentas -notcontains 'claude')) { Descartar $destino }
+            else { Escrever $origem $destino $null }
+        }
+    }
     if ($Remover -or ($Ferramentas -notcontains 'codex')) {
         Descartar (Join-Path $WS 'AGENTS.md')
     } else {

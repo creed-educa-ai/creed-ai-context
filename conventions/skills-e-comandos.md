@@ -80,7 +80,9 @@ comando cria duas versões dela, e a do comando envelhece primeiro.
 | Formato do artefato gerado | `templates/` |
 | O gatilho para a ferramenta chamar o workflow | `adaptadores/` |
 
-Comando novo do Claude Code nasce em `adaptadores/claude/commands/<nome>.md`, com a
+Comando novo do Claude Code nasce em `adaptadores/claude/commands/<nome>.md` e skill nova
+em `adaptadores/claude/skills/<nome>/SKILL.md` — a skill é acionada pelo `description`,
+não pelo dev, então ele descreve QUANDO usar, não o que ela faz. Os dois nascem com a
 marca `GERADO por`, e só existe depois de rodar `scripts/instalar-adaptadores.sh` —
 ver `../adaptadores/README.md`. Editar o arquivo instalado é trabalho perdido.
 

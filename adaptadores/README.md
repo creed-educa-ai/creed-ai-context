@@ -10,6 +10,7 @@ escrito no formato que uma ferramenta específica lê.
 | `copilot-instructions.md` | `<repo>/.github/copilot-instructions.md` | GitHub Copilot |
 | `cursor-rules.mdc` | `<repo>/.cursor/rules/creed.mdc` | Cursor |
 | `claude/commands/*.md` | `<workspace>/.claude/commands/` | slash commands do Claude Code |
+| `claude/skills/<nome>/SKILL.md` | `<workspace>/.claude/skills/<nome>/` | skills do Claude Code (carregam sozinhas, pelo `description`) |
 | `prompts/*.md` | nada — são para copiar e colar | qualquer chat |
 
 Gerar (só as suas ferramentas): `bash ../scripts/instalar-adaptadores.sh -f codex --lembrar`
@@ -30,6 +31,6 @@ Gerar (só as suas ferramentas): `bash ../scripts/instalar-adaptadores.sh -f cod
 5. **Toda saída deste diretório carrega a marca `GERADO por`** na primeira linha (ou
    logo após o frontmatter). É por ela que o script sabe o que pode apagar — não
    remova a marca ao editar o adaptador-fonte.
-6. **Comando novo segue `../conventions/skills-e-comandos.md`:** modelo leve declarado
+6. **Comando ou skill novo segue `../conventions/skills-e-comandos.md`:** modelo leve declarado
    no frontmatter e passos determinísticos. O comando é ponteiro fino — a regra mora
    no harness.
