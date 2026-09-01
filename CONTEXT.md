@@ -72,7 +72,7 @@ tarefa (ClickUp) → spec → tasks → código → defesa → review → PR
 
 | Estágio | Workflow | Saída |
 |---|---|---|
-| Tarefa → spec | [`workflows/tarefa-to-spec.md`](workflows/tarefa-to-spec.md) | `tarefas/<ID>/spec.md` |
+| Tarefa → spec | [`workflows/tarefa-to-spec.md`](workflows/tarefa-to-spec.md) | `tarefas/<ID>/spec.md`, calibrada por [`conventions/profundidade-da-spec.md`](conventions/profundidade-da-spec.md) |
 | Spec → tasks | [`workflows/spec-to-tasks.md`](workflows/spec-to-tasks.md) | `tarefas/<ID>/tasks.md` + `N_task.md` |
 | Tarefa mudou → spec | [`workflows/atualizar-spec.md`](workflows/atualizar-spec.md) | `spec.md` atualizada + impacto nas tasks e nas premissas |
 | Tasks → código | [`workflows/tasks-to-code.md`](workflows/tasks-to-code.md) | código no repo, testes verdes, entrega didática |
@@ -80,8 +80,11 @@ tarefa (ClickUp) → spec → tasks → código → defesa → review → PR
 | Review | [`workflows/revisao.md`](workflows/revisao.md) | veredito + `review.md` quando aplicável |
 | Dúvidas → reunião | [`workflows/duvidas-to-pauta.md`](workflows/duvidas-to-pauta.md) | `pauta/proxima-reuniao.md` |
 
-O pipeline é **proporcional**: tarefa pequena pula spec e vai direto a tasks. Critério
-em [`workflows/tarefa-to-spec.md`](workflows/tarefa-to-spec.md) → "Quando pular".
+O pipeline é **proporcional**, e a proporção é medida: cada tarefa é calibrada em dois
+eixos — incerteza de **produto** (P1–P3) e complexidade **técnica** (T1–T3) —, e a
+calibragem decide quais seções a spec tem. Como o projeto entrega **um documento**, não
+PRD + techspec, é o que impede um dos dois lados de sair raso. P1 · T1 não gera spec: vai
+direto a tasks. Régua em [`conventions/profundidade-da-spec.md`](conventions/profundidade-da-spec.md).
 
 ## Prioridade em conflitos
 

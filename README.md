@@ -182,7 +182,8 @@ Abra o workspace em `ages/`. O `CLAUDE.md` carrega sozinho. Slash commands:
 
 | Comando | O que faz |
 |---|---|
-| `/spec <ID>` | tarefa do ClickUp → `tarefas/<ID>/spec.md` |
+| `/calibrar <ID>` | mede a tarefa em P × T e diz quais seções a spec precisa ter |
+| `/spec <ID>` | tarefa do ClickUp → `tarefas/<ID>/spec.md`, na profundidade calibrada |
 | `/tasks <ID>` | spec → lista de tasks incrementais |
 | `/atualizar-spec <ID>` | tarefa mudou no ClickUp → spec atualizada + impacto nas tasks |
 | `/implementar <ID> <N>` | implementa a task N |
