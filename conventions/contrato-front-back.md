@@ -24,17 +24,38 @@ Antes de escrever uma linha de integração, abra `app/domains/<dominio>/router.
 
 | O que você encontra | O que fazer |
 |---|---|
-| Endpoints de verdade (como `respondentes`) | transcreva o contrato real e siga |
+| Endpoints de verdade, escritos para uma tarefa | transcreva o contrato real e siga |
 | Docstring **"STUB"** e um `APIRouter` sem rota | **PARE.** O domínio não existe |
 | O diretório não existe | **PARE.** O domínio não existe |
+| `respondentes` | **é scaffold**: forma para copiar, não contrato para consumir — ver abaixo |
 
-Hoje **só `respondentes` está implementado**. `organizacoes`, `prismas`, `prognosticos`,
-`relatorios` e `dashboards` são stubs registrados no `main.py` — a rota responde, e
-responde 404. Descobrir isso por tentativa custa uma tarde.
+Hoje, na prática, **nenhum domínio tem contrato acordado**. `organizacoes`, `prismas`,
+`prognosticos`, `relatorios` e `dashboards` são stubs registrados no `main.py` — a rota
+responde, e responde 404. Descobrir isso por tentativa custa uma tarde. E não há migration
+nenhuma: `alembic/versions/` está vazio.
 
-### Quando o domínio é stub
+### `respondentes` é exemplo, não contrato
 
-1. Diga, em uma linha, que o contrato não existe e cite o arquivo stub.
+O domínio `respondentes` (e a feature de mesmo nome no front, e o `Respondente` em
+`types/api.ts`) nasceu do **scaffold dos projetos**. Ele é o molde — a forma de router,
+service, repository, schemas, slice e view que todo mundo copia — e continua valendo
+para isso.
+
+O que ele **não** é: contrato negociado com a cliente. Ninguém decidiu que respondente
+tem `regiao` e `pais`. Então:
+
+- copie dele a **forma**: nomes de camada, paginação `ListaPaginada<T>`, formato de
+  resposta, máquina de status;
+- **não** copie os **campos** para um domínio novo, e não trate os dele como acordados;
+- feature que mexa de fato em respondentes precisa de contrato acordado como qualquer
+  outra — o código existente é ponto de partida, não decisão registrada.
+
+Na dúvida entre "isto é padrão do projeto" e "isto é resíduo do scaffold": padrão é o que
+está escrito neste harness; o resto é exemplo.
+
+### Quando o contrato não existe (o caso comum hoje)
+
+1. Diga, em uma linha, que o contrato não existe e cite o arquivo que você abriu.
 2. O contrato passa a ser **decisão de produto registrada**: sai na spec (seção
    "Contrato"), vira premissa no ledger (`premissas-e-duvidas.md`) e **tarefa de backend
    no ClickUp**.
@@ -43,8 +64,6 @@ responde 404. Descobrir isso por tentativa custa uma tarde.
 4. Quando o backend chegar e divergir, **o backend ganha** — o front se ajusta
    (`../context/frontend.md`). É por isso que a premissa fica registrada: para a
    divergência ser conversa de cinco minutos, e não arqueologia.
-
-Nunca invente campo em silêncio. Nome de campo inventado vira migration depois.
 
 ## Transcrever, não interpretar
 

@@ -1,8 +1,9 @@
 # Camadas do front
 
-O molde `src/features/respondentes/` já tem a separação certa. Esta convenção diz
-**por que** ela existe e **como perceber que furou** — porque camada furada não dá erro
-de compilação, só aparece na terceira feature, quando já é caro.
+O molde `src/features/respondentes/` — gerado no scaffold dos projetos — já tem a
+separação certa. Esta convenção diz **por que** ela existe e **como perceber que
+furou** — porque camada furada não dá erro de compilação, só aparece na terceira
+feature, quando já é caro.
 
 ## As quatro camadas
 
@@ -71,7 +72,8 @@ mesma função.
 
 ## Dívida conhecida do molde
 
-O `RespondentesView.tsx` usa `text-slate-600`, `border-red-200` e afins — cor crua, não
+O `respondentes` é exemplo de scaffold, não código nascido de tarefa, e mostra a idade:
+o `RespondentesView.tsx` usa `text-slate-600`, `border-red-200` e afins — cor crua, não
 token do tema (`../conventions/ui-e-responsividade.md` §1). O molde é canônico na
 **estrutura** (camadas, nomes, i18n, máquina de status); nessa parte específica ele é
 dívida, e feature nova nasce com token. Não refatore o molde de passagem: escopo fechado

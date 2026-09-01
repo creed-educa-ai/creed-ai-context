@@ -7,7 +7,7 @@ description: Ligar o front ao backend do CREED — transcrever schemas Pydantic 
 Você vai ligar o front ao backend. A régua é
 `creed-ai-context/conventions/contrato-front-back.md`.
 
-<critical>PORTÃO: abra `creed-backend/app/domains/<dominio>/router.py` ANTES de escrever. Endpoints de verdade → transcreva. Docstring "STUB" ou diretório inexistente → PARE e diga que o domínio não existe. Hoje só `respondentes` está implementado; `organizacoes`, `prismas`, `prognosticos`, `relatorios` e `dashboards` são stubs que respondem 404.</critical>
+<critical>PORTÃO: abra `creed-backend/app/domains/<dominio>/router.py` ANTES de escrever. Endpoints de verdade → transcreva. Docstring "STUB" ou diretório inexistente → PARE e diga que o domínio não existe. Hoje NENHUM domínio tem contrato acordado: `organizacoes`, `prismas`, `prognosticos`, `relatorios` e `dashboards` são stubs que respondem 404, e `respondentes` é exemplo gerado no scaffold dos projetos — molde de FORMA (camadas, paginação, máquina de status), nunca fonte de campos acordados.</critical>
 <critical>A fonte da verdade é o código, nesta ordem: `schemas.py` → `router.py` → OpenAPI em `/api/v1/docs` com o backend rodando. O `src/types/api.ts` é espelho MANUAL: transcreva, não interprete.</critical>
 <critical>`snake_case` do backend PERMANECE `snake_case` no TypeScript (`data_nascimento`, `tamanho_pagina`). Opcional e nulo não são a mesma coisa. Campo calculado no response (como `idade`) não existe no create. Paginação já tem forma — `ListaPaginada<T>`; não crie uma segunda.</critical>
 <critical>Toda chamada passa pelo `src/lib/apiClient.ts` (get/post/patch/delete, base `/api/v1`, `ApiError` com status). Nunca `fetch` direto, nunca URL absoluta — o Vite faz proxy.</critical>

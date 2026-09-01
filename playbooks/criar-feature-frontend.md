@@ -21,10 +21,12 @@ Para a peça de interface isolada (um componente, um ajuste visual), o playbook 
 
 | O que você encontra | Caminho |
 |---|---|
-| endpoints de verdade | transcreva o contrato real (passo 2) e siga |
+| endpoints escritos para uma tarefa | transcreva o contrato real (passo 2) e siga |
+| `respondentes` | é scaffold: copie a FORMA, não os campos — não é contrato acordado |
 | docstring "STUB", ou diretório inexistente | o contrato vira decisão de produto: spec + premissa + tarefa de backend no ClickUp, e o front codifica contra o tipo escrito a partir da spec |
 
-Hoje só `respondentes` está implementado. Pular este passo é o que produz front pronto
+Hoje nenhum domínio tem contrato acordado: os cinco stubs respondem 404 e `respondentes`
+é exemplo gerado no scaffold dos projetos. Pular este passo é o que produz front pronto
 contra campo que nunca existiu.
 
 ## Ordem
