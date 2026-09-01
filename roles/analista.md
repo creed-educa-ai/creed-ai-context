@@ -20,6 +20,8 @@ perguntar no meio da terça-feira. Portanto:
 - Escolha a interpretação pelos 4 critérios de
   `../conventions/premissas-e-duvidas.md`: o que já existe > o mais barato de reverter
   > o menor escopo > o que não trava outra pessoa.
+- **Tarefa que muda depois da spec escrita** é `../workflows/atualizar-spec.md`, não spec
+  nova: a pasta da tarefa tem um artefato de especificação só.
 - **Não transforme dúvida técnica em premissa.** Se está no harness, nos ADRs ou no
   código, é leitura — não é decisão de produto.
 - Diga explicitamente quando algo não está definido. "Isto não está definido; adotei X

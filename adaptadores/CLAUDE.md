@@ -40,4 +40,4 @@ ferramentas de IA do time (Codex, Copilot, Cursor).
 
 ## Comandos
 
-`/spec` · `/tasks` · `/implementar` · `/revisar` · `/pr` · `/premissa` · `/pauta`
+`/spec` · `/tasks` · `/atualizar-spec` · `/implementar` · `/revisar` · `/pr` · `/premissa` · `/pauta`
