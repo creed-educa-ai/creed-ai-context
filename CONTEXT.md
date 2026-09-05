@@ -26,6 +26,19 @@ Cliente (mobile/desktop) → **tudo o mais dentro da AWS/EKS**: front (Nginx), b
 (Uvicorn), PostgreSQL no RDS, N8N self-hosted como esteira de IA consumida por webhook
 assíncrono. Ver [`context/arquitetura.md`](context/arquitetura.md).
 
+## Modelo de dados
+
+Desenhado pelo time no dbdiagram.io. A fonte literal é
+[`context/modelo-de-dados.dbml`](context/modelo-de-dados.dbml); a leitura — o que cada
+bloco resolve, as pendências e o mapa tabela → domínio — está em
+[`context/modelo-de-dados.md`](context/modelo-de-dados.md).
+
+⚠️ **Não gere migration a partir do `.dbml` ainda.** O banco não foi inaugurado
+(`alembic/versions/` vazio) e dois pontos do export atual impedem o DDL de subir. A
+devolutiva fechou em 2026-09-04 e a correção está em
+[`context/modelo-de-dados.proposta.dbml`](context/modelo-de-dados.proposta.dbml):
+o caminho é colar no dbdiagram, reexportar por cima e só então inaugurar.
+
 ## Princípios inegociáveis
 
 1. **Agregação no banco, cálculo no backend, renderização no front.**

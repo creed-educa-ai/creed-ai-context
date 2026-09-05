@@ -15,6 +15,7 @@ português, código técnico em inglês.
 | **Prognóstico** | Projeção gerada a partir dos prismas | `domains/prognosticos` | 🟡 |
 | **Relatório** | Saída consolidada e exportável para a organização | `domains/relatorios` | 🟡 |
 | **Dashboard** | Visão agregada e interativa dos indicadores | `domains/dashboards` | 🟡 |
+| **Papel (role)** | Nível de acesso dentro da organização. **Em conflito:** o modelo de dados diz `Admin`/`Gestor`/`Respondente`, a P-003 (de ensaio) diz `admin`/`funcionario`. Resolver antes da autenticação — ver [`context/modelo-de-dados.md`](context/modelo-de-dados.md) #12 | `Vinculo.role`, navegação do front | 🟡 |
 | **Plasticidade humana** | Conceito-base do produto (cliente é a autoridade) | produto | 🟡 |
 | **Esteira de IA** | Fluxo N8N acionado por webhook assíncrono | infraestrutura | ✅ |
 
