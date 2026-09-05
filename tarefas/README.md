@@ -20,5 +20,12 @@ tarefas/<id-clickup>-<slug>/
 
 ## Exemplo
 
-`EXEMPLO-relatorio-por-organizacao/` é um esqueleto preenchido para servir de referência
-na primeira vez. Não é tarefa real — não implemente.
+Pasta com prefixo `EXEMPLO-` é referência, **não tarefa a implementar**. Há duas:
+
+| Pasta | O que mostra |
+|---|---|
+| `EXEMPLO-relatorio-por-organizacao/` | esqueleto sintético, preenchido à mão para mostrar a forma |
+| `EXEMPLO-menu-de-navegacao/` | saída real da esteira (`/calibrar` → `/spec` → `/tasks`) sobre a tarefa CREED-17, gerada como ensaio. Nada foi implementado |
+
+Premissa que nasceu de pasta `EXEMPLO-` vai para o ledger com `EXEMPLO` na coluna Tarefa
+e **não** entra na pauta da cliente ([`../decisoes/premissas.md`](../decisoes/premissas.md)).
