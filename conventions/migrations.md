@@ -3,6 +3,10 @@
 > Ver ADR-002 §2.4. Este é o assunto com maior chance de perda de dado no projeto.
 > A IA **propõe**; um humano **lê linha a linha** antes de qualquer commit.
 
+> O modelo de dados que as migrations materializam vive em
+> [`../context/modelo-de-dados.md`](../context/modelo-de-dados.md) — leia o status dele
+> antes de gerar qualquer revisão.
+
 ## As sete regras
 
 1. **Autogenerate nunca vai para o repositório sem leitura linha a linha.**

@@ -1,0 +1,421 @@
+// CREED.ai Educa — PROPOSTA de correção do modelo de dados. FECHADA em 2026-09-04.
+//
+// Base: modelo-de-dados.dbml (cópia literal do que está no dbdiagram hoje).
+// Cada desvio da base leva a marca [C-NN], detalhada em modelo-de-dados.md.
+//
+// Alvo: uma v1 sólida do banco que destrave a autenticação — não o modelo definitivo.
+// Versionamento de resposta e resultado ficou fora de propósito: as três soluções
+// possíveis são aditivas (tabela nova ou coluna nulável) e nenhuma exige reescrever
+// dado já gravado. Ver "Adiado de propósito" em modelo-de-dados.md.
+//
+// Isto NÃO é o modelo do time. Vira o modelo quando alguém do time aceitar as
+// mudanças, colar no dbdiagram e reexportar por cima de modelo-de-dados.dbml.
+//
+// 14 tabelas · 9 enums · 21 FKs, todas apontando para PK, sem ciclo obrigatório.
+
+// --- Enums ---
+
+Enum Prisma {
+  plasticidade_humana
+  empreendedorismo
+  multiculturalismo
+  neuroinovacao
+  tomada_decisao
+}
+
+Enum QuestionType {
+  objective
+  descriptive
+}
+
+Enum FormResponseStatus {
+  in_progress
+  submitted
+}
+
+// [C6] Form.status era string livre num modelo em que todo o resto é enum.
+Enum FormStatus {
+  draft
+  published
+  closed
+}
+
+// [C6] Participant.status e Organization.status eram string livre.
+Enum RecordStatus {
+  active
+  inactive
+}
+
+// [C13] valores em snake_case, como Prisma e QuestionType já eram.
+Enum VincType {
+  emprego
+  mentoria
+  academico
+  pessoal
+}
+
+// [C12] conflita com a premissa P-003 (admin, funcionario). Decisão pendente:
+// esta lista está mantida como no diagrama de propósito, para não decidir sozinho.
+Enum Roles {
+  admin
+  gestor
+  respondente
+}
+
+// [C13]
+Enum DocType {
+  cpf
+  cnpj
+  nif
+  nipc
+  passaporte
+  vat_eu
+  outro
+}
+
+// [C14] recorte por gênero é matéria-prima do produto; duas opções descartam gente.
+Enum Gender {
+  masc
+  fem
+  outro
+  nao_informado
+}
+
+// [C4] Enum Setores removido: setor virou dado da tabela Setor.
+
+// --- Usuários ---
+
+// [C2] o ciclo obrigatório era User.vinculo_id not null + Vinculo.user_id not null:
+// a primeira linha de qualquer das duas tabelas é impossível de inserir. Quem cai é
+// Vinculo.user_id — o unique que o diagrama já trazia aqui diz que 1 usuário = 1
+// vínculo era intenção. Consequências, que precisam ser defensáveis:
+//   · pessoa com dois vínculos precisa de dois logins (email é unique);
+//   · usuário não nasce antes do vínculo: a ordem de cadastro é
+//     Organization + Participant -> Vinculo -> User, e o admin da plataforma
+//     também precisa de um vínculo com alguma organização;
+//   · ao trocar de vínculo o ponteiro se move e o vínculo antigo fica sem login.
+//     A pessoa não se perde: FormResponse -> Vinculo -> Participant continua inteiro.
+// Se alguma das três incomodar, o ajuste barato é vinculo_id nullable.
+//
+// [C26] status: é assim que se desliga um login, e não se confunde com end_at.
+//   status = inactive -> o login não entra mais. Decisão de ACESSO.
+//   Vinculo.end_at    -> o vínculo com a organização acabou. Fato de CADASTRO.
+// São coisas separadas de propósito: alguém pode sair da organização e a conta
+// continuar respondendo por outro vínculo mais tarde, e alguém pode ter o acesso
+// suspenso sem que o vínculo tenha terminado. Apagar a linha do User não é
+// alternativa: Dashboard.user_id aponta para cá.
+Table User {
+  id uuid [pk, default: `uuid()`]
+  vinculo_id uuid [unique, not null]
+  email string [unique, not null]
+  password string
+  status RecordStatus [not null, default: 'active']
+  created_at datetime [default: `now()`]
+  updated_at datetime
+}
+
+// [C3] document_id fica, agora com FK de verdade (antes era coluna solta, sem Ref).
+// [C4] department removido — setor é atributo do vínculo, não da pessoa.
+// [C19] address deixou de ser obrigatório: endereço é dado pessoal sem uso
+//       definido em nenhuma tela até agora.
+Table Participant {
+  id uuid [pk, default: `uuid()`]
+  name string [not null]
+  document_id uuid [unique]
+  gender Gender
+  address string
+  status RecordStatus [not null, default: 'active']
+  created_at datetime [default: `now()`]
+  updated_at datetime
+}
+
+// [C3] document_id fica, agora com FK de verdade — é aqui que o CNPJ mora.
+Table Organization {
+  id uuid [pk, default: `uuid()`]
+  name string [not null]
+  document_id uuid [unique]
+  address string [not null]
+  status RecordStatus [not null, default: 'active']
+  created_at datetime [default: `now()`]
+  updated_at datetime
+}
+
+// [C4] a tabela deixou de embrulhar o enum. Setor é dado da cliente: acrescentar
+// "Jurídico" com enum é migration, com tabela é INSERT.
+// organization_id nulo = setor global, válido para todas as organizações.
+Table Setor {
+  id uuid [pk, default: `uuid()`]
+  organization_id uuid
+  name string [not null]
+  created_at datetime [default: `now()`]
+
+  indexes {
+    organization_id
+    (organization_id, name) [unique]
+  }
+}
+
+// [C4] setor_id passou a ser opcional: com setor virando dado, o vínculo pode
+//      nascer antes de a organização cadastrar os setores dela.
+// [C10] created_at acrescentado (havia updated_at sem created_at).
+// [C2] user_id saiu: o login aponta para o vínculo, não o contrário.
+// [C16] índices nas FKs — todas entram em JOIN de agregação.
+Table Vinculo {
+  id uuid [pk, default: `uuid()`]
+
+  participant_id uuid [not null]
+  organization_id uuid [not null]
+  setor_id uuid
+
+  type VincType [not null]
+  role Roles [not null]
+
+  start_at datetime [not null, default: `now()`]
+  end_at datetime
+  created_at datetime [default: `now()`]
+  updated_at datetime
+
+  indexes {
+    participant_id
+    organization_id
+    setor_id
+  }
+}
+
+// [C3] a seta aponta do dono para o documento, não o contrário. Participant e
+// Organization voltam a ter document_id — as colunas que o diagrama já trazia,
+// agora com FK de verdade —, e Document deixa de ter coluna de dono: sem dono
+// polimórfico, sem CHECK, e a organização finalmente consegue ter CNPJ (o DocType
+// já previa CNPJ, NIPC e VAT_EU sem que houvesse caminho para gravá-los).
+// O preço, declarado: UM documento por participante e um por organização.
+// CPF + passaporte na mesma pessoa não cabe. Ver pendência 🟡 22.
+Table Document {
+  id uuid [pk, default: `uuid()`]
+  type DocType [not null]
+  value string [not null]
+  issuing_country string
+  created_at datetime [default: `now()`]
+
+  indexes {
+    (type, value) [unique]
+  }
+}
+
+// --- Formulários ---
+
+// [C1] creator_id apontava para Vinculo.organization_id e participant_id para
+// Vinculo.participant_id — colunas sem unique, e o Postgres recusa o DDL
+// ("there is no unique constraint matching given keys"). O alvo estava errado, a
+// intenção não: o dono do formulário é a ORGANIZAÇÃO, e é por isso que a seta ia
+// parar em organization_id. A coluna vira organization_id -> Organization.id.
+// Formulário não tem dono-pessoa: quem pode editar, publicar e liberar sai do
+// Vinculo (papel admin/gestor naquela organização), não de uma coluna aqui — é
+// autorização, e autorização que vira coluna precisa de UPDATE para mudar.
+// [C21] participant_id ficou como está, mas com o dono sendo a organização e as
+// respostas vindo de N vínculos, o que ele significa virou pergunta aberta.
+// [C6] status virou enum.
+Table Form {
+  id uuid [pk, default: `uuid()`]
+  organization_id uuid [not null]
+  participant_id uuid
+  status FormStatus [not null, default: 'draft']
+  created_at datetime [default: `now()`]
+
+  indexes {
+    organization_id
+    participant_id
+  }
+}
+
+// [C11] "order" é palavra reservada em SQL — a coluna viveria entre aspas para sempre.
+// [C9] prisma acrescentado: sem ele, agregar por prisma depende inteiramente da
+//      saída da IA (InsightPrisma), e o princípio nº 1 do projeto é agregar no banco.
+// [C10] created_at acrescentado.
+Table Question {
+  id uuid [pk, default: `uuid()`]
+  form_id uuid [not null]
+  text string [not null]
+  order_index int [not null]
+  type QuestionType [not null]
+  prisma Prisma
+  required boolean [default: true]
+  created_at datetime [default: `now()`]
+
+  indexes {
+    form_id
+    (form_id, order_index) [unique]
+  }
+}
+
+// [C8] QuestionType.objective existia sem nenhuma tabela de alternativas, e
+// Answer.value é texto livre: agregar objetiva viraria GROUP BY em coisa digitada.
+Table QuestionOption {
+  id uuid [pk, default: `uuid()`]
+  question_id uuid [not null]
+  label string [not null]
+  value string [not null]
+  order_index int [not null]
+  created_at datetime [default: `now()`]
+
+  indexes {
+    question_id
+    (question_id, order_index) [unique]
+  }
+}
+
+// --- Respostas ---
+
+// [C5] unique (form_id, vinculo_id): nada impedia o mesmo vínculo responder o
+//      mesmo formulário cinco vezes.
+Table FormResponse {
+  id uuid [pk, default: `uuid()`]
+
+  form_id uuid [not null]
+  vinculo_id uuid [not null]
+
+  status FormResponseStatus [not null, default: 'in_progress']
+  started_at datetime [not null, default: `now()`]
+  submitted_at datetime
+
+  indexes {
+    form_id
+    vinculo_id
+    (form_id, vinculo_id) [unique]
+  }
+}
+
+// [C8] objetiva responde em option_id; descritiva responde em value.
+// Sem unique (form_response_id, question_id) de propósito: se objetiva aceitar
+// mais de uma alternativa, a resposta são várias linhas. Ver pendência 🟡.
+Table Answer {
+  id uuid [pk, default: `uuid()`]
+  form_response_id uuid [not null]
+  question_id uuid [not null]
+  option_id uuid
+  value string
+  created_at datetime [default: `now()`]
+
+  indexes {
+    form_response_id
+    question_id
+  }
+}
+
+// --- Análises ---
+
+// varchar sem tamanho declarado é text — dito explicitamente.
+//
+// [C7] dashboard_id removido: o insight nasce de uma resposta, não de um painel.
+// Se o dashboard é montado sob demanda, prender o insight a um painel congela numa
+// linha o resultado que deveria ser recalculado. O painel lê insights; os insights
+// não sabem que painel existe.
+//
+// [C24] dois níveis de insight na mesma tabela, e são só dois (decidido 2026-09-04):
+//   form_response_id preenchido -> insight INDIVIDUAL: a leitura de uma resposta de
+//                                  um participante vinculado à organização;
+//   form_response_id nulo       -> insight da ORGANIZAÇÃO INTEIRA: a leitura sobre
+//                                  os resultados de todos os participantes vinculados.
+// Não há recorte por formulário, por período nem por setor. O que separa duas
+// leituras da mesma organização é o created_at — por isso o índice composto
+// (organization_id, created_at): "o insight mais recente da organização X" é a
+// query principal do painel.
+// organization_id é not null nos dois. No individual ele é denormalizado (dá para
+// chegar nele por FormResponse -> Vinculo -> organization_id), e é de propósito:
+// "todos os insights da organização X" vira um WHERE indexado em vez de um join de
+// três tabelas unido a um segundo caminho. O dashboard é sob demanda — essa query
+// roda o tempo todo. O risco da denormalização é baixo porque vínculo não troca de
+// organização: troca de organização é vínculo novo.
+// Alternativa descartada: form_response_id e organization_id ambos nuláveis com
+// CHECK de exatamente um. Evita a duplicação, mas deixa "insights da organização"
+// com dois caminhos de query e nenhum índice que sirva aos dois.
+// Atenção: o insight da organização não registra SOBRE QUANTAS respostas ele foi
+// feito. Uma leitura sobre 40 respostas e outra sobre 60 são duas linhas iguais na
+// estrutura, separadas só pelo created_at. É a pendência 🟠 23, ADIADA de propósito
+// para depois da v1 — a mitigação é de tela: mostrar o created_at junto do texto.
+Table Insight {
+  id uuid [pk, default: `uuid()`]
+  organization_id uuid [not null]
+  form_response_id uuid
+  content text [not null]
+  created_at datetime [default: `now()`]
+
+  indexes {
+    organization_id
+    form_response_id
+    (organization_id, created_at)
+  }
+}
+
+Table InsightPrisma {
+  insight_id uuid [not null]
+  prisma Prisma [not null]
+
+  indexes {
+    (insight_id, prisma) [pk]
+  }
+}
+
+// --- Dashboard ---
+
+// [C7] hash, blurhash, content_type, url, s3_url e size saíram inteiros: são campos
+// de arquivo, e dashboard não é arquivo. Decidido em 2026-09-04 — dashboard e
+// relatório são montados PELO BACKEND, SOB DEMANDA, a partir das respostas e dos
+// insights versionados. Guardar o resultado renderizado num bucket seria congelar
+// o cálculo e tirar a renderização do front, contra o princípio nº 1.
+//
+// O que sobra é a VISÃO SALVA: "este usuário guardou este recorte deste
+// formulário". Nada de resultado mora aqui — o resultado é a query.
+//
+// Se não existir "salvar/compartilhar uma visão" como funcionalidade, esta tabela
+// não tem razão de existir e sai junto: um dashboard sob demanda é rota e query,
+// não linha de banco. Ver a devolutiva em modelo-de-dados.md.
+Table Dashboard {
+  id uuid [pk, default: `uuid()`]
+  user_id uuid
+  form_id uuid
+  is_private boolean [default: false]
+  created_at datetime [default: `now()`]
+
+  indexes {
+    user_id
+    form_id
+  }
+}
+
+// [C7] DashboardExport não entra. Exportar PDF/imagem, se virar requisito, é cache
+// de um cálculo — e cache precisa saber quando invalidar, o que exige o
+// versionamento de resposta e resultado que o modelo ainda não tem (pendência 🟠 23).
+// Enquanto isso não existir, exportação se gera e se entrega, não se guarda.
+
+// --- FKs ---
+// Todas apontam para PK. Nenhum ciclo obrigatório.
+
+Ref: User.vinculo_id > Vinculo.id
+Ref: Vinculo.participant_id > Participant.id
+Ref: Vinculo.organization_id > Organization.id
+Ref: Vinculo.setor_id > Setor.id
+Ref: Setor.organization_id > Organization.id
+
+// [C3] 1:1 nos dois: o dono aponta para o documento, e o unique nas colunas
+// impede duas pessoas apontarem para a mesma linha.
+Ref: Participant.document_id - Document.id
+Ref: Organization.document_id - Document.id
+
+Ref: Form.organization_id > Organization.id
+Ref: Form.participant_id > Participant.id
+Ref: Question.form_id > Form.id
+Ref: QuestionOption.question_id > Question.id
+
+Ref: FormResponse.form_id > Form.id
+Ref: FormResponse.vinculo_id > Vinculo.id
+
+Ref: Answer.form_response_id > FormResponse.id
+Ref: Answer.question_id > Question.id
+Ref: Answer.option_id > QuestionOption.id
+
+Ref: Insight.organization_id > Organization.id
+Ref: Insight.form_response_id > FormResponse.id
+Ref: InsightPrisma.insight_id > Insight.id
+
+Ref: Dashboard.user_id > User.id
+Ref: Dashboard.form_id > Form.id

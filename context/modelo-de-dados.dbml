@@ -1,0 +1,242 @@
+// --- Enums ---
+
+Enum Prisma {
+  plasticidade_humana
+  empreendedorismo
+  multiculturalismo
+  neuroinovacao
+  tomada_decisao
+}
+
+Enum QuestionType {
+  objective
+  descriptive
+}
+
+Enum FormResponseStatus {
+  in_progress
+  submitted
+}
+
+Enum VincType {
+  Emprego
+  Mentoria
+  Academico
+  Pessoal
+}
+
+Enum Roles {
+  Admin
+  Gestor
+  Respondente
+}
+
+Enum DocType { 
+  CPF 
+  CNPJ 
+  NIF 
+  NIPC 
+  PASSAPORTE 
+  VAT_EU
+  OUTRO
+}
+
+Enum Gender {
+  masc
+  fem
+}
+
+Enum Setores {
+  Marketing
+  Financeiro
+  Administrativo
+  RecursosHumanos
+  TecnologiaInformacao
+}
+
+// --- Usuários ---
+
+Table User {
+  id uuid [pk, default: `uuid()`]
+  vinculo_id uuid [unique, not null]
+  email string [unique, not null]
+  password string
+
+}
+
+
+Table Participant {
+  id uuid [pk, default: `uuid()`]
+  name string [not null]
+  department Setores [not null]
+  gender Gender
+  address string [not null]
+  document_id uuid
+  status string
+  created_at datetime [default: `now()`]
+  updated_at datetime
+}
+
+
+Table Organization {
+  id uuid [pk, default: `uuid()`]
+  name string [not null]
+  address string [not null]
+  document_id uuid
+  status string
+  created_at datetime [default: `now()`]
+  updated_at datetime
+}
+
+Table Setor {
+  id uuid [pk, default: `uuid()`]
+  type Setores [not null]
+}
+
+
+Table Vinculo {
+  id uuid [pk, default: `uuid()`]
+
+  user_id uuid [not null]
+  participant_id uuid [not null]
+  organization_id uuid [not null]
+  setor_id uuid [not null]
+
+  type VincType [not null]
+  role Roles [not null]
+
+  start_at datetime [default: `now()`]
+  end_at datetime
+  updated_at datetime
+}
+
+Table Document {
+  id uuid [pk, default: `uuid()`]
+  participant_id uuid [not null]
+  type DocType [not null]
+  value string [not null]
+  issuing_country string
+}
+
+// --- Formulários ---
+
+Table Form {
+  id uuid [pk, default: `uuid()`]
+  creator_id uuid
+  participant_id uuid
+  status string
+  created_at datetime [default: `now()`]
+
+  indexes {
+    creator_id
+  }
+}
+
+Table Question {
+  id uuid [pk, default: `uuid()`]
+  form_id uuid [not null]
+  text string [not null]
+  order number [not null]
+  type QuestionType [not null]
+  required boolean [default: true]
+
+  indexes {
+    form_id
+  }
+}
+
+
+// --- Respostas ---
+
+Table FormResponse {
+  id uuid [pk, default: `uuid()`]
+
+  form_id uuid [not null]
+  vinculo_id uuid [not null]
+
+  status FormResponseStatus [not null]
+  started_at datetime
+  submitted_at datetime
+
+  indexes {
+    form_id
+    vinculo_id
+  }
+}
+
+Table Answer {
+  id uuid [pk, default: `uuid()`]
+  form_response_id uuid [not null]
+  question_id uuid [not null]
+  value string
+
+  indexes {
+    form_response_id
+    question_id
+  }
+}
+
+
+// --- Análises ---
+
+Table Insight {
+  id uuid [pk, default: `uuid()`]
+  form_response_id uuid [not null]
+  dashboard_id uuid
+  content varchar [not null]
+  created_at datetime [default: `now()`]
+}
+
+Table InsightPrisma {
+  insight_id uuid [not null]
+  prisma Prisma [not null]
+
+  indexes {
+    (insight_id, prisma) [pk]
+  }
+}
+
+// --- Dashboard  ---
+
+Table Dashboard {
+  id uuid [pk, default: `uuid()`]
+  user_id uuid
+  form_id uuid
+  hash string
+  blurhash string
+  is_private boolean [default: false]
+  content_type string
+  url string
+  s3_url string
+  size int
+  created_at datetime [default: `now()`]
+} 
+
+Ref: Document.participant_id > Participant.id
+
+
+// --- FKs ---
+
+Ref: Form.creator_id > Vinculo.organization_id
+Ref: Form.participant_id > Vinculo.participant_id
+Ref: Question.form_id > Form.id
+
+Ref: FormResponse.form_id > Form.id
+Ref: FormResponse.vinculo_id > Vinculo.id
+
+Ref: Answer.form_response_id > FormResponse.id
+Ref: Answer.question_id > Question.id
+
+Ref: Insight.form_response_id > FormResponse.id
+Ref: Insight.dashboard_id > Dashboard.id
+Ref: InsightPrisma.insight_id > Insight.id
+
+Ref: User.vinculo_id > Vinculo.id
+
+Ref: Vinculo.user_id > User.id
+Ref: Vinculo.participant_id > Participant.id
+Ref: Vinculo.organization_id > Organization.id
+Ref: Vinculo.setor_id > Setor.id
+
+Ref: Dashboard.user_id > User.id
+Ref: Dashboard.form_id > Form.id
