@@ -3,8 +3,9 @@
 ## Antes de abrir
 
 - [ ] Branch no padrão `<slug>/<id-clickup>-<contexto>` 🔒
-- [ ] Alvo é `dev` (só release/hotfix vai para `main`)
-- [ ] `git diff dev...HEAD` lido **inteiro** pelo autor
+- [ ] Alvo é `dev` nos repos de produto, `main` no `creed-ai-context` (só
+      release/hotfix vai de `dev` para `main`)
+- [ ] `git diff <alvo>...HEAD` lido **inteiro** pelo autor
 - [ ] Suíte local verde
 - [ ] Nada fora do escopo da tarefa no diff
 - [ ] Defesa respondida — você sabe explicar cada decisão do diff sem abrir o chat

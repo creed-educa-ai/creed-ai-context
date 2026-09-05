@@ -1,11 +1,12 @@
 ---
 description: Revisa o diff atual contra os checklists do projeto
-argument-hint: [dev...HEAD | caminho]
+argument-hint: [dev...HEAD | main...HEAD | caminho]
 model: sonnet
 ---
 <!-- GERADO por creed-ai-context/scripts/instalar-adaptadores — não edite. -->
 
-Revise **$ARGUMENTS** (padrão: `git diff dev...HEAD`).
+Revise **$ARGUMENTS** (padrão: `git diff <alvo>...HEAD`, onde `<alvo>` é `dev` nos
+repos de produto e `main` no `creed-ai-context`, que não tem `dev`).
 
 Siga `creed-ai-context/workflows/revisao.md`, no papel de
 `creed-ai-context/roles/revisor.md`.

@@ -10,7 +10,14 @@
 Working tree com a task pronta + o ID da tarefa no ClickUp.
 
 ## Saída
-PR contra `dev`, com review pedida aos maintainers de [`../equipe.md`](../equipe.md).
+PR contra o **alvo do repo**, com review pedida aos maintainers de
+[`../equipe.md`](../equipe.md).
+
+> **Qual é o alvo.** `dev` nos três repos de produto (`creed-backend`,
+> `creed-frontend`, `creed-infrastructure`); **`main` no `creed-ai-context`**, que não
+> tem `dev`. Regra e motivo em
+> [`../conventions/git-workflow.md`](../conventions/git-workflow.md) → "Fluxo".
+> Na dúvida: `git symbolic-ref refs/remotes/origin/HEAD`.
 
 ---
 
@@ -24,7 +31,7 @@ e consequência. **BLOQUEIA** = não segue para §2; **AVISA** = entra nas consi
 | 1 | Mudança em **um** repo só | `git status --short` nos repos de `../scripts/repos.conf` | BLOQUEIA — task não cruza repo; pergunte qual subir |
 | 2 | Não está em `dev`/`main` | `git branch --show-current` | segue para §4.1 (cria a branch) |
 | 3 | Nome da branch no padrão 🔒 | regex de `.github/workflows/nome-da-branch.yml` | BLOQUEIA — proponha `git branch -m` |
-| 4 | Branch saiu de `dev` | `git merge-base --is-ancestor origin/dev HEAD` | BLOQUEIA — rebase é decisão humana |
+| 4 | Branch saiu do **alvo do repo** | `git merge-base --is-ancestor origin/<alvo> HEAD` — `<alvo>` é `dev`, ou `main` no `creed-ai-context` | BLOQUEIA — rebase é decisão humana |
 | 5 | ID da branch = ID da tarefa | nome da branch × `../tarefas/<ID>-*/` | BLOQUEIA |
 | 6 | A tarefa existe no harness | `../tarefas/<ID>-*/spec.md` ou `tasks.md` | AVISA — sem spec, a aderência não é verificável |
 | 7 | Critérios de aceite atendidos | `spec.md` e `N_task.md` × diff | BLOQUEIA se algum não estiver |
@@ -66,7 +73,7 @@ Tier do review: <Trivial | Padrão | Sensível>
 2. git add <arquivos, um a um>
 3. git commit -m "<tipo>(<escopo>): <resumo>"
 4. git push -u origin <branch>
-5. gh pr create --base dev --reviewer creed-educa-ai/maintainers
+5. gh pr create --base <alvo do repo> --reviewer creed-educa-ai/maintainers
 
 ### Descrição do PR
 <o corpo montado a partir de ../templates/pr-template.md, inteiro, para você ler antes>
@@ -115,10 +122,11 @@ Pare no primeiro erro e reporte — não tente contornar.
    Recusado pelo hook? O nome está fora do padrão — volte ao pré-voo, não use
    `--no-verify`.
 
-4. **PR** com alvo `dev` (só release/hotfix vai para `main`), corpo de
+4. **PR** com alvo do repo — `dev` nos repos de produto (só release/hotfix vai para
+   `main`), **`main` no `creed-ai-context`** —, corpo de
    `../templates/pr-template.md`, review pedida ao time de `../equipe.md`:
    ```bash
-   gh pr create --base dev \
+   gh pr create --base <dev | main> \
      --title "<tipo>(<escopo>): <resumo>" \
      --body-file <arquivo temporário fora do repo> \
      --reviewer creed-educa-ai/maintainers \

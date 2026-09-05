@@ -3,7 +3,9 @@
 Uma camada só — o time tem 1 aprovação obrigatória por PR e não precisa de mais.
 
 ## Entrada
-`git diff dev...HEAD` (ou o diff da task, quando a review é durante a implementação).
+`git diff <alvo>...HEAD` (ou o diff da task, quando a review é durante a
+implementação). O alvo é `dev` nos repos de produto e `main` no `creed-ai-context` —
+ver [`../conventions/git-workflow.md`](../conventions/git-workflow.md) → "Fluxo".
 
 ## Passos
 
