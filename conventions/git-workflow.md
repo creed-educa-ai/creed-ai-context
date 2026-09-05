@@ -13,6 +13,20 @@ dev  ← alvo padrão de todo PR
 sua branch de tarefa
 ```
 
+**Vale para os três repos de produto. Este repositório é a exceção:**
+
+| Repo | Alvo do PR |
+|---|---|
+| `creed-backend` · `creed-frontend` · `creed-infrastructure` | `dev` — e `dev` → `main` no release |
+| `creed-ai-context` (este) | **`main`** — não existe `dev` aqui |
+
+O harness não tem etapa de release: o que entra vale para a próxima tarefa de quem
+puxar, não para um deploy. Sem release, `dev` seria um passo sem função.
+
+Consequência prática no [`../playbooks/abrir-pr.md`](../playbooks/abrir-pr.md): onde o
+pré-voo diz "branch saiu de `dev`", leia "saiu do alvo **deste** repo" — neste
+repositório, `origin/main`.
+
 ## Nome da branch — 🔒 check obrigatório
 
 ```
