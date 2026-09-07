@@ -24,3 +24,6 @@ cliente**. Regras: [`../conventions/premissas-e-duvidas.md`](../conventions/prem
 
 <Mover para cá as premissas com desfecho, mantendo a linha completa e a data da
 reunião que decidiu.>
+
+| P-003 | 2026-09-07 | autenticação | A tela de troca de senha (CREED-18.8) não integra com nenhuma API: "Avançar" só valida os dados no front. | Não existe domínio de autenticação no creed-backend, nenhum contrato definido; integrar contra um contrato inexistente arriscaria codificar campo que nunca vai existir. | médio | — | 🟡 aberta |
+| P-004 | 2026-09-07 | autenticação | A senha precisa ter no mínimo 8 caracteres, sem regra adicional de complexidade. | Não existe política de senha definida em documento do produto; 8 é o mínimo comum de mercado, barato de apertar depois. | baixo | — | 🟡 aberta |
