@@ -1,0 +1,15 @@
+# Mock do contrato da CREED-23. Não é infraestrutura do produto: é andaime que
+# morre quando o domínio `authentication` entrar (entrega 4 da spec).
+#
+# Por isso mora aqui, junto da spec, e não no docker-compose.yml do
+# creed-backend — lá dentro alguém acabaria subindo o mock achando que é a API.
+#
+#   docker compose up
+#   http://localhost:4010/api/v1/authentication/login
+services:
+  mock:
+    image: stoplight/prism:5
+    command: mock --host 0.0.0.0 --port 4010 /openapi.yaml
+    volumes:
+      - ./openapi.yaml:/openapi.yaml:ro
+    ports: ['4010:4010']
