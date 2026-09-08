@@ -71,12 +71,6 @@
           "detail": "E-mail ou senha inválidos"
         }
       },
-      "409": {
-        "password_change_required": {
-          "detail": "É necessário definir uma nova senha antes do primeiro acesso.",
-          "code": "password_change_required"
-        }
-      },
       "422": {
         "campo_faltando": {
           "detail": [
@@ -172,55 +166,6 @@
               "msg": "Field required",
               "input": {
                 "email": "carla.mendes@aurora.test"
-              }
-            }
-          ]
-        }
-      },
-      "503": {
-        "keycloak_fora": {
-          "detail": "Serviço de autenticação indisponível. Tente novamente."
-        }
-      }
-    }
-  },
-  "POST /api/v1/authentication/password": {
-    "request": {
-      "definir_senha": {
-        "email": "joao.pereira@aurora.test",
-        "current_password": "Provisoria-2026",
-        "new_password": "NovaSenha-2026"
-      }
-    },
-    "responses": {
-      "204": "Senha definida. O front chama `POST /authentication/login` de novo",
-      "401": {
-        "credencial_invalida": {
-          "detail": "E-mail ou senha inválidos"
-        }
-      },
-      "409": {
-        "password_change_not_required": {
-          "detail": "Não há troca de senha pendente para esta conta.",
-          "code": "password_change_not_required"
-        }
-      },
-      "422": {
-        "politica_de_senha": {
-          "detail": "A senha deve ter no mínimo 8 caracteres."
-        },
-        "payload_invalido": {
-          "detail": [
-            {
-              "type": "missing",
-              "loc": [
-                "body",
-                "new_password"
-              ],
-              "msg": "Field required",
-              "input": {
-                "email": "joao.pereira@aurora.test",
-                "current_password": "temp-123"
               }
             }
           ]
@@ -365,7 +310,7 @@
       "novo_respondente": {
         "vinculo_id": "7a695843-2109-4d0c-8b7a-5f4e3d2c1b0a",
         "email": "joao.pereira@aurora.test",
-        "temporary_password": "Provisoria-2026"
+        "initial_password": "SenhaInicial-2026"
       }
     },
     "responses": {

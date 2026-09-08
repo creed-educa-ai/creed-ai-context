@@ -124,20 +124,6 @@ paths:
                 usuario_inativo:
                   summary: User.status = inactive (corpo idêntico ao de cima)
                   value: { detail: E-mail ou senha inválidos }
-        '409':
-          description: |
-            Senha correta, mas o Keycloak exige a troca antes do primeiro acesso
-            (premissa P-007, ação obrigatória `UPDATE_PASSWORD`). O front leva o
-            usuário para a tela de nova senha e chama
-            `POST /api/v1/authentication/password`.
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/ErrorWithCode' }
-              examples:
-                password_change_required:
-                  value:
-                    detail: É necessário definir uma nova senha antes do primeiro acesso.
-                    code: password_change_required
         '422': { $ref: '#/components/responses/UnprocessableEntity' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
@@ -215,78 +201,6 @@ paths:
       responses:
         '204': { description: Sessão encerrada (ou já estava) }
         '422': { $ref: '#/components/responses/UnprocessableEntity' }
-        '503': { $ref: '#/components/responses/ServiceUnavailable' }
-
-  /api/v1/authentication/password:
-    post:
-      tags: [authentication]
-      operationId: changePassword
-      summary: Define a senha definitiva no primeiro acesso
-      description: |
-        Rota pública, e o par e-mail + senha atual é a credencial — quem chega
-        aqui ainda não tem token, porque o login recusou com 409.
-
-        **Escopo estreito de propósito**: só funciona enquanto a troca estiver
-        pendente. Não é "trocar minha senha" (não há tela para isso nesta
-        entrega) nem "esqueci minha senha" (P-009: quem esquece pede a um admin).
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/PasswordChangeRequest' }
-            examples:
-              definir_senha:
-                summary: a senha atual é a temporária que o admin definiu no cadastro
-                value:
-                  email: joao.pereira@aurora.test
-                  current_password: Provisoria-2026
-                  new_password: NovaSenha-2026
-      responses:
-        '204':
-          description: |
-            Senha definida. O front chama `POST /authentication/login` de novo
-            com a senha nova — este endpoint **não** devolve sessão.
-        '401':
-          description: E-mail ou senha atual inválidos
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/ErrorDetail' }
-              examples:
-                credencial_invalida:
-                  value: { detail: E-mail ou senha inválidos }
-        '409':
-          description: Não há troca pendente para esta conta
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/ErrorWithCode' }
-              examples:
-                password_change_not_required:
-                  value:
-                    detail: Não há troca de senha pendente para esta conta.
-                    code: password_change_not_required
-        '422':
-          description: |
-            Duas formas diferentes com o mesmo código — ver
-            `../contrato-api.md` → "O corpo de erro tem duas formas".
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorDetail'
-                  - $ref: '#/components/schemas/HTTPValidationError'
-              examples:
-                politica_de_senha:
-                  summary: senha nova recusada pela política do realm (detail é string)
-                  value: { detail: A senha deve ter no mínimo 8 caracteres. }
-                payload_invalido:
-                  summary: campo faltando ou com tipo errado (detail é lista)
-                  value:
-                    detail:
-                      - type: missing
-                        loc: [body, new_password]
-                        msg: Field required
-                        input: { email: joao.pereira@aurora.test, current_password: temp-123 }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
 
   /api/v1/authentication/session:
@@ -425,7 +339,7 @@ paths:
                 value:
                   vinculo_id: 7a695843-2109-4d0c-8b7a-5f4e3d2c1b0a
                   email: joao.pereira@aurora.test
-                  temporary_password: Provisoria-2026
+                  initial_password: SenhaInicial-2026
       responses:
         '201':
           description: Acesso criado nos dois lados (banco e realm)
@@ -553,23 +467,6 @@ components:
       properties:
         refresh_token: { type: string, minLength: 1 }
 
-    PasswordChangeRequest:
-      type: object
-      required: [email, current_password, new_password]
-      additionalProperties: false
-      properties:
-        email: { type: string, format: email, maxLength: 320 }
-        current_password:
-          type: string
-          minLength: 1
-          description: A senha temporária que o admin definiu no cadastro (P-007).
-        new_password:
-          type: string
-          minLength: 8
-          description: |
-            O `minLength: 8` aqui é só a primeira barreira. A política que vale é
-            a do realm do Keycloak, e ela responde 422 com `detail` string.
-
     UserSessionResponse:
       type: object
       required: [id, email, role, vinculo_id, organization_id, organization_name]
@@ -594,17 +491,24 @@ components:
 
     UserCreate:
       type: object
-      required: [vinculo_id, email, temporary_password]
+      required: [vinculo_id, email, initial_password]
       additionalProperties: false
       properties:
         vinculo_id: { type: string, format: uuid }
         email: { type: string, format: email, maxLength: 320 }
-        temporary_password:
+        initial_password:
           type: string
           minLength: 8
           description: |
-            Definida por quem cadastra (P-007). O Keycloak marca a conta com a
-            ação obrigatória `UPDATE_PASSWORD`.
+            Senha **definitiva**, definida por quem cadastra e passada à pessoa
+            fora da plataforma (premissa P-012). O provisionamento usa
+            `temporary: false` no Keycloak — **sem** ação obrigatória, porque
+            `UPDATE_PASSWORD` pendente faz o Direct Access Grant (D1) recusar o
+            login com `Account is not fully set up`.
+
+            ⚠️ Este campo **some** quando o envio de e-mail entrar: aí o usuário
+            é criado sem credencial e o Keycloak manda o link do realm para a
+            pessoa definir a própria senha.
 
     UserUpdate:
       type: object
@@ -650,17 +554,6 @@ components:
         detail:
           type: string
           description: Mensagem pronta, em português — é o que a tela mostra.
-
-    ErrorWithCode:
-      type: object
-      required: [detail, code]
-      properties:
-        detail: { type: string }
-        code:
-          type: string
-          description: |
-            Chave estável para o front ramificar. Só existe onde a ramificação é
-            real (hoje: primeiro login). Não é um catálogo de erros.
 
     HTTPValidationError:
       type: object

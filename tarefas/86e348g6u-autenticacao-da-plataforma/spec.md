@@ -102,7 +102,7 @@ e traduzir isso obrigaria a destraduzir a cada linha da documentação do Keyclo
 | POST | `/authentication/renew` | `RenewRequest{refresh_token}` | `SessionResponse` |
 | POST | `/authentication/logout` | `RenewRequest{refresh_token}` | 204 |
 | GET | `/authentication/session` | — (Bearer) | `UserSessionResponse` |
-| POST | `/users` | `UserCreate{vinculo_id, email, temporary_password}` | `UserResponse` (201) |
+| POST | `/users` | `UserCreate{vinculo_id, email, initial_password}` | `UserResponse` (201) |
 | GET | `/users` | query `organization_id`, `role`, paginação | `PaginaDe[UserResponse]` ⚠️ |
 | PATCH | `/users/{id}` | `UserUpdate{status?}` | `UserResponse` |
 
@@ -352,7 +352,7 @@ refresh token no meio da tela.
 | ID | Premissa | Custo de reverter |
 |---|---|---|
 | P-006 | Os papéis são **`admin`, `gestor`, `respondente`** — a lista do diagrama, não a de [P-003](../../decisoes/premissas.md). | baixo hoje, **alto depois** |
-| P-007 | O acesso nasce com **senha temporária definida por quem cadastra**, e o Keycloak exige a troca no primeiro login (`UPDATE_PASSWORD`). Não há convite por e-mail. | baixo |
+| ~~P-007~~ | ~~O acesso nasce com senha temporária, e o Keycloak exige a troca no primeiro login.~~ **❌ Refutada em 2026-09-08** — substituída por **P-012**: o primeiro acesso é por e-mail com link para o realm do Keycloak, e a plataforma não tem tela de troca de senha. No interim, senha **definitiva** pelo admin, com `temporary: false` no provisionamento. Ver [`contrato-api.md`](contrato-api.md) → "O que caiu, e por quê". | baixo |
 | P-008 | **Não existe autocadastro.** Todo login nasce da cadeia Organização → Participante → Vínculo → Usuário, por alguém com papel `admin`. | baixo |
 | P-009 | **"Esqueci minha senha" não existe nesta entrega.** Quem perde a senha pede a um `admin`, que emite outra temporária. | médio |
 | P-010 | Sessão: `access_token` de **15 minutos**, `refresh_token` de **8 horas**, sem renovação deslizante além disso. | baixo |

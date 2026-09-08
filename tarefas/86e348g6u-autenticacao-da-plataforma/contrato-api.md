@@ -21,7 +21,6 @@ Prefixo `/api/v1`. Identificadores em inglês por
 | Método | Rota | Auth | Papel | Entrada | Saída |
 |---|---|---|---|---|---|
 | POST | `/authentication/login` | — | — | `LoginRequest` | `Session` · 200 |
-| POST | `/authentication/password` | — | — | `PasswordChangeRequest` | 204 |
 | POST | `/authentication/renew` | — | — | `RenewRequest` | `Session` · 200 |
 | POST | `/authentication/logout` | — | — | `RenewRequest` | 204 |
 | GET | `/authentication/session` | Bearer | qualquer | — | `UserSession` · 200 |
@@ -35,13 +34,12 @@ Prefixo `/api/v1`. Identificadores em inglês por
 
 ```
 LoginRequest             { email, password }
-PasswordChangeRequest    { email, current_password, new_password }
 RenewRequest             { refresh_token }
 
 Session                  { access_token, refresh_token, expires_in, user: UserSession }
 UserSession              { id, email, role, vinculo_id, organization_id, organization_name }
 
-UserCreate               { vinculo_id, email, temporary_password }
+UserCreate               { vinculo_id, email, initial_password }
 UserUpdate               { status? }
 User                     { id, email, status, role, vinculo_id, organization_id, created_at }
 Page<T>                  { items, total, page, page_size }
@@ -58,9 +56,13 @@ Três observações que evitam bug de transcrição:
 - **Não há `token_type`.** O front sempre monta `Authorization: Bearer <token>`; um campo
   que só pode ter um valor é campo que alguém vai ramificar por engano.
 
-## Os três fluxos que o front precisa desenhar
+## Os dois fluxos que o front precisa desenhar
 
-### 1. Login normal
+### 1. Login — e não há um segundo caminho
+
+> 🟡 **Premissa P-012** — o primeiro acesso é por e-mail com link para o realm do
+> Keycloak, onde a pessoa define a própria senha. Enquanto o e-mail não existir, o admin
+> define uma senha definitiva e passa por fora da plataforma. Confirmar na próxima reunião.
 
 ```
 POST /authentication/login  {email, password}
@@ -71,29 +73,23 @@ POST /authentication/login  {email, password}
 O 401 é **o mesmo** para e-mail inexistente, senha errada e acesso desativado. O front não
 tem como distinguir, e é de propósito (critério de aceite da spec).
 
-### 2. Primeiro acesso — a tela que a spec não tinha
+**Não existe tela de troca de senha nesta plataforma** — nem hoje, nem depois que o envio
+de e-mail entrar. Quem define senha é a página do realm do Keycloak, alcançada por link no
+e-mail. O front tem tela de login e mais nada.
 
-> 🟡 **Premissa P-011** — a troca de senha do primeiro acesso acontece em tela da
-> plataforma, não em página do Keycloak. Confirmar na próxima reunião.
+Isso depende de uma linha do provisionamento, e vale saber por quê: o `POST /users` cria a
+credencial com **`temporary: false`**. Se ela fosse temporária, o Keycloak anexaria a ação
+obrigatória `UPDATE_PASSWORD`, e o Direct Access Grant (decisão D1) passaria a **recusar o
+login** com `invalid_grant: "Account is not fully set up"` — o primeiro login de todo
+usuário morreria numa mensagem de credencial inválida que não é verdade.
 
-O Keycloak marca a conta com `UPDATE_PASSWORD` (P-007) e, com Direct Access Grant
-(decisão D1), **recusa o login por senha enquanto a ação estiver pendente** — responde
-`invalid_grant: "Account is not fully set up"`. Sem contrato para isso, o primeiro login de
-todo usuário morre numa mensagem de credencial inválida que não é verdade.
+> ⚠️ **A mesma armadilha vem pelo realm.** `temporary: false` só resolve se o realm não
+> tiver *default required actions* ligadas (`VERIFY_EMAIL`, "Update Password" como ação
+> padrão). Se tiver, o Keycloak anexa a ação a todo usuário novo e o sintoma é idêntico,
+> sem ninguém ter tocado no provisionamento. O realm é arquivo versionado (entrega 2) —
+> isto é item de review, não bug a descobrir.
 
-```
-POST /authentication/login  {email, password}
-  409 {code: "password_change_required"} -> tela "defina sua senha"
-
-POST /authentication/password  {email, current_password, new_password}
-  204 -> volta e chama o login de novo, com a senha nova
-  422 -> a política de senha do realm recusou (detail é string, mostra na tela)
-```
-
-O `code` existe porque a ramificação é real. Não é um catálogo de erros — é a única chave
-do contrato inteiro, e só nasce onde o front precisa decidir para onde ir.
-
-### 3. Renovação — o que o `apiClient` faz sozinho
+### 2. Renovação — o que o `apiClient` faz sozinho
 
 ```
 qualquer rota -> 401
@@ -112,7 +108,7 @@ disparam **um** refresh, não cinco.
 | 401 | sem token · token inválido/expirado · credencial errada · `status = inactive` · claim divergente do banco | renova **uma vez**; falhou, limpa a sessão e vai para `/login` |
 | 403 | autenticado, mas o papel não alcança a rota | "acesso negado" — **não desloga** |
 | 404 | `vinculo_id` ou `user_id` que não existe, **ou é de outra organização** | mensagem de não encontrado |
-| 409 | primeiro acesso pendente (`code`) · e-mail já tem acesso | ramifica pelo `code`, ou erro de formulário |
+| 409 | e-mail já tem acesso | erro de formulário no cadastro |
 | 422 | payload não bate com o schema **ou** senha recusada pela política do realm | ver abaixo — em desenvolvimento, quase sempre é bug do front |
 | 503 | Keycloak fora do ar | "tente novamente" — **nunca** "senha inválida", e **não** limpa a sessão |
 
@@ -149,7 +145,7 @@ A entrega 5 reescreve o `apiClient` de qualquer forma — é lá que ele passa a
 // --- CREED-23 · autenticação --------------------------------------------
 // Contrato PROPOSTO, backend ainda não existe. Fonte:
 // creed-ai-context/tarefas/86e348g6u-autenticacao-da-plataforma/contrato-api.md
-// Premissas: P-006 (lista de papéis), P-007 (senha temporária), P-010 (sessão).
+// Premissas: P-006 (lista de papéis), P-012 (primeiro acesso), P-010 (sessão).
 // Quando o backend chegar e divergir, o backend ganha.
 
 export type Role = 'admin' | 'gestor' | 'respondente';
@@ -176,12 +172,6 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface PasswordChangeRequest {
-  email: string;
-  current_password: string;
-  new_password: string;
-}
-
 export interface User {
   id: string;
   email: string;
@@ -195,7 +185,9 @@ export interface User {
 export interface UserCreate {
   vinculo_id: string;
   email: string;
-  temporary_password: string;
+  // Senha definitiva, passada à pessoa fora da plataforma (P-012). Este campo
+  // some quando o envio de e-mail entrar — aí o Keycloak manda o link do realm.
+  initial_password: string;
 }
 
 export interface UserUpdate {
@@ -226,8 +218,6 @@ export const authenticationApi = {
   logout: (refresh_token: string) =>
     apiClient.post<undefined>('/authentication/logout', { refresh_token }),
   session: () => apiClient.get<UserSession>('/authentication/session'),
-  changePassword: (dados: PasswordChangeRequest) =>
-    apiClient.post<undefined>('/authentication/password', dados),
 };
 ```
 
@@ -250,7 +240,7 @@ para não ser descoberto no review.
 | # | Decisão | Quem decidiu | Efeito |
 |---|---|---|---|
 | 1 | **`Page[T]` em inglês** — `app/shared/paginacao.py` vira `pagination.py`, campos `items/total/page/page_size`, query `page`/`page_size` | você | 1 arquivo + 2 imports no back, 1 interface + 2 referências no front, **hoje**. Depois da entrega 4, `users` é o molde e todo domínio novo copia o envelope — o mesmo rename passa a custar N domínios × 2 repos. Fecha o ⚠️ da spec |
-| 2 | **409 + `POST /authentication/password`** para o primeiro acesso | você | resolve o furo de D1 × P-007: sem isso o primeiro login de todo usuário morre. Custa uma tela a mais no front, e nenhum tipo de token novo no sistema |
+| 2 | **Primeiro acesso não passa pela plataforma** — provisionamento com `temporary: false`, sem ação obrigatória, sem 409 e sem tela de senha | você | é o desenho de destino (P-012): o convite por e-mail leva à página do realm do Keycloak. Como lá também não há tela nossa, tirá-la agora não é dívida — é remover uma tela que o destino não tem. **Substituiu** a decisão anterior (409 + `POST /authentication/password`), que caiu junto com P-007 e P-011 |
 | 3 | **503 quando o Keycloak está fora** | agente | a spec só mapeava 401/403/409. Sem o 503, indisponibilidade vira "senha inválida" e o usuário troca a senha que estava certa |
 | 4 | **404 para `vinculo_id`/`user_id` de outra organização** — mesma resposta de "não existe" | agente | dizer "existe, mas não é sua" vaza cadastro de outra organização. Segue o mapeamento `NotFoundError → 404` do molde |
 | 5 | **`logout` idempotente** — refresh já inválido também devolve 204 | agente | o usuário está saindo; travá-lo numa tela que ele quer abandonar é o pior desfecho para um erro que não muda nada |
@@ -280,9 +270,27 @@ Coisas que este contrato **não** resolve e que alguém vai esbarrar:
 ## Premissas
 
 Usadas: **P-006** (papéis `admin`/`gestor`/`respondente` — ainda aberta e em conflito com
-P-003), **P-007** (senha temporária), **P-008** (sem autocadastro), **P-009** (sem
-recuperação por e-mail), **P-010** (sessão de 15 min / 8 h).
+P-003), **P-008** (sem autocadastro), **P-009** (sem recuperação por e-mail), **P-010**
+(sessão de 15 min / 8 h), **[P-012](../../decisoes/premissas.md)** (primeiro acesso por
+e-mail com link para o realm; no interim, senha definitiva pelo admin).
 
-Nasceu daqui: **[P-011](../../decisoes/premissas.md)** — a tela de troca de senha do
-primeiro acesso é nossa, não do Keycloak. Registrada em 2026-09-08, 🟡 aberta, custo de
-reverter **médio**: ela some junto com D1, se o time migrar para Authorization Code.
+### O que caiu, e por quê — leia antes de comparar com a spec
+
+A spec e a descrição do épico no ClickUp ainda descrevem **senha temporária com troca
+obrigatória no primeiro login** (P-007), e uma versão anterior deste documento propôs um
+409 `password_change_required` mais um `POST /authentication/password` (P-011). **As duas
+caíram em 2026-09-08**, por uma decisão de time que já existia e não estava registrada: o
+convite é por e-mail com link para o realm do Keycloak, e é lá que a senha é definida.
+
+| Premissa | Status | Onde ler o desfecho |
+|---|---|---|
+| P-007 | ❌ refutada | [`premissas.md`](../../decisoes/premissas.md) → Fechadas |
+| P-011 | ❌ refutada | idem — refutada no mesmo dia em que nasceu |
+| P-012 | 🟡 aberta | substitui as duas |
+
+Premissa refutada não é erro do time: é o mecanismo funcionando. O que ele pegou aqui foi
+uma decisão tomada e não escrita — e é exatamente para isso que o ledger existe.
+
+**Consequência fora deste documento:** a
+[PR #11 do `creed-frontend`](https://github.com/creed-educa-ai/creed-frontend/pull/11)
+implementa a tela de troca de senha do primeiro acesso. Neste desenho ela perde a função.

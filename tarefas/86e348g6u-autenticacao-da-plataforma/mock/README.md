@@ -60,7 +60,7 @@ time:
 | o caminho feliz | nenhum — vem o primeiro exemplo |
 | a tela como `gestor` (ou `admin`, `respondente`) | `Prefer: example=gestor` |
 | credencial inválida | `Prefer: code=401` |
-| primeiro acesso, senha a definir | `Prefer: code=409` |
+| e-mail já tem acesso (no `POST /users`) | `Prefer: code=409` |
 | acesso negado, sem deslogar | `Prefer: code=403` |
 | Keycloak fora do ar | `Prefer: code=503` |
 | lista vazia | `Prefer: example=vazia` |
@@ -69,8 +69,8 @@ time:
 ```bash
 curl -i -X POST https://<endereco-do-mock>/api/v1/authentication/login \
   -H 'Content-Type: application/json' \
-  -H 'Prefer: code=409' \
-  -d '{"email":"joao.pereira@aurora.test","password":"Provisoria-2026"}'
+  -H 'Prefer: code=401' \
+  -d '{"email":"joao.pereira@aurora.test","password":"errada"}'
 ```
 
 No front, dá para pendurar isso num campo do DevTools ou num `localStorage` lido pelo
