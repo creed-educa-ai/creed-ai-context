@@ -9,7 +9,15 @@
 services:
   mock:
     image: stoplight/prism:5
-    command: mock --host 0.0.0.0 --port 4010 /openapi.yaml
+    # --multiprocess=false NÃO é opcional: a imagem traz NODE_ENV=production, e nesse
+    # modo o default do flag vira `true`. Aí o Prism lê `cluster.isPrimary`, que vem
+    # undefined no Node 24 da imagem, e o processo morre com TypeError antes de abrir
+    # a porta. Detalhe em README.md → "As duas armadilhas desse comando".
+    #
+    # Aqui o `command` é acrescentado ao ENTRYPOINT da imagem — semântica normal do
+    # Docker — então começa em `mock`. No Render é diferente: lá o campo de comando
+    # SUBSTITUI o entrypoint, e precisa do `node .../dist/index.js` na frente.
+    command: mock --host 0.0.0.0 --port 4010 --multiprocess=false /openapi.yaml
     volumes:
       - ./openapi.yaml:/openapi.yaml:ro
     ports: ['4010:4010']
