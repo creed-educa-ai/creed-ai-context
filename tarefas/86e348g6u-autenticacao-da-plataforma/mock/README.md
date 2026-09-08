@@ -39,7 +39,7 @@ E o endereço no `.env.local` de cada um — arquivo que o git ignora, então a 
 nunca entra em commit:
 
 ```
-VITE_API_BASE_URL=https://<endereco-do-mock>/api/v1
+VITE_API_BASE_URL=https://creed-mock-server.onrender.com/api/v1
 ```
 
 Acabou. Sem proxy, sem Docker, sem Node, sem `if (mock)` no código. **CORS já vem
@@ -67,7 +67,7 @@ time:
 | um caso específico de um status | `Prefer: code=401, example=usuario_inativo` |
 
 ```bash
-curl -i -X POST https://<endereco-do-mock>/api/v1/authentication/login \
+curl -i -X POST https://creed-mock-server.onrender.com/api/v1/authentication/login \
   -H 'Content-Type: application/json' \
   -H 'Prefer: code=401' \
   -d '{"email":"joao.pereira@aurora.test","password":"errada"}'
@@ -85,7 +85,7 @@ Os nomes de exemplo de cada rota estão no `openapi.yaml`, sob `examples:`, e no
 Payload errado não passa. Isto:
 
 ```bash
-curl -X POST https://<endereco-do-mock>/api/v1/authentication/login \
+curl -X POST https://creed-mock-server.onrender.com/api/v1/authentication/login \
   -H 'Content-Type: application/json' -d '{"email":"nao-e-email","senha":"errado"}'
 ```
 
@@ -136,15 +136,56 @@ Sem repositório de deploy, sem Dockerfile, sem build, sem pipeline — é a ima
 do Prism e um comando. **Recomendado: Render**, no plano gratuito.
 
 1. Conta em <https://render.com> (gratuita, plano *Hobby*).
-2. **New → Web Service → Existing Image**.
-3. Imagem: `stoplight/prism:5`
-4. Comando (sobrescrevendo o do container):
+2. **+ New → Web Service → Existing Image**.
+3. Imagem: `docker.io/stoplight/prism:5`
+4. Em **Advanced**, no campo de comando (*Docker Command*), **exatamente isto**:
    ```
-   mock --host 0.0.0.0 --port $PORT https://raw.githubusercontent.com/creed-educa-ai/creed-ai-context/main/tarefas/86e348g6u-autenticacao-da-plataforma/mock/openapi.yaml
+   node /usr/src/prism/packages/cli/dist/index.js mock --host 0.0.0.0 --port 4010 --multiprocess=false https://raw.githubusercontent.com/creed-educa-ai/creed-ai-context/main/tarefas/86e348g6u-autenticacao-da-plataforma/mock/openapi.yaml
    ```
-5. Instance type: **Free**.
+5. Instance type: **Free**. Variável de ambiente `PORT` = `4010`.
 6. Sai uma URL `https://<nome>.onrender.com`. É ela que vai para o `.env.local` do time,
    com `/api/v1` no fim.
+
+> **O serviço do time é `creed-mock-server`**, em
+> <https://creed-mock-server.onrender.com>. Só crie outro se estiver testando.
+
+### As duas armadilhas desse comando — custaram três deploys
+
+Nenhuma das duas está na documentação do Render. As duas valem para **qualquer** imagem
+que o time subir lá, não só o Prism.
+
+**1. O campo de comando do Render substitui o `ENTRYPOINT`, não é acrescentado como
+`CMD`.** A imagem do Prism define
+`ENTRYPOINT ["/sbin/tini","--","node","dist/index.js"]` e **nenhum `CMD`**. Então o
+comando natural — `mock --host 0.0.0.0 ...`, que é o que funciona no `docker-compose` —
+faz o container tentar executar um programa chamado `mock`, que não existe.
+
+*Sintoma:* `Exited with status 128` e **nenhuma linha de log da aplicação**. Ausência
+total de saída é a assinatura: o processo não chegou a existir. Por isso o comando chama
+`node .../dist/index.js` explicitamente — que é o mesmo que `prism`, pelo `bin` do
+`package.json` do pacote.
+
+**2. `--multiprocess=false` não é opcional.** A imagem traz `NODE_ENV=production`
+embutido (conferido na config da imagem, junto com `NODE_VERSION=24.15.0`), e nesse modo
+o default de `--multiprocess` vira **`true`** — fora de produção é `false`, dá para
+conferir no próprio `--help`, que muda de acordo. Em modo multiprocess o Prism lê
+`cluster.isPrimary`, que vem `undefined` no Node 24, e o processo morre.
+
+Como o `NODE_ENV` vem **da imagem** e não do Render, isto vale **em qualquer lugar** que
+rode esse container — inclusive no [`docker-compose.yml`](docker-compose.yml) desta
+pasta, que por isso também passa o flag. Só o caminho do `npx` escapa, porque aí o
+`NODE_ENV` é o do seu shell.
+
+*Sintoma:* o help do Prism impresso no log, seguido de
+`TypeError: Cannot read properties of undefined (reading 'isPrimary')` em
+`createMultiProcessPrism`, e `Exited with status 1`.
+
+Perder o multiprocess não custa nada aqui: ele só acelera o processamento de log sob
+carga, e isto é um mock de contrato.
+
+> **Regra geral que sai dessas duas:** log sem saída nenhuma da aplicação = o comando não
+> executou (armadilha 1). Log com saída e stack trace = o comando executou e o programa
+> falhou (armadilha 2, ou outra). Ler qual dos dois é economiza a rodada de adivinhação.
 
 **O preço do plano gratuito, dito antes de doer:** o Render derruba um serviço Free
 depois de **15 minutos sem requisição**, e ele leva **cerca de 1 minuto** para voltar. Na
@@ -195,8 +236,11 @@ docker compose up   # mesma coisa, sem Node local
 Nos dois casos a API fica em `http://localhost:4010/api/v1/...`, e o `.env.local` aponta
 para lá em vez do endereço online.
 
-*(O caminho do `npx` foi executado e verificado; o do Docker não — não havia Docker na
-máquina em que este arquivo foi escrito.)*
+*(O caminho do `npx` foi executado e verificado. O do Docker não — não havia Docker na
+máquina em que este arquivo foi escrito. A primeira versão do `docker-compose.yml` estava
+**errada** por causa da armadilha 2, e nunca teria subido; foi corrigida depois que o
+mesmo erro apareceu no Render. É o preço de documentar um caminho sem rodá-lo — quem
+tiver Docker, rode e confirme.)*
 
 ### Três avisos, porque a URL é pública
 
