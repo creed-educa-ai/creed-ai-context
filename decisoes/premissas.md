@@ -24,8 +24,21 @@ cliente**. Regras: [`../conventions/premissas-e-duvidas.md`](../conventions/prem
 | P-009 | 2026-09-05 | autenticação | "Esqueci minha senha" não existe nesta entrega. Quem perde a senha pede a um `admin`, que emite outra temporária. | Sem serviço de e-mail, o fluxo de reset não tem por onde sair. Acrescentar depois é configurar SMTP no realm, não escrever código. | médio | 86e348g6u | 🟡 aberta |
 | P-010 | 2026-09-05 | autenticação | Sessão: `access_token` de 15 minutos e `refresh_token` de 8 horas (um turno), sem renovação deslizante além disso. | Prazo curto limita a janela de um token vazado, e 8h cobre um dia de trabalho sem relogar. É configuração de realm — trocar não é migration nem deploy de código. | baixo | 86e348g6u | 🟡 aberta |
 | P-012 | 2026-09-08 | autenticação | O primeiro acesso é por **e-mail com link para o realm do Keycloak**, onde a pessoa define a própria senha. Enquanto o envio de e-mail não existir, o acesso nasce com **senha definitiva** definida pelo admin e passada fora da plataforma — sem ação obrigatória no Keycloak, portanto sem troca forçada no primeiro login. | Decisão de time, com precedente de uso corporativo. O Keycloak já resolve o fluxo inteiro (`execute-actions-email` + página do realm), então a plataforma nunca precisa de tela de troca de senha — nem hoje nem depois. No interim, `temporary: false` no provisionamento evita a ação obrigatória que faria o Direct Access Grant (D1) recusar o login. Substitui P-007 e P-011. | baixo — o front não muda em nenhum dos dois momentos; muda o provisionamento no backend | 86e348g6u | 🟡 aberta |
+| P-003 | 2026-09-07 | autenticação | A tela de troca de senha (CREED-18.8) não integra com nenhuma API: "Avançar" só valida os dados no front. | Não existe domínio de autenticação no creed-backend, nenhum contrato definido; integrar contra um contrato inexistente arriscaria codificar campo que nunca vai existir. | médio | — | 🟡 aberta |
+| P-004 | 2026-09-07 | autenticação | A senha precisa ter no mínimo 8 caracteres, sem regra adicional de complexidade. | Não existe política de senha definida em documento do produto; 8 é o mínimo comum de mercado, barato de apertar depois. | baixo | — | 🟡 aberta |
 
-> **P-003 × P-006 vão juntas para a pauta.** P-003 (`admin`/`funcionario`) continua aberta
+> ⚠️ **IDs duplicados: P-003 e P-004 aparecem duas vezes nesta tabela.** As de
+> 2026-09-01 são de navegação (tarefa `EXEMPLO`); as de 2026-09-07 são da tela de troca
+> de senha e nasceram com ID já em uso. Não foi descuido de uma pessoa: na `main` o
+> último ID era P-005, e as **P-006 a P-010 passaram dias sem commit** — quem olhasse o
+> repositório não as via. Premissa que não está commitada não existe para o time.
+>
+> **Preservadas como estão, de propósito.** Renumerar significa editar código de uma PR
+> aberta de outra pessoa (`AlterarSenhaView.tsx:22`, `validadores.ts:3`), e essa PR pode
+> nem sobreviver à P-012. Tarefa própria:
+> [renumerar as premissas duplicadas](https://app.clickup.com/t/86e35wea4).
+
+> **P-003 (a de navegação) × P-006 vão juntas para a pauta.** P-003 (`admin`/`funcionario`) continua aberta
 > e em conflito com P-006 (`admin`/`gestor`/`respondente`). Não são duas perguntas: são a
 > mesma, e a resposta da cliente fecha as duas de uma vez.
 
