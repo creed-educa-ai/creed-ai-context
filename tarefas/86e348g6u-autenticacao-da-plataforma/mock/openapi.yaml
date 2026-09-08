@@ -1,0 +1,638 @@
+# CREED-23 — contrato dos endpoints de autenticação e usuários.
+#
+# Este arquivo é a fonte legível por máquina do contrato descrito em
+# ../contrato-api.md. Ele NÃO é gerado pelo backend: o backend ainda não existe.
+# Quando o domínio `authentication` entrar (entrega 4 da spec), o OpenAPI real
+# passa a sair de http://localhost:8000/api/v1/openapi.json e ESTE arquivo morre
+# — o backend ganha, sempre (conventions/contrato-front-back.md).
+#
+# Os paths incluem o prefixo /api/v1 de propósito: é assim que o FastAPI emite,
+# porque o prefixo é aplicado no `include_router` (app/main.py), não no `servers`.
+#
+# Serve de mock com:  docker compose up   (ver README.md desta pasta)
+
+openapi: 3.1.0
+
+info:
+  title: CREED.ai Educa — Authentication & Users (contrato proposto)
+  version: 0.1.0-proposta
+  description: |
+    Contrato **proposto**, ainda não implementado. Deriva da spec da CREED-23.
+
+    Vocabulário em inglês por ADR-0005: `session`, `token`, `role` e `refresh` são
+    vocabulário de OAuth, não da cliente. `vinculo_id` fica em português porque
+    `Vinculo` é nome de tabela e está na lista de vocabulário ainda aberta
+    (pendência do ADR-0005) — se o time fechar por `Engagement`, este campo vira
+    `engagement_id` e é o único ponto do contrato que muda.
+
+servers:
+  - url: http://localhost:4010
+    description: Mock (Prism)
+  - url: http://localhost:8000
+    description: Backend local (quando existir)
+
+tags:
+  - name: authentication
+    description: Login, renovação, logout e "quem sou eu".
+  - name: users
+    description: Provisionamento e desativação de acesso. Papel vem do Vinculo.
+
+paths:
+  /api/v1/authentication/login:
+    post:
+      tags: [authentication]
+      operationId: login
+      summary: Autentica por e-mail e senha e devolve a sessão
+      description: |
+        Rota pública. O backend chama o token endpoint do Keycloak
+        (`grant_type=password`, decisão D1) e devolve os tokens — o front nunca
+        fala com o Keycloak.
+
+        **401 não diz o que errou**: e-mail inexistente, senha errada e
+        `User.status = inactive` devolvem exatamente a mesma mensagem. É critério
+        de aceite da spec, não zelo extra.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+            examples:
+              admin:
+                summary: admin do seed
+                value: { email: admin@aurora.test, password: senha-do-seed }
+              gestor:
+                value: { email: carla.mendes@aurora.test, password: senha-valida }
+              senha_errada:
+                value: { email: carla.mendes@aurora.test, password: errada }
+      responses:
+        '200':
+          description: Sessão criada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionResponse' }
+              examples:
+                admin:
+                  summary: sessão de admin
+                  value:
+                    access_token: &tk eyJhbGciOiJSUzI1NiJ9.eyJtb2NrIjp0cnVlfQ.assinatura-sintetica-do-mock
+                    refresh_token: &rtk eyJhbGciOiJIUzI1NiJ9.eyJtb2NrIjoicmVmcmVzaCJ9.assinatura-sintetica-do-mock
+                    expires_in: 900
+                    user:
+                      id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                      email: admin@aurora.test
+                      role: admin
+                      vinculo_id: 9c8b7a65-4321-4f0e-9d8c-7b6a5f4e3d2c
+                      organization_id: 0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70
+                      organization_name: Instituto Aurora
+                gestor:
+                  summary: sessão de gestor
+                  value:
+                    access_token: *tk
+                    refresh_token: *rtk
+                    expires_in: 900
+                    user:
+                      id: 2b3c4d5e-6f70-4b8c-9dae-1f2a3b4c5d6e
+                      email: carla.mendes@aurora.test
+                      role: gestor
+                      vinculo_id: 8b7a6954-3210-4e0d-8c7b-6a5f4e3d2c1b
+                      organization_id: 0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70
+                      organization_name: Instituto Aurora
+                respondente:
+                  summary: sessão de respondente
+                  value:
+                    access_token: *tk
+                    refresh_token: *rtk
+                    expires_in: 900
+                    user:
+                      id: 3c4d5e6f-7081-4c9d-8ebf-2a3b4c5d6e7f
+                      email: joao.pereira@aurora.test
+                      role: respondente
+                      vinculo_id: 7a695843-2109-4d0c-8b7a-5f4e3d2c1b0a
+                      organization_id: 0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70
+                      organization_name: Instituto Aurora
+        '401':
+          description: |
+            Credencial inválida **ou** acesso desativado. Mesma resposta para os
+            dois — o front não tem como distinguir, e é intencional.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorDetail' }
+              examples:
+                credencial_invalida:
+                  value: { detail: E-mail ou senha inválidos }
+                usuario_inativo:
+                  summary: User.status = inactive (corpo idêntico ao de cima)
+                  value: { detail: E-mail ou senha inválidos }
+        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /api/v1/authentication/renew:
+    post:
+      tags: [authentication]
+      operationId: renew
+      summary: Troca o refresh token por uma sessão nova
+      description: |
+        Rota pública — o `refresh_token` no corpo é a credencial. Quem chama é o
+        `apiClient` do front, uma vez por 401, com renovação em voo única
+        (decisão D6).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RenewRequest' }
+            examples:
+              renovar:
+                value:
+                  refresh_token: eyJhbGciOiJIUzI1NiJ9.eyJtb2NrIjoicmVmcmVzaCJ9.assinatura-sintetica-do-mock
+      responses:
+        '200':
+          description: Sessão renovada — mesmo corpo do login
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionResponse' }
+              examples:
+                renovada:
+                  value:
+                    access_token: *tk
+                    refresh_token: *rtk
+                    expires_in: 900
+                    user:
+                      id: 2b3c4d5e-6f70-4b8c-9dae-1f2a3b4c5d6e
+                      email: carla.mendes@aurora.test
+                      role: gestor
+                      vinculo_id: 8b7a6954-3210-4e0d-8c7b-6a5f4e3d2c1b
+                      organization_id: 0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70
+                      organization_name: Instituto Aurora
+        '401':
+          description: |
+            Refresh expirado, revogado ou de um usuário desativado. **Fim da
+            sessão**: o front limpa `creed.session` e vai para `/login`. Não
+            tenta renovar de novo.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorDetail' }
+              examples:
+                refresh_expirado:
+                  value: { detail: Sessão expirada. Entre novamente. }
+        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /api/v1/authentication/logout:
+    post:
+      tags: [authentication]
+      operationId: logout
+      summary: Encerra a sessão no Keycloak
+      description: |
+        **Idempotente de propósito**: refresh já inválido também devolve 204. O
+        usuário está saindo — travá-lo numa tela que ele quer abandonar seria o
+        pior desfecho possível para um erro que não muda nada.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RenewRequest' }
+            examples:
+              sair:
+                value:
+                  refresh_token: eyJhbGciOiJIUzI1NiJ9.eyJtb2NrIjoicmVmcmVzaCJ9.assinatura-sintetica-do-mock
+      responses:
+        '204': { description: Sessão encerrada (ou já estava) }
+        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /api/v1/authentication/session:
+    get:
+      tags: [authentication]
+      operationId: getSession
+      summary: Quem é o dono do token
+      description: |
+        É como o front descobre papel e organização **sem decodificar o JWT**.
+        Chamada no boot da aplicação quando há sessão em `localStorage`: é ela
+        que responde "recarregar a página não desloga".
+      responses:
+        '200':
+          description: Usuário da sessão
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserSessionResponse' }
+              examples:
+                admin:
+                  value:
+                    id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                    email: admin@aurora.test
+                    role: admin
+                    vinculo_id: 9c8b7a65-4321-4f0e-9d8c-7b6a5f4e3d2c
+                    organization_id: 0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70
+                    organization_name: Instituto Aurora
+                gestor:
+                  value:
+                    id: 2b3c4d5e-6f70-4b8c-9dae-1f2a3b4c5d6e
+                    email: carla.mendes@aurora.test
+                    role: gestor
+                    vinculo_id: 8b7a6954-3210-4e0d-8c7b-6a5f4e3d2c1b
+                    organization_id: 0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70
+                    organization_name: Instituto Aurora
+                respondente:
+                  value:
+                    id: 3c4d5e6f-7081-4c9d-8ebf-2a3b4c5d6e7f
+                    email: joao.pereira@aurora.test
+                    role: respondente
+                    vinculo_id: 7a695843-2109-4d0c-8b7a-5f4e3d2c1b0a
+                    organization_id: 0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70
+                    organization_name: Instituto Aurora
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /api/v1/users:
+    get:
+      tags: [users]
+      operationId: listUsers
+      summary: Lista os acessos da organização do vínculo de quem chama
+      description: |
+        Exige papel `admin`.
+
+        **O recorte é sempre a organização do vínculo de quem chama**, mesmo sem
+        `organization_id` na query. Passar `organization_id` de outra organização
+        responde 403 — não lista vazio. Esconder no front não é autorização.
+      parameters:
+        - name: organization_id
+          in: query
+          required: false
+          description: Só aceita a organização do próprio vínculo. Outra responde 403.
+          schema: { type: string, format: uuid }
+        - name: role
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/Role' }
+        - name: page
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: page_size
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+      responses:
+        '200':
+          description: Página de acessos
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PageOfUser' }
+              examples:
+                pagina_cheia:
+                  value:
+                    items:
+                      - id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                        email: admin@aurora.test
+                        status: active
+                        role: admin
+                        vinculo_id: 9c8b7a65-4321-4f0e-9d8c-7b6a5f4e3d2c
+                        organization_id: 0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70
+                        created_at: '2026-09-01T09:12:44.108000+00:00'
+                      - id: 2b3c4d5e-6f70-4b8c-9dae-1f2a3b4c5d6e
+                        email: carla.mendes@aurora.test
+                        status: active
+                        role: gestor
+                        vinculo_id: 8b7a6954-3210-4e0d-8c7b-6a5f4e3d2c1b
+                        organization_id: 0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70
+                        created_at: '2026-09-03T14:30:02.771000+00:00'
+                      - id: 3c4d5e6f-7081-4c9d-8ebf-2a3b4c5d6e7f
+                        email: joao.pereira@aurora.test
+                        status: inactive
+                        role: respondente
+                        vinculo_id: 7a695843-2109-4d0c-8b7a-5f4e3d2c1b0a
+                        organization_id: 0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70
+                        created_at: '2026-09-05T11:07:19.334000+00:00'
+                    total: 3
+                    page: 1
+                    page_size: 50
+                vazia:
+                  summary: nenhum acesso bate com o filtro — 200, não 404
+                  value: { items: [], total: 0, page: 1, page_size: 50 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+
+    post:
+      tags: [users]
+      operationId: createUser
+      summary: Cria o acesso de um vínculo existente
+      description: |
+        Exige papel `admin`.
+
+        Ordem do provisionamento (decisão D4): cria no Keycloak, recebe o `sub`,
+        `INSERT User`. Se o INSERT falhar, o usuário é apagado do realm
+        (compensação). O front não vê nada disso: ou 201, ou erro.
+
+        Não existe autocadastro (P-008): o vínculo tem que existir antes, e é ele
+        que carrega o papel — por isso não há `role` no payload.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserCreate' }
+            examples:
+              novo_respondente:
+                value:
+                  vinculo_id: 7a695843-2109-4d0c-8b7a-5f4e3d2c1b0a
+                  email: joao.pereira@aurora.test
+                  initial_password: SenhaInicial-2026
+      responses:
+        '201':
+          description: Acesso criado nos dois lados (banco e realm)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserResponse' }
+              examples:
+                criado:
+                  value:
+                    id: 3c4d5e6f-7081-4c9d-8ebf-2a3b4c5d6e7f
+                    email: joao.pereira@aurora.test
+                    status: active
+                    role: respondente
+                    vinculo_id: 7a695843-2109-4d0c-8b7a-5f4e3d2c1b0a
+                    organization_id: 0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70
+                    created_at: '2026-09-08T13:42:10.512000+00:00'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404':
+          description: |
+            `vinculo_id` não existe, ou é de outra organização. Mesma resposta
+            para os dois — dizer "existe, mas não é sua" vaza cadastro alheio.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorDetail' }
+              examples:
+                vinculo_inexistente:
+                  value: { detail: Vínculo não encontrado }
+        '409':
+          description: E-mail já tem acesso — no banco ou no realm
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorDetail' }
+              examples:
+                email_duplicado:
+                  value: { detail: Já existe acesso para o e-mail joao.pereira@aurora.test }
+        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /api/v1/users/{user_id}:
+    parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      tags: [users]
+      operationId: updateUser
+      summary: Liga ou desliga o acesso
+      description: |
+        Exige papel `admin`. Único campo alterável nesta entrega é `status`.
+
+        `status = inactive` é decisão de **acesso** e não se confunde com
+        `Vinculo.end_at`, que é fato de **cadastro** (nota [C26] do modelo).
+        Trocar o papel é escrever em `Vinculo`, e não há endpoint para isso neste
+        épico — ver "Buracos conhecidos" em `../contrato-api.md`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserUpdate' }
+            examples:
+              desativar: { value: { status: inactive } }
+              reativar: { value: { status: active } }
+      responses:
+        '200':
+          description: Acesso atualizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserResponse' }
+              examples:
+                desativado:
+                  value:
+                    id: 3c4d5e6f-7081-4c9d-8ebf-2a3b4c5d6e7f
+                    email: joao.pereira@aurora.test
+                    status: inactive
+                    role: respondente
+                    vinculo_id: 7a695843-2109-4d0c-8b7a-5f4e3d2c1b0a
+                    organization_id: 0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70
+                    created_at: '2026-09-05T11:07:19.334000+00:00'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404':
+          description: Acesso não existe, ou é de outra organização
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorDetail' }
+              examples:
+                inexistente:
+                  value: { detail: Usuário 3c4d5e6f-7081-4c9d-8ebf-2a3b4c5d6e7f não encontrado }
+        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Role:
+      type: string
+      enum: [admin, gestor, respondente]
+      description: |
+        Papel do Vinculo, não do User — premissa P-006, **ainda aberta**. Se a
+        cliente pedir outra lista, este enum muda em todos os lugares de uma vez.
+
+    RecordStatus:
+      type: string
+      enum: [active, inactive]
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      additionalProperties: false
+      properties:
+        email: { type: string, format: email, maxLength: 320 }
+        password: { type: string, minLength: 1 }
+
+    RenewRequest:
+      type: object
+      required: [refresh_token]
+      additionalProperties: false
+      properties:
+        refresh_token: { type: string, minLength: 1 }
+
+    UserSessionResponse:
+      type: object
+      required: [id, email, role, vinculo_id, organization_id, organization_name]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        role: { $ref: '#/components/schemas/Role' }
+        vinculo_id: { type: string, format: uuid }
+        organization_id: { type: string, format: uuid }
+        organization_name: { type: string }
+
+    SessionResponse:
+      type: object
+      required: [access_token, refresh_token, expires_in, user]
+      properties:
+        access_token: { type: string }
+        refresh_token: { type: string }
+        expires_in:
+          type: integer
+          description: Vida do access_token em segundos (P-010 fixa em 900).
+        user: { $ref: '#/components/schemas/UserSessionResponse' }
+
+    UserCreate:
+      type: object
+      required: [vinculo_id, email, initial_password]
+      additionalProperties: false
+      properties:
+        vinculo_id: { type: string, format: uuid }
+        email: { type: string, format: email, maxLength: 320 }
+        initial_password:
+          type: string
+          minLength: 8
+          description: |
+            Senha **definitiva**, definida por quem cadastra e passada à pessoa
+            fora da plataforma (premissa P-012). O provisionamento usa
+            `temporary: false` no Keycloak — **sem** ação obrigatória, porque
+            `UPDATE_PASSWORD` pendente faz o Direct Access Grant (D1) recusar o
+            login com `Account is not fully set up`.
+
+            ⚠️ Este campo **some** quando o envio de e-mail entrar: aí o usuário
+            é criado sem credencial e o Keycloak manda o link do realm para a
+            pessoa definir a própria senha.
+
+    UserUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        status: { $ref: '#/components/schemas/RecordStatus' }
+
+    UserResponse:
+      type: object
+      required: [id, email, status, role, vinculo_id, organization_id, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        status: { $ref: '#/components/schemas/RecordStatus' }
+        role:
+          allOf: [{ $ref: '#/components/schemas/Role' }]
+          description: Campo derivado — vem de `Vinculo.role`, não de uma coluna de User.
+        vinculo_id: { type: string, format: uuid }
+        organization_id:
+          type: string
+          format: uuid
+          description: Campo derivado — vem de `Vinculo.organization_id`.
+        created_at: { type: string, format: date-time }
+
+    PageOfUser:
+      type: object
+      description: |
+        Envelope compartilhado `Page[T]` de `app/shared/pagination.py`. Um só no
+        projeto inteiro — não existe segundo formato de paginação.
+      required: [items, total, page, page_size]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/UserResponse' }
+        total: { type: integer }
+        page: { type: integer }
+        page_size: { type: integer }
+
+    ErrorDetail:
+      type: object
+      required: [detail]
+      properties:
+        detail:
+          type: string
+          description: Mensagem pronta, em português — é o que a tela mostra.
+
+    HTTPValidationError:
+      type: object
+      description: Forma que o **próprio FastAPI** devolve quando o payload não bate.
+      required: [detail]
+      properties:
+        detail:
+          type: array
+          items:
+            type: object
+            properties:
+              type: { type: string }
+              loc:
+                type: array
+                items: { type: [string, integer] }
+              msg: { type: string }
+              input: {}
+
+  responses:
+    Unauthorized:
+      description: |
+        Sem token, token inválido/expirado, `User.status = inactive`, ou claim
+        divergente do banco (decisão D2). O front renova **uma vez**; falhou,
+        limpa a sessão e vai para `/login`.
+      headers:
+        WWW-Authenticate:
+          schema: { type: string }
+          example: Bearer
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorDetail' }
+          examples:
+            sem_token:
+              value: { detail: Não autenticado }
+            token_expirado:
+              value: { detail: Sessão expirada. Entre novamente. }
+            claim_divergente:
+              summary: papel do token diferente do papel do banco — 401 e log, nunca "passa"
+              value: { detail: Sessão inválida. Entre novamente. }
+
+    Forbidden:
+      description: |
+        Autenticado, mas o papel não alcança a rota. **Não desloga** — é o bug
+        clássico que a distinção 401 x 403 existe para impedir.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorDetail' }
+          examples:
+            papel_insuficiente:
+              value: { detail: Você não tem permissão para esta ação. }
+
+    UnprocessableEntity:
+      description: |
+        Payload não bate com o schema. **Em desenvolvimento isto é bug do
+        front**: o contrato foi transcrito errado. Não vire tratamento bonito na
+        tela — volte ao schema.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/HTTPValidationError' }
+          examples:
+            campo_faltando:
+              value:
+                detail:
+                  - type: missing
+                    loc: [body, password]
+                    msg: Field required
+                    input: { email: carla.mendes@aurora.test }
+
+    ServiceUnavailable:
+      description: |
+        Keycloak fora do ar (`KeycloakIndisponivel`). **Não é credencial
+        errada** — o front mostra "tente novamente", nunca "senha inválida", e
+        não limpa a sessão.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorDetail' }
+          examples:
+            keycloak_fora:
+              value: { detail: Serviço de autenticação indisponível. Tente novamente. }
+
+security:
+  - bearerAuth: []

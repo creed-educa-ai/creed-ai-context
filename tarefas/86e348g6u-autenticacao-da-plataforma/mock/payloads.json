@@ -1,0 +1,444 @@
+{
+  "_leia": {
+    "o_que_e": "Exemplos de payload do contrato da CREED-23, extraidos de mock/openapi.yaml.",
+    "gerado_por": "mock/gerar_payloads.py — nao edite este arquivo a mao.",
+    "status": "PROPOSTA — nenhum endpoint existe em codigo ainda.",
+    "como_ler": "request = o que o front manda. responses = por codigo HTTP, por nome de exemplo.",
+    "no_mock": "Escolher um exemplo por requisicao: cabecalho  Prefer: code=<status>, example=<nome>"
+  },
+  "POST /api/v1/authentication/login": {
+    "request": {
+      "admin": {
+        "email": "admin@aurora.test",
+        "password": "senha-do-seed"
+      },
+      "gestor": {
+        "email": "carla.mendes@aurora.test",
+        "password": "senha-valida"
+      },
+      "senha_errada": {
+        "email": "carla.mendes@aurora.test",
+        "password": "errada"
+      }
+    },
+    "responses": {
+      "200": {
+        "admin": {
+          "access_token": "eyJhbGciOiJSUzI1NiJ9.eyJtb2NrIjp0cnVlfQ.assinatura-sintetica-do-mock",
+          "refresh_token": "eyJhbGciOiJIUzI1NiJ9.eyJtb2NrIjoicmVmcmVzaCJ9.assinatura-sintetica-do-mock",
+          "expires_in": 900,
+          "user": {
+            "id": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+            "email": "admin@aurora.test",
+            "role": "admin",
+            "vinculo_id": "9c8b7a65-4321-4f0e-9d8c-7b6a5f4e3d2c",
+            "organization_id": "0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70",
+            "organization_name": "Instituto Aurora"
+          }
+        },
+        "gestor": {
+          "access_token": "eyJhbGciOiJSUzI1NiJ9.eyJtb2NrIjp0cnVlfQ.assinatura-sintetica-do-mock",
+          "refresh_token": "eyJhbGciOiJIUzI1NiJ9.eyJtb2NrIjoicmVmcmVzaCJ9.assinatura-sintetica-do-mock",
+          "expires_in": 900,
+          "user": {
+            "id": "2b3c4d5e-6f70-4b8c-9dae-1f2a3b4c5d6e",
+            "email": "carla.mendes@aurora.test",
+            "role": "gestor",
+            "vinculo_id": "8b7a6954-3210-4e0d-8c7b-6a5f4e3d2c1b",
+            "organization_id": "0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70",
+            "organization_name": "Instituto Aurora"
+          }
+        },
+        "respondente": {
+          "access_token": "eyJhbGciOiJSUzI1NiJ9.eyJtb2NrIjp0cnVlfQ.assinatura-sintetica-do-mock",
+          "refresh_token": "eyJhbGciOiJIUzI1NiJ9.eyJtb2NrIjoicmVmcmVzaCJ9.assinatura-sintetica-do-mock",
+          "expires_in": 900,
+          "user": {
+            "id": "3c4d5e6f-7081-4c9d-8ebf-2a3b4c5d6e7f",
+            "email": "joao.pereira@aurora.test",
+            "role": "respondente",
+            "vinculo_id": "7a695843-2109-4d0c-8b7a-5f4e3d2c1b0a",
+            "organization_id": "0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70",
+            "organization_name": "Instituto Aurora"
+          }
+        }
+      },
+      "401": {
+        "credencial_invalida": {
+          "detail": "E-mail ou senha inválidos"
+        },
+        "usuario_inativo": {
+          "detail": "E-mail ou senha inválidos"
+        }
+      },
+      "422": {
+        "campo_faltando": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "password"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "carla.mendes@aurora.test"
+              }
+            }
+          ]
+        }
+      },
+      "503": {
+        "keycloak_fora": {
+          "detail": "Serviço de autenticação indisponível. Tente novamente."
+        }
+      }
+    }
+  },
+  "POST /api/v1/authentication/renew": {
+    "request": {
+      "renovar": {
+        "refresh_token": "eyJhbGciOiJIUzI1NiJ9.eyJtb2NrIjoicmVmcmVzaCJ9.assinatura-sintetica-do-mock"
+      }
+    },
+    "responses": {
+      "200": {
+        "renovada": {
+          "access_token": "eyJhbGciOiJSUzI1NiJ9.eyJtb2NrIjp0cnVlfQ.assinatura-sintetica-do-mock",
+          "refresh_token": "eyJhbGciOiJIUzI1NiJ9.eyJtb2NrIjoicmVmcmVzaCJ9.assinatura-sintetica-do-mock",
+          "expires_in": 900,
+          "user": {
+            "id": "2b3c4d5e-6f70-4b8c-9dae-1f2a3b4c5d6e",
+            "email": "carla.mendes@aurora.test",
+            "role": "gestor",
+            "vinculo_id": "8b7a6954-3210-4e0d-8c7b-6a5f4e3d2c1b",
+            "organization_id": "0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70",
+            "organization_name": "Instituto Aurora"
+          }
+        }
+      },
+      "401": {
+        "refresh_expirado": {
+          "detail": "Sessão expirada. Entre novamente."
+        }
+      },
+      "422": {
+        "campo_faltando": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "password"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "carla.mendes@aurora.test"
+              }
+            }
+          ]
+        }
+      },
+      "503": {
+        "keycloak_fora": {
+          "detail": "Serviço de autenticação indisponível. Tente novamente."
+        }
+      }
+    }
+  },
+  "POST /api/v1/authentication/logout": {
+    "request": {
+      "sair": {
+        "refresh_token": "eyJhbGciOiJIUzI1NiJ9.eyJtb2NrIjoicmVmcmVzaCJ9.assinatura-sintetica-do-mock"
+      }
+    },
+    "responses": {
+      "204": "Sessão encerrada (ou já estava)",
+      "422": {
+        "campo_faltando": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "password"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "carla.mendes@aurora.test"
+              }
+            }
+          ]
+        }
+      },
+      "503": {
+        "keycloak_fora": {
+          "detail": "Serviço de autenticação indisponível. Tente novamente."
+        }
+      }
+    }
+  },
+  "GET /api/v1/authentication/session": {
+    "request": null,
+    "responses": {
+      "200": {
+        "admin": {
+          "id": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+          "email": "admin@aurora.test",
+          "role": "admin",
+          "vinculo_id": "9c8b7a65-4321-4f0e-9d8c-7b6a5f4e3d2c",
+          "organization_id": "0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70",
+          "organization_name": "Instituto Aurora"
+        },
+        "gestor": {
+          "id": "2b3c4d5e-6f70-4b8c-9dae-1f2a3b4c5d6e",
+          "email": "carla.mendes@aurora.test",
+          "role": "gestor",
+          "vinculo_id": "8b7a6954-3210-4e0d-8c7b-6a5f4e3d2c1b",
+          "organization_id": "0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70",
+          "organization_name": "Instituto Aurora"
+        },
+        "respondente": {
+          "id": "3c4d5e6f-7081-4c9d-8ebf-2a3b4c5d6e7f",
+          "email": "joao.pereira@aurora.test",
+          "role": "respondente",
+          "vinculo_id": "7a695843-2109-4d0c-8b7a-5f4e3d2c1b0a",
+          "organization_id": "0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70",
+          "organization_name": "Instituto Aurora"
+        }
+      },
+      "401": {
+        "sem_token": {
+          "detail": "Não autenticado"
+        },
+        "token_expirado": {
+          "detail": "Sessão expirada. Entre novamente."
+        },
+        "claim_divergente": {
+          "detail": "Sessão inválida. Entre novamente."
+        }
+      },
+      "503": {
+        "keycloak_fora": {
+          "detail": "Serviço de autenticação indisponível. Tente novamente."
+        }
+      }
+    }
+  },
+  "GET /api/v1/users": {
+    "request": null,
+    "responses": {
+      "200": {
+        "pagina_cheia": {
+          "items": [
+            {
+              "id": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+              "email": "admin@aurora.test",
+              "status": "active",
+              "role": "admin",
+              "vinculo_id": "9c8b7a65-4321-4f0e-9d8c-7b6a5f4e3d2c",
+              "organization_id": "0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70",
+              "created_at": "2026-09-01T09:12:44.108000+00:00"
+            },
+            {
+              "id": "2b3c4d5e-6f70-4b8c-9dae-1f2a3b4c5d6e",
+              "email": "carla.mendes@aurora.test",
+              "status": "active",
+              "role": "gestor",
+              "vinculo_id": "8b7a6954-3210-4e0d-8c7b-6a5f4e3d2c1b",
+              "organization_id": "0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70",
+              "created_at": "2026-09-03T14:30:02.771000+00:00"
+            },
+            {
+              "id": "3c4d5e6f-7081-4c9d-8ebf-2a3b4c5d6e7f",
+              "email": "joao.pereira@aurora.test",
+              "status": "inactive",
+              "role": "respondente",
+              "vinculo_id": "7a695843-2109-4d0c-8b7a-5f4e3d2c1b0a",
+              "organization_id": "0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70",
+              "created_at": "2026-09-05T11:07:19.334000+00:00"
+            }
+          ],
+          "total": 3,
+          "page": 1,
+          "page_size": 50
+        },
+        "vazia": {
+          "items": [],
+          "total": 0,
+          "page": 1,
+          "page_size": 50
+        }
+      },
+      "401": {
+        "sem_token": {
+          "detail": "Não autenticado"
+        },
+        "token_expirado": {
+          "detail": "Sessão expirada. Entre novamente."
+        },
+        "claim_divergente": {
+          "detail": "Sessão inválida. Entre novamente."
+        }
+      },
+      "403": {
+        "papel_insuficiente": {
+          "detail": "Você não tem permissão para esta ação."
+        }
+      },
+      "422": {
+        "campo_faltando": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "password"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "carla.mendes@aurora.test"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "POST /api/v1/users": {
+    "request": {
+      "novo_respondente": {
+        "vinculo_id": "7a695843-2109-4d0c-8b7a-5f4e3d2c1b0a",
+        "email": "joao.pereira@aurora.test",
+        "initial_password": "SenhaInicial-2026"
+      }
+    },
+    "responses": {
+      "201": {
+        "criado": {
+          "id": "3c4d5e6f-7081-4c9d-8ebf-2a3b4c5d6e7f",
+          "email": "joao.pereira@aurora.test",
+          "status": "active",
+          "role": "respondente",
+          "vinculo_id": "7a695843-2109-4d0c-8b7a-5f4e3d2c1b0a",
+          "organization_id": "0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70",
+          "created_at": "2026-09-08T13:42:10.512000+00:00"
+        }
+      },
+      "401": {
+        "sem_token": {
+          "detail": "Não autenticado"
+        },
+        "token_expirado": {
+          "detail": "Sessão expirada. Entre novamente."
+        },
+        "claim_divergente": {
+          "detail": "Sessão inválida. Entre novamente."
+        }
+      },
+      "403": {
+        "papel_insuficiente": {
+          "detail": "Você não tem permissão para esta ação."
+        }
+      },
+      "404": {
+        "vinculo_inexistente": {
+          "detail": "Vínculo não encontrado"
+        }
+      },
+      "409": {
+        "email_duplicado": {
+          "detail": "Já existe acesso para o e-mail joao.pereira@aurora.test"
+        }
+      },
+      "422": {
+        "campo_faltando": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "password"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "carla.mendes@aurora.test"
+              }
+            }
+          ]
+        }
+      },
+      "503": {
+        "keycloak_fora": {
+          "detail": "Serviço de autenticação indisponível. Tente novamente."
+        }
+      }
+    }
+  },
+  "PATCH /api/v1/users/{user_id}": {
+    "request": {
+      "desativar": {
+        "status": "inactive"
+      },
+      "reativar": {
+        "status": "active"
+      }
+    },
+    "responses": {
+      "200": {
+        "desativado": {
+          "id": "3c4d5e6f-7081-4c9d-8ebf-2a3b4c5d6e7f",
+          "email": "joao.pereira@aurora.test",
+          "status": "inactive",
+          "role": "respondente",
+          "vinculo_id": "7a695843-2109-4d0c-8b7a-5f4e3d2c1b0a",
+          "organization_id": "0f4c9a02-1b7d-4a3e-9c58-2d6e8b1a4f70",
+          "created_at": "2026-09-05T11:07:19.334000+00:00"
+        }
+      },
+      "401": {
+        "sem_token": {
+          "detail": "Não autenticado"
+        },
+        "token_expirado": {
+          "detail": "Sessão expirada. Entre novamente."
+        },
+        "claim_divergente": {
+          "detail": "Sessão inválida. Entre novamente."
+        }
+      },
+      "403": {
+        "papel_insuficiente": {
+          "detail": "Você não tem permissão para esta ação."
+        }
+      },
+      "404": {
+        "inexistente": {
+          "detail": "Usuário 3c4d5e6f-7081-4c9d-8ebf-2a3b4c5d6e7f não encontrado"
+        }
+      },
+      "422": {
+        "campo_faltando": {
+          "detail": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "password"
+              ],
+              "msg": "Field required",
+              "input": {
+                "email": "carla.mendes@aurora.test"
+              }
+            }
+          ]
+        }
+      },
+      "503": {
+        "keycloak_fora": {
+          "detail": "Serviço de autenticação indisponível. Tente novamente."
+        }
+      }
+    }
+  }
+}
