@@ -160,7 +160,7 @@ muda é que ela deixa de ter uma decisão de infra não tomada no caminho.
 Item de pauta, não de PR:
 
 > Existe domínio e acesso a DNS que possamos usar para e-mail transacional, e a conta AWS
-> onde o EKS roda pode ter SES habilitado com saída do sandbox?
+> onde a EC2 roda pode ter SES habilitado com saída do sandbox?
 
 **Sim** → SES, e este ADR ganha um adendo com região e identidade.
 **Não** → provedor com domínio de teste, e o adendo registra o limite que isso impõe.

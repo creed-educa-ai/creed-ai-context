@@ -19,7 +19,7 @@ ela está no diretório-pai do workspace: `ages/creed-ai-context/`.
 ## Princípios inegociáveis
 
 1. Agregação no banco, cálculo no backend, renderização no front.
-2. Migrations nunca no startup do container — Job dedicado.
+2. Migrations nunca no startup do container — passo dedicado do pipeline.
 3. Autogenerate de migration sempre revisado linha a linha por um humano.
 4. CI é obrigatório; pre-commit acelera, CI garante.
 5. Estrutura por domínio (back) e por feature (front), espelhadas.

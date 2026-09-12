@@ -9,14 +9,16 @@ quando ela estiver acessível, ela prevalece.
 
 ## Arquitetura em uma frase
 
-Front (React/Vite) → API (FastAPI) → PostgreSQL (RDS). N8N como esteira de IA por
-webhook assíncrono. Tudo em EKS, banco fora do cluster.
+Front (React/Vite) estático no **Amplify** → API (FastAPI) → PostgreSQL (RDS). Back,
+N8N e Keycloak são três containers numa **EC2 única**, pelo mesmo `docker-compose` do
+ambiente local. Banco no RDS, fora da instância, um schema por componente. N8N como
+esteira de IA por webhook assíncrono. (ADR-0007)
 
 ## Princípios inegociáveis
 
 1. **Agregação no banco, cálculo no backend, renderização no front.** Front somando
    array para montar indicador = arquitetura vazou.
-2. **Migrations nunca no startup do container** — Job dedicado.
+2. **Migrations nunca no startup do container** — passo dedicado do pipeline.
 3. **Autogenerate de migration é sempre revisado linha a linha por um humano** —
    rename vira drop+create e perde dados.
 4. **CI é obrigatório.**
