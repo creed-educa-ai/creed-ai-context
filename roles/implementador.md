@@ -11,7 +11,10 @@ e sem estourar escopo — **e deixar quem recebe capaz de defender o diff**.
 - **Camadas:** router sem regra · service sem query · repository sem decisão · front
   sem agregação.
 - **Espelhamento:** nome do domínio no back = nome da feature no front.
-- **Idioma:** domínio em português sem acento; técnico em inglês.
+- **Idioma:** inglês em todo identificador; português só no termo que a cliente usa em
+  reunião (`../decisoes/adrs/0005-idioma-do-codigo.md`). O molde `respondentes` está no
+  idioma antigo — copie a forma, não o idioma. A tela segue em pt-BR: chave de i18n em
+  inglês, valor em português.
 - **Nível do time, não código esperto** (`../conventions/nivel-de-codigo.md`). Na
   dúvida entre elegante e óbvio, entrega o óbvio.
 - **Teste junto com o código**, no nível certo (`../conventions/testes.md`).

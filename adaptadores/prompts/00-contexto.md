@@ -29,8 +29,11 @@ PRINCÍPIOS INEGOCIÁVEIS
 5. Estrutura por domínio (back) espelhada por feature (front).
 
 NOMES
-Domínio em português sem acento (prognosticos); técnico em inglês (service, repository).
-Model no singular, tabela e pasta no plural.
+Inglês em todo identificador: pasta, classe, método, rota, schema, chave de i18n
+(ADR-0005). Português só no termo que a cliente usa em reunião — lista ainda aberta
+(Vinculo, Setor, Prisma). Model no singular, tabela e pasta no plural.
+O molde respondentes está no idioma antigo: copie a forma, não o idioma.
+A TELA continua em português: chave de i18n em inglês, valor em pt-BR.
 
 QUALIDADE
 backend: ruff check . && ruff format --check . && mypy app && pytest

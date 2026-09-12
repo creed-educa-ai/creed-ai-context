@@ -52,16 +52,26 @@ o banco obriga a mexer no service, a camada furou.
 
 ## Nome do método diz de qual camada é
 
-`estrutura-e-nomes.md` já manda domínio em português e técnico em inglês.
-Aplicado a método, isso vira um sinal de leitura imediata — e é o que o molde já faz:
+> ⚠️ **Mudou.** Esta seção separava as camadas por **idioma** — service em português
+> (`criar`), repository em inglês (`get_by_id`). Com o
+> [ADR-0005](../decisoes/adrs/0005-idioma-do-codigo.md) o código é inglês dos dois lados,
+> e o sinal de idioma acabou. O molde `respondentes` ainda mostra a forma antiga: é
+> resíduo datado, não exemplo a copiar.
 
-| Camada | Idioma | Exemplos no molde |
+O sinal que sobrou é mais forte, porque nunca dependeu de idioma: **o service nomeia o
+caso de uso, o repository nomeia o acesso.**
+
+| Camada | O que o nome diz | Exemplos |
 |---|---|---|
-| `service.py` | português | `obter`, `listar`, `criar`, `atualizar`, `remover` |
-| `repository.py` | inglês | `get_by_id`, `get_by_email`, `list_paginated`, `create`, `delete` |
+| `service.py` | a intenção, no vocabulário de quem pede | `register`, `deactivate`, `change_role`, `submit` |
+| `repository.py` | como o dado é buscado ou gravado | `get_by_id`, `get_by_email`, `list_paginated`, `insert`, `delete` |
 
-Método em português é operação de negócio; em inglês, operação técnica. Método de
-service em inglês costuma ser regra que vazou para o lugar errado.
+Método de service chamado `get_by_email` costuma ser repository disfarçado. Método de
+repository chamado `register` já está decidindo alguma coisa — e decisão é do service.
+Na dúvida, vale o corte do [ADR-0004](../decisoes/adrs/0004-camadas-do-backend.md):
+
+> Se a resposta muda quando o **produto** muda de ideia, é service.
+> Se muda quando o **banco** muda de forma, é repository.
 
 ## Transação: quem fecha
 

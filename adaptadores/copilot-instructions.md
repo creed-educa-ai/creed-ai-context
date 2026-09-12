@@ -49,8 +49,13 @@ Nada de agregação no front. Texto visível via i18n.
 
 ## Nomes
 
-Domínio em português sem acento (`prognosticos`), técnico em inglês (`service`,
-`repository`). Model singular, tabela e pasta plural. Nome da feature = nome do domínio.
+**Inglês em todo identificador** — pasta, classe, método, rota, schema, chave de i18n
+(ADR-0005). Português só no termo que a cliente usa em reunião, e essa lista ainda está
+aberta (`Vinculo`, `Setor`, `Prisma`). Model singular, tabela e pasta plural. Nome da
+feature = nome do domínio.
+
+O molde `respondentes` está no **idioma antigo** (`criar`, `PaginaDe`): copie a forma,
+não o idioma. E a tela continua em português — chave de i18n em inglês, valor em `pt-BR`.
 
 ## Testes
 

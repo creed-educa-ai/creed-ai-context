@@ -1,7 +1,10 @@
 # Glossário
 
-Termos do domínio da CREED.ai Educa. **O nome no código é o nome aqui** — domínio em
-português, código técnico em inglês.
+Termos do domínio da CREED.ai Educa. Desde o
+[ADR-0005](decisoes/adrs/0005-idioma-do-codigo.md), **o nome no código é o nome aqui só
+para os termos que a cliente de fato usa em reunião** — todo o resto do código é inglês.
+Quais desses termos são esses ainda é decisão aberta do time (pendência do ADR-0005), e
+é este arquivo que a decisão vai marcar.
 
 > ⚠️ Este glossário é um **esqueleto**. Cada entrada marcada com 🟡 está preenchida por
 > premissa da equipe, não por definição da cliente. Confirmar na próxima reunião
