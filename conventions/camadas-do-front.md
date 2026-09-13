@@ -43,6 +43,32 @@ para mudar.** Se mudar a rota do backend obriga a mexer na View, a camada furou.
 Store global com tudo dentro é o oposto de boa gestão de estado: cada campo a mais é um
 lugar a mais para desincronizar.
 
+## Testando View conectada ao Redux
+
+> 🟡 **Premissa P-014** — decisão individual, ainda sem revisão do time
+> (`../decisoes/premissas.md`).
+
+Teste de `<Feature>View.tsx` que usa `useAppSelector`/`useAppDispatch` monta uma store
+isolada, só com o(s) reducer(s) que a própria tela usa — não importa a store real do
+app (`@/app/store`):
+
+```tsx
+function renderizar() {
+  const store = configureStore({ reducer: { auth: authReducer } });
+  return render(
+    <Provider store={store}>
+      <LoginView />
+    </Provider>,
+  );
+}
+```
+
+Por quê: o Vitest isola módulos por **arquivo**, não por `it()` — todos os casos de um
+mesmo arquivo de teste reaproveitam a mesma instância da store importada. Usar a store
+real deixa estado vazar de um teste pro outro (ex.: um `it` que loga com sucesso deixa
+`state.auth.token` setado pro próximo) e acopla o teste da tela a reducers que ela nem
+usa (um teste de login sabendo que `respondentesReducer` existe).
+
 ## A máquina de status
 
 Uma só, igual em toda feature, copiada do `respondentesSlice`:
