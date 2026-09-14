@@ -50,9 +50,13 @@ Transversal: `src/app/` (store, routes, hooks) · `src/components/ui/` ·
 
 ## creed-infrastructure
 
-`migration-job.yaml` (Job dedicado, `helm.sh/hook: pre-upgrade`) e notas de EKS.
-Componentes: front (Nginx em pod) · back (Uvicorn em pod) · PostgreSQL **no RDS**
-(nunca stateful em pod) · N8N (pod stateful + PVC).
+Notas de deploy. Componentes: front (**Amplify**, build estático) · back, N8N e
+Keycloak (três containers numa **EC2 única**, pelo mesmo `docker-compose` do ambiente
+local) · PostgreSQL **no RDS**, fora da instância, um schema por componente.
+
+`migration-job.yaml` continua versionado como referência de um desenho **aposentado**
+([ADR-0007](decisoes/adrs/0007-amplify-e-ec2-no-lugar-do-eks.md)) — nada o consome.
+Migration hoje é passo do pipeline.
 
 ## Comandos de qualidade
 

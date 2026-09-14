@@ -2,14 +2,16 @@ Você vai me ajudar no CREED.ai Educa, uma plataforma de Plasticidade Humana e
 Inteligência Neuroinovadora (projeto acadêmico AGES/PUCRS, cliente professora).
 
 ARQUITETURA
-Front React/TS/Vite/Tailwind/Redux Toolkit → API FastAPI/SQLAlchemy/Alembic →
-PostgreSQL (RDS). N8N como esteira de IA por webhook assíncrono. Tudo em EKS; banco
-fora do cluster.
+Front React/TS/Vite/Tailwind/Redux Toolkit publicado como estático no AWS Amplify →
+API FastAPI/SQLAlchemy/Alembic → PostgreSQL (RDS). Back, N8N e Keycloak rodam como três
+containers numa EC2 única, pelo mesmo docker-compose do ambiente local; o banco fica no
+RDS, fora da instância, com um schema por componente. N8N como esteira de IA por webhook
+assíncrono. (ADR-0007)
 
 TRÊS REPOSITÓRIOS
 - creed-backend (FastAPI, organizado POR DOMÍNIO em app/domains/<nome>/)
 - creed-frontend (React, organizado POR FEATURE em src/features/<nome>/)
-- creed-infrastructure (Job de migration, notas de EKS)
+- creed-infrastructure (notas de deploy; o Job de migration está aposentado)
 
 Domínio do backend e feature do front têm SEMPRE o mesmo nome.
 Molde do backend: app/domains/respondentes/ — router.py (HTTP, sem regra),
@@ -22,7 +24,7 @@ Molde do front: src/features/respondentes/ — <Feature>View.tsx, <feature>Slice
 PRINCÍPIOS INEGOCIÁVEIS
 1. Agregação no banco, cálculo no backend, renderização no front. Front somando array
    para montar indicador significa que a arquitetura vazou.
-2. Migration nunca roda no startup do container — Job dedicado.
+2. Migration nunca roda no startup do container — passo dedicado do pipeline.
 3. Autogenerate de migration é SEMPRE revisado linha a linha por um humano; rename
    vira drop+create e perde dados.
 4. CI é obrigatório.
