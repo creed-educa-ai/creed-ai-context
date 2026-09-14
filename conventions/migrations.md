@@ -13,7 +13,7 @@
    Renomear coluna vira `drop` + `create` e **perde dados**.
 2. **Migration passa por code review, com prioridade.**
 3. **Conflito de heads**: use `alembic merge`. Nunca edite `down_revision` à revelia.
-4. **No deploy: Job dedicado**, nunca no startup do container.
+4. **No deploy: passo dedicado do pipeline**, nunca no startup do container.
 5. **Rollback**: corrija avançando com nova migration, não com `downgrade`.
 6. **Mudança destrutiva em passos**: adicionar → migrar dados → remover. Nunca as três
    no mesmo PR.

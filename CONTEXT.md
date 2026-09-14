@@ -15,16 +15,18 @@ Três repositórios, um workspace:
 |---|---|---|
 | `creed-backend/` | API, domínios, migrations | FastAPI · SQLAlchemy · Alembic · Pydantic |
 | `creed-frontend/` | SPA por feature | React · TS · Vite · Tailwind · Redux Toolkit · Vitest |
-| `creed-infrastructure/` | Job de migration, notas de EKS | Kubernetes · Helm hooks |
+| `creed-infrastructure/` | Notas de deploy e o Job de migration aposentado | EC2 · Docker Compose · Amplify |
 
 Detalhe por repo em [`catalogo.md`](catalogo.md). Termos do domínio em [`glossario.md`](glossario.md).
 Quem é quem — e quem revisa PR — em [`equipe.md`](equipe.md).
 
 ## Arquitetura em uma frase
 
-Cliente (mobile/desktop) → **tudo o mais dentro da AWS/EKS**: front (Nginx), backend
-(Uvicorn), PostgreSQL no RDS, N8N self-hosted como esteira de IA consumida por webhook
-assíncrono. Ver [`context/arquitetura.md`](context/arquitetura.md).
+Cliente (mobile/desktop) → front estático no **Amplify** → back, N8N e Keycloak como
+três containers numa **EC2 única** (mesmo `docker-compose` do ambiente local) →
+PostgreSQL no **RDS**, um schema por componente. A esteira de IA (N8N) é consumida por
+webhook assíncrono. Ver [`context/arquitetura.md`](context/arquitetura.md) e
+[`ADR-0007`](decisoes/adrs/0007-amplify-e-ec2-no-lugar-do-eks.md).
 
 ## Modelo de dados
 
@@ -43,7 +45,7 @@ o caminho é colar no dbdiagram, reexportar por cima e só então inaugurar.
 
 1. **Agregação no banco, cálculo no backend, renderização no front.**
    Se o front estiver agregando, a arquitetura vazou.
-2. **Migrations nunca rodam no startup do container** — Job dedicado.
+2. **Migrations nunca rodam no startup do container** — passo dedicado antes do deploy.
 3. **Autogenerate de migration sempre revisado linha a linha.**
 4. **CI é obrigatório** — pre-commit acelera, CI garante.
 5. **Estrutura por domínio (back) e por feature (front), espelhadas.**

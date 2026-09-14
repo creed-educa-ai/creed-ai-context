@@ -141,7 +141,7 @@ app/external_services/n8n/
 |---|---|
 | O client não sabe o que é um prognóstico | traduzir CREED ↔ provedor é trabalho do `service.py` do domínio dono |
 | Só o `service.py` chama, injetado por `dependencies.py` | router nunca chama client; nada de instanciar client em nível de módulo |
-| Timeout obrigatório, vindo de `settings` | chamada sem timeout é o pod pendurado esperando serviço que já morreu |
+| Timeout obrigatório, vindo de `settings` | chamada sem timeout é o container pendurado esperando serviço que já morreu |
 | Erro de biblioteca morre no client | o que sai do client é `N8NIndisponivel`, não `httpx.HTTPError` |
 | Cair não derruba a requisição do usuário | a esteira é assíncrona por decisão de arquitetura: falha ao disparar é **estado do domínio** (com reenvio possível), não 500 na cara de quem clicou |
 | Teste não toca a rede | client fake, do mesmo jeito que o repository fake |

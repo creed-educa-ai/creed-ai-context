@@ -45,7 +45,7 @@ significa que o contrato exista.
 
    - `httpx.AsyncClient`, recebido ou construído no `__init__` — nunca em nível de
      módulo, que fura o `lifespan` e vaza conexão entre testes.
-   - **timeout vindo de `settings`**, sempre. Chamada sem timeout é o pod pendurado
+   - **timeout vindo de `settings`**, sempre. Chamada sem timeout é o container pendurado
      esperando um serviço que já morreu.
    - `try/except` estreito em volta da chamada, convertendo o erro da biblioteca na
      exceção do passo 3. Nada de `httpx` sai deste arquivo.

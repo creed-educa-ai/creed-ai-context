@@ -26,9 +26,48 @@ de respondentes reais, alto — vira migration com risco de perda.
 
 ---
 
+## 2. Níveis de acesso — quem pode o quê
+
+**Hoje está assim:** o time vai construir a autenticação com **três níveis**:
+*administrador* (cadastra pessoas e define o nível de cada uma), *gestor* (enxerga a
+organização dele inteira: formulários, respostas e painéis) e *respondente* (só os
+próprios formulários). É a lista que está no diagrama de dados que o time desenhou.
+
+**Pergunta:** três níveis chegam, ou a senhora precisa de algum outro — alguém que veja
+mais de uma organização, por exemplo, ou alguém que veja os painéis mas não possa
+cadastrar ninguém?
+
+**Custo de mudar:** **agora, zero** — nada foi construído ainda. Depois que a
+autenticação existir, alto: muda o banco, muda a regra de todas as telas e muda o
+servidor de senhas.
+
+*(P-006, e fecha também a P-003)*
+
+---
+
+## 3. Primeiro acesso e senha esquecida
+
+**Hoje está assim:** a plataforma **não envia e-mail** — isso não existe na
+infraestrutura. Então o time planeja: o administrador cadastra a pessoa com uma senha
+provisória, e a plataforma obriga a trocar no primeiro acesso. Quem esquecer a senha
+pede uma nova ao administrador.
+
+**Pergunta:** isso funciona na prática de vocês, ou a senhora espera que a pessoa
+receba um convite por e-mail e crie a própria senha?
+
+**Custo de mudar:** médio — passa a exigir um serviço de envio de e-mail configurado,
+que hoje não existe em lugar nenhum do projeto.
+
+*(P-007, P-009)*
+
+---
+
 ## Ficou para a próxima
 
-<IDs das premissas abertas que não couberam, uma linha cada.>
+- **P-008** — não existe "criar conta" pela plataforma: todo acesso nasce de um cadastro
+  feito por um administrador.
+- **P-010** — quanto tempo a pessoa fica logada antes de precisar entrar de novo
+  (proposto: 8 horas).
 
 ---
 
@@ -37,3 +76,6 @@ de respondentes reais, alto — vira migration com risco de perda.
 | Premissa | Desfecho | Ação |
 |---|---|---|
 | P-001 | | |
+| P-006 (+ P-003) | | |
+| P-007 | | |
+| P-009 | | |
