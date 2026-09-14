@@ -5,10 +5,11 @@
 > programa contra **antes de o backend existir**, e o que o backend implementa nas
 > entregas 3 e 4.
 >
-> **Status: proposta.** Nenhuma linha disto existe em código. Quando o backend chegar e
-> divergir, **o backend ganha** e o front se ajusta
-> ([`conventions/contrato-front-back.md`](../../conventions/contrato-front-back.md)). É
-> exatamente para essa conversa durar cinco minutos que este arquivo existe.
+> **Status: parcialmente implementado (2026-09-14).** Este documento continua descrevendo
+> o **alvo**. O que já existe em código diverge dele em pontos concretos, e pela regra de
+> [`conventions/contrato-front-back.md`](../../conventions/contrato-front-back.md)
+> **o backend ganha** — o quadro "Estado real" abaixo é a fonte para quem está programando
+> hoje. O resto da tabela permanece como o destino acordado, não como dívida.
 >
 > Payloads literais, com exemplos nomeados: [`mock/openapi.yaml`](mock/openapi.yaml).
 > Como disparar requisição de verdade contra eles: [`mock/README.md`](mock/README.md).
@@ -29,6 +30,37 @@ Prefixo `/api/v1`. Identificadores em inglês por
 | PATCH | `/users/{user_id}` | Bearer | `admin` | `UserUpdate` | `User` · 200 |
 
 `GET /users` aceita `organization_id`, `role`, `page` e `page_size` na query.
+
+## Estado real — 2026-09-14
+
+O domínio `users` está na `dev` do backend; o `authentication` está em PR
+([creed-backend#12](https://github.com/creed-educa-ai/creed-backend/pull/12), draft) e o
+front que consome está em [creed-frontend#22](https://github.com/creed-educa-ai/creed-frontend/pull/22).
+O fluxo de login foi verificado de ponta a ponta contra Keycloak e Postgres locais.
+
+| Alvo acima | O que existe | Nota |
+|---|---|---|
+| `POST /authentication/login` | **`POST /auth/login`** | prefixo mais curto; front e back já concordam |
+| `POST /authentication/renew` | **`POST /auth/renew`** | idem |
+| `GET /authentication/session` | **`GET /auth/me`** | mesmo payload (`UserSessionResponse`) |
+| `POST /authentication/logout` | **não existe** | sem endpoint, "sair" só limpa a sessão no front e o refresh token segue válido até expirar |
+| `POST /users` | existe, **sem guarda de papel** | e o payload é outro — ver abaixo |
+| `GET /users` · `PATCH /users/{id}` | **não existem** | |
+| — | **`DELETE /users/{user_id}`** (204) | existe e não está no contrato |
+
+**`UserCreate` diverge de verdade.** O alvo é `{vinculo_id, email, initial_password}`;
+o implementado é **`{keycloak_id, name, email}`**. A razão é que `Vinculo` ainda não tem
+tabela, então o papel virou coluna do `user` e o vínculo não é pedido. Enquanto isso, quem
+provisiona cria o usuário no Keycloak primeiro e passa o `sub` — não há senha no payload,
+coerente com a P-012.
+
+**`role` e `organization_id` do `User`** continuam existindo na leitura, mas hoje saem
+sempre `null` em `UserSessionResponse` (exceto `role`, que vem da coluna).
+
+⚠️ **O 503 do quadro de status ainda não acontece.** Keycloak fora do ar responde **401**,
+não 503 — o service traduz indisponibilidade para erro de credencial. É o par que a seção
+"Códigos de status" avisa para não confundir, e está confundido no código.
+
 
 ## Os payloads
 

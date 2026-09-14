@@ -35,11 +35,19 @@ Desenhado pelo time no dbdiagram.io. A fonte literal é
 bloco resolve, as pendências e o mapa tabela → domínio — está em
 [`context/modelo-de-dados.md`](context/modelo-de-dados.md).
 
-⚠️ **Não gere migration a partir do `.dbml` ainda.** O banco não foi inaugurado
-(`alembic/versions/` vazio) e dois pontos do export atual impedem o DDL de subir. A
-devolutiva fechou em 2026-09-04 e a correção está em
+⚠️ **O banco foi inaugurado em 2026-09-13 — e não pelo `.dbml`.** A primeira revisão
+do Alembic (`0b0ad39d779a`) criou **só** a tabela `user` da CREED-23; o resto do modelo
+continua existindo apenas no diagrama.
+
+**Continua valendo não gerar migration a partir do `.dbml`**: dois pontos do export
+atual impedem o DDL de subir. A devolutiva fechou em 2026-09-04 e a correção está em
 [`context/modelo-de-dados.proposta.dbml`](context/modelo-de-dados.proposta.dbml):
-o caminho é colar no dbdiagram, reexportar por cima e só então inaugurar.
+o caminho é colar no dbdiagram, reexportar por cima e só então migrar o resto.
+
+⚠️ **E a `user` que subiu diverge do modelo do time** — ela tem `name` e `role` como
+coluna e não tem `vinculo_id`. A divergência está descrita em
+[`context/modelo-de-dados.md`](context/modelo-de-dados.md) → "A v1 e a autenticação",
+e ainda não tem decisão.
 
 ## Princípios inegociáveis
 
