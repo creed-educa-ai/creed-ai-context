@@ -54,6 +54,8 @@ dois logins, mas um só `Participant` — é no participante que as análises se
 | 2026-09-04 | **Dashboard e relatório são calculados sob demanda pelo backend** — nenhum resultado é persistido **[C7]** | campos de arquivo saem, `DashboardExport` não entra, `Insight.dashboard_id` sai. Expõe a falta do versionamento de respostas e resultados (pendência 🟠 23). Ver [devolutiva](#devolutiva--dashboard-relatório-e-o-cálculo-sob-demanda) |
 | 2026-09-04 | **`User` ganha `status`** (`RecordStatus`, `not null`, default `active`) **[C26]** | desativar um login é caso de uso de autenticação, e a v1 existe para destravar a autenticação. Não se confunde com `Vinculo.end_at`: `status` é **acesso**, `end_at` é **vínculo**. Única mudança feita depois do fechamento da devolutiva |
 | 2026-09-04 | **A meta é uma v1 sólida do banco, para destravar a autenticação** — versionamento de resposta e resultado fica para depois | a devolutiva fecha aqui; a proposta não muda mais sem decisão nova. O que foi adiado, com gatilho de retorno, está em [Adiado de propósito](#adiado-de-propósito); o que a auth ainda vai precisar, em [A v1 e a autenticação](#a-v1-e-a-autenticação) |
+| 2026-09-13 | **`User.password` sai — a credencial mora no Keycloak [C27]** | guardar hash aqui criaria uma segunda fonte de senha e a pergunta sem resposta boa: qual das duas vale no login? Fecha a pendência "`User.password` é nulável" — não há senha nossa. **Ratificada pelo código**, não por reunião: a migration de inauguração subiu sem a coluna |
+| 2026-09-13 | **`User.keycloak_id` entra** (`uuid`, `unique`, `not null`) **[C28]** | é o `sub` do JWT, a única ligação entre o token que chega e a linha da tabela. Sem ele o backend acharia o usuário por e-mail, e e-mail é dado que muda. **Não é FK** — aponta para fora do banco, então a contagem de FKs do cabeçalho não muda |
 
 ## Pendências
 
@@ -232,7 +234,7 @@ consertar depois é migration de correção com dado gravado em cima.
 O próximo passo é autenticação, então vale dizer o que **este** modelo já resolve para ela
 e o que ainda não:
 
-**Resolve.** `User.email` único, `User.password`, e o papel vindo de `Vinculo.role` —
+**Resolve.** `User.email` único e o papel vindo de `Vinculo.role` —
 autorização por papel *dentro de uma organização*, que é o que o produto pede. Com o 1:1
 de [C2], o papel de um login é uma consulta direta: `User → Vinculo → role`.
 
@@ -242,7 +244,8 @@ de [C2], o papel de um login é uma consulta direta: `User → Vinculo → role`
 |---|---|
 | **`Roles` ainda em conflito com [P-003](../decisoes/premissas.md)** (#12) | a auth vai codificar a lista de papéis. Decidir depois é migration de enum **e** refactor de guarda de rota. É a pendência mais urgente das que sobraram, e a mais barata: nenhum código depende dos dois lados hoje |
 | ~~Não há como desativar um login~~ — **resolvido [C26]**: `User.status RecordStatus`, `not null`, default `active` | `status = inactive` desliga o **acesso**; `Vinculo.end_at` encerra o **vínculo**. Separados de propósito: dá para suspender alguém sem encerrar o vínculo, e dá para o vínculo acabar sem apagar a conta. Apagar a linha do `User` nunca foi opção — `Dashboard.user_id` aponta para ela |
-| **`User.password` é nulável** | login precisa saber o que fazer com senha nula. Se for convite pendente ou SSO, é comportamento a especificar; se foi descuido, é `not null` |
+| ~~**`User.password` é nulável**~~ — **resolvido [C27]**: a coluna saiu | não há senha nossa. A credencial é do Keycloak (P-012, decisão D1 da CREED-23); daqui sai só o `keycloak_id`, que não abre porta sozinho |
+| 🔴 **A tabela `user` que subiu não é a deste modelo** | a migration de inauguração (`0b0ad39d779a`, 2026-09-13) criou `user` com **`name` e `role` como coluna** e **sem `vinculo_id`** — porque `Vinculo` ainda não tem tabela. O modelo diz que o papel vem de `Vinculo.role` e que todo usuário tem vínculo ([C2]). Os dois não podem estar certos ao mesmo tempo: ou `Vinculo` entra e `role`/`name` saem do `user`, ou o modelo muda. **Sem decisão** — e o custo cresce a cada linha gravada |
 | **Sem tabela de token** (reset de senha, refresh, verificação de e-mail) | não é problema: essas tabelas são **aditivas**, entram por migration própria quando a auth for desenhada. Só não confundir com esquecimento |
 
 ## Mapa tabela → domínio do backend

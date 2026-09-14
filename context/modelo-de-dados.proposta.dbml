@@ -104,11 +104,22 @@ Enum Gender {
 // continuar respondendo por outro vínculo mais tarde, e alguém pode ter o acesso
 // suspenso sem que o vínculo tenha terminado. Apagar a linha do User não é
 // alternativa: Dashboard.user_id aponta para cá.
+// [C27] password SAI. A credencial passa a viver no Keycloak — é a razão de ele
+// existir no desenho. Guardar hash também aqui cria duas fontes de senha e a pergunta
+// que não tem resposta boa: qual das duas vale no login? Fecha a pendência
+// "password é nulável — login precisa saber o que fazer com senha nula": não há senha
+// nossa.
+//
+// [C28] keycloak_id ENTRA — é o `sub` do JWT, a única ligação entre o token que chega
+// na requisição e a linha desta tabela. Sem ele o backend acharia o usuário por email,
+// e email é dado que muda. `not null` porque não existe User sem credencial; `unique`
+// já cria o índice; NÃO é FK — aponta para fora do banco, então a contagem de FKs do
+// cabeçalho não muda.
 Table User {
   id uuid [pk, default: `uuid()`]
   vinculo_id uuid [unique, not null]
+  keycloak_id uuid [unique, not null]
   email string [unique, not null]
-  password string
   status RecordStatus [not null, default: 'active']
   created_at datetime [default: `now()`]
   updated_at datetime
