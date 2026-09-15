@@ -33,16 +33,24 @@ Prefixo `/api/v1`. Identificadores em inglês por
 
 ## Estado real — 2026-09-14
 
-O domínio `users` está na `dev` do backend; o `authentication` está em PR
-([creed-backend#12](https://github.com/creed-educa-ai/creed-backend/pull/12), draft) e o
-front que consome está em [creed-frontend#22](https://github.com/creed-educa-ai/creed-frontend/pull/22).
+Os domínios `users` e `authentication` estão na `dev` do backend
+([creed-backend#12](https://github.com/creed-educa-ai/creed-backend/pull/12) mergeado).
 O fluxo de login foi verificado de ponta a ponta contra Keycloak e Postgres locais.
+
+⚠️ **As três rotas de autenticação estão em renomeação, ainda não mergeada.** Na `dev`
+de hoje elas continuam `/auth/login`, `/auth/renew` e `GET /auth/me`. O PR
+[creed-backend#14](https://github.com/creed-educa-ai/creed-backend/pull/14) as move para
+`/authentication/{login,renew,session}` — o alvo deste documento — em vez de o front se
+ajustar ao desvio, porque o [ADR-0005](../../decisoes/adrs/0005-idioma-do-codigo.md)
+escreve `/api/v1/authentication/renew` como o nome correto. O lado do front é
+[creed-frontend#24](https://github.com/creed-educa-ai/creed-frontend/pull/24), que **só
+pode entrar depois** do #14: invertida a ordem, o login cai em 404 na janela entre os dois.
 
 | Alvo acima | O que existe | Nota |
 |---|---|---|
-| `POST /authentication/login` | **`POST /auth/login`** | prefixo mais curto; front e back já concordam |
+| `POST /authentication/login` | **`POST /auth/login`** | vira o alvo no #14 |
 | `POST /authentication/renew` | **`POST /auth/renew`** | idem |
-| `GET /authentication/session` | **`GET /auth/me`** | mesmo payload (`UserSessionResponse`) |
+| `GET /authentication/session` | **`GET /auth/me`** | vira o alvo no #14; mesmo payload (`UserSessionResponse`) |
 | `POST /authentication/logout` | **não existe** | sem endpoint, "sair" só limpa a sessão no front e o refresh token segue válido até expirar |
 | `POST /users` | existe, **sem guarda de papel** | e o payload é outro — ver abaixo |
 | `GET /users` · `PATCH /users/{id}` | **não existem** | |
