@@ -21,7 +21,7 @@ Siga `creed-ai-context/workflows/tasks-to-clickup.md`, no papel de
 
 <critical>NENHUMA FRASE PODE PRESSUPOR QUE A PESSOA LEU O `creed-ai-context`. "Veja o molde", "siga a convenção", "premissa P-012" sozinhos reprovam a tarefa: ou vira texto expandido ali mesmo, ou vira material anexado. O bloco "Rastreio" no fim é o único ponteiro para o harness, e é opcional para quem lê.</critical>
 
-<critical>MATERIAIS: monte a lista por subtarefa pela tabela de gatilhos do workflow (contrato, mock, modelo de dados, permalink do molde, texto da premissa, glossário, doc de serviço externo). Marque ✅ anexado ou ⬜ falta anexar COM DONO, e cobre isso na mensagem final, subtarefa por subtarefa. Você NÃO anexa arquivo por conta própria — só se a pessoa pedir, arquivo por arquivo. E nunca escreva "veja o anexo" para material que está ⬜.</critical>
+<critical>MATERIAIS: monte a lista por subtarefa pela tabela de gatilhos do workflow (contrato, mock, modelo de dados, permalink do molde, texto da premissa, glossário, doc de serviço externo). Marque ✅ anexado ou ⬜ falta anexar COM DONO, e cobre isso na mensagem final, subtarefa por subtarefa. Você NÃO anexa arquivo por conta própria — só se a pessoa pedir, arquivo por arquivo; quando pedir, siga a seção "Quando o pedido explícito vier" do workflow e, DEPOIS de anexar, corrija a descrição de ⬜ para ✅. E nunca escreva "veja o anexo" para material que está ⬜.</critical>
 
 <critical>IDEMPOTÊNCIA: toda descrição publicada termina com `Rastreio: <ID>/<N>`. No passo 3, compare por essa linha — cria o que falta, atualiza o que mudou, DEIXA o que está igual (não gasta chamada) e NÃO TOCA em subtarefa sem rastreio: reporte e siga. Escreva sempre em `markdown_description`, nunca em `description`.</critical>
 

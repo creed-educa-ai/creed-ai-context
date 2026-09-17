@@ -3,7 +3,8 @@
 ```
 Épico: 86e348g6u — CREED-23 [Autenticação] Estruturar autenticação da plataforma
 Spec: spec.md · Tasks: tasks.md · Contrato: contrato-api.md
-Gerado em: 2026-09-17 · Publicado em: 2026-09-17 (épico + 7 subtarefas, 8 escritas)
+Gerado em: 2026-09-17 · Publicado em: 2026-09-17 (épico + 7 subtarefas)
+Anexos: 2026-09-17 — 8 arquivos subidos; 5 descrições corrigidas de ⬜ para ✅
 ```
 
 ## Mapa de publicação
@@ -54,8 +55,10 @@ divergiu do acordado, a divergência está escrita na própria subtarefa, e a fo
 |---|---|---|---|
 | `creed-23-openapi.yaml` | anexo do épico CREED-23 | 3, 4, 5, 6 | ✅ anexado no épico |
 | `creed-23-payloads.json` | anexo do épico CREED-23 | 5, 6 | ✅ anexado no épico |
-| Contrato completo (`contrato-api.md`) | `tarefas/86e348g6u-.../contrato-api.md` | 3, 4, 5, 6 | ⬜ falta anexar — **AGES IV** |
-| Correções do DBML (`correcoes-dbml-auth.md`) | `tarefas/86e348g6u-.../correcoes-dbml-auth.md` | 1 | ⬜ falta anexar — **AGES IV** |
+| Contrato completo (`contrato-api.md`) | `tarefas/86e348g6u-.../contrato-api.md` | 3, 4, 5, 6 | ✅ anexado como `creed-23-contrato-api.md` |
+| Correções do DBML (`correcoes-dbml-auth.md`) | `tarefas/86e348g6u-.../correcoes-dbml-auth.md` | 1 | ✅ anexado como `creed-23-correcoes-dbml-auth.md` |
+| Modelo de dados proposto (`context/modelo-de-dados.proposta.dbml`) | fora da pasta da tarefa | 1 | ✅ anexado |
+| Mock: README e docker-compose | `tarefas/86e348g6u-.../mock/` | 5 | ✅ anexados |
 | Diagrama do modelo de dados (link dbdiagram.io) | fora do repositório | 1 | ⬜ falta o link — **AGES III** |
 | Protótipo da tela de login (Figma) | fora do repositório | 6 | ⬜ falta o link — **AGES III** |
 | Desenho do menu e do que cada papel vê | não existe ainda | 7 | ⬜ **falta produzir** — AGES III/IV |
@@ -277,7 +280,8 @@ reproduz exatamente o mesmo banco.
 
 | Material | Situação |
 |---|---|
-| O bloco de tabela já corrigido, pronto para colar no dbdiagram (`correcoes-dbml-auth.md`) | ⬜ falta anexar — **AGES IV** |
+| `creed-23-correcoes-dbml-auth.md` — o bloco de tabela já corrigido, pronto para colar no dbdiagram | ✅ anexado |
+| `creed-23-modelo-de-dados.proposta.dbml` — o modelo inteiro, na versão que sobe | ✅ anexado |
 | Link do diagrama no dbdiagram.io | ⬜ falta anexar — **AGES III** |
 | Definições: *vínculo* = ligação de uma pessoa com uma organização, com papel e período · *organização* = instituição à qual as pessoas respondentes pertencem | ✅ acima |
 
@@ -551,7 +555,7 @@ isso o espelhamento não tem por onde ser exercitado.
 | Material | Situação |
 |---|---|
 | `creed-23-openapi.yaml` — os formatos literais | ✅ anexado no épico CREED-23 |
-| Contrato completo em texto (`contrato-api.md`) | ⬜ falta anexar — **AGES IV** |
+| `creed-23-contrato-api.md` — o contrato completo, em texto | ✅ anexado |
 | Link do arquivo de exemplo `app/domains/respondentes/service.py` no GitHub | ⬜ falta o permalink — **AGES IV** |
 
 ### Rastreio
@@ -743,7 +747,7 @@ contrato acima, e estão registrados para não serem descobertos por acidente:
 | Material | Situação |
 |---|---|
 | `creed-23-openapi.yaml` — os formatos literais | ✅ anexado no épico CREED-23 |
-| Contrato completo em texto (`contrato-api.md`) | ⬜ falta anexar — **AGES IV** |
+| `creed-23-contrato-api.md` — o contrato completo, em texto | ✅ anexado |
 
 ### Rastreio
 
@@ -881,8 +885,9 @@ coisa → cai na tela de login, sem tela quebrada.
 | Material | Situação |
 |---|---|
 | `creed-23-openapi.yaml` e `creed-23-payloads.json` | ✅ anexados no épico CREED-23 |
-| Como disparar chamadas de verdade contra os exemplos, antes de o servidor existir | ⬜ falta anexar o `mock/README.md` — **AGES IV** |
-| Contrato completo em texto (`contrato-api.md`) | ⬜ falta anexar — **AGES IV** |
+| `creed-23-mock-README.md` — como disparar chamadas de verdade contra os exemplos | ✅ anexado |
+| `creed-23-mock-docker-compose.yml` — sobe o mock local que o README explica | ✅ anexado |
+| `creed-23-contrato-api.md` — o contrato completo, em texto | ✅ anexado |
 
 > ⚠️ Os exemplos anexados **não guardam estado**: o crachá que eles devolvem não é aceito por
 > eles depois. O ciclo entrar → usar → renovar só fecha de verdade contra o servidor da
@@ -1018,7 +1023,7 @@ de quem revisa esta entrega — não a apague sem combinar.
 | Protótipo da tela de login (Figma) | ⬜ falta o link — **AGES III** |
 | Protótipo da tela de acesso negado | ⬜ falta o link — **AGES III** |
 | `creed-23-payloads.json` — exemplos de resposta do login | ✅ anexado no épico CREED-23 |
-| Contrato completo em texto (`contrato-api.md`) | ⬜ falta anexar — **AGES IV** |
+| `creed-23-contrato-api.md` — o contrato completo, em texto | ✅ anexado |
 
 ### Rastreio
 
