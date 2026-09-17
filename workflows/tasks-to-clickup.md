@@ -129,6 +129,30 @@ Duas regras sem exceção:
 - **A automação não anexa por conta própria.** Ela lista; subir arquivo para o board é
   ação humana, arquivo por arquivo, a pedido explícito.
 
+### Quando o pedido explícito vier
+
+Use `clickup_request_attachment_upload` — **não** `clickup_attach_task_file`. O segundo
+exige o arquivo em base64 dentro da própria chamada; o primeiro devolve um tíquete e a
+URL, e o arquivo sobe por HTTP sem passar pelo contexto.
+
+| Passo | O quê |
+|---|---|
+| 1 | Um tíquete por par arquivo × subtarefa. Quatro subtarefas recebendo o mesmo arquivo são quatro tíquetes |
+| 2 | `POST` multipart para a URL devolvida, com o tíquete no cabeçalho `X-Upload-Ticket` e o arquivo no campo `attachment` |
+| 3 | Deu certo quando a resposta traz `"id"`. Qualquer outra coisa: **pare na primeira falha** e diga qual arquivo era |
+| 4 | **Anexou? Corrija a descrição.** A linha `⬜ falta anexar` vira `✅ anexado`, com o nome que o arquivo ganhou no board — senão a tarefa passa a mentir ao contrário |
+
+Três detalhes que custam tempo:
+
+- **No Windows, converta o caminho com `cygpath -m` antes do `curl`.** O `curl` do
+  Git Bash é build Windows e não lê caminho `/c/...`; o erro é
+  `curl: (26) Failed to open/read local data from file/application`, que não diz nada
+  sobre o formato do caminho.
+- **Nomeie com prefixo da tarefa** (`creed-23-contrato-api.md`). No board o anexo perde
+  a pasta de origem, e dois `README.md` soltos não se distinguem.
+- **O tíquete expira.** Pedir todos de uma vez e subir depois funciona, mas se demorar,
+  peça de novo em vez de insistir no tíquete velho.
+
 ## Passos
 
 | # | Passo | Entrada | Saída verificável |
