@@ -89,14 +89,16 @@ Regras que valem para **qualquer** modelo ou ferramenta:
 
 ```
 tarefa (ClickUp) → spec → tasks → código → defesa → review → PR
-                     ↑                        ↑                  ↓
-                  premissas           (passo humano)   pauta da reunião com a cliente
+                     ↑        │               ↑                  ↓
+                  premissas   └▶ subtarefas   │     pauta da reunião com a cliente
+                                  no ClickUp  (passo humano)
 ```
 
 | Estágio | Workflow | Saída |
 |---|---|---|
 | Tarefa → spec | [`workflows/tarefa-to-spec.md`](workflows/tarefa-to-spec.md) | `tarefas/<ID>/spec.md`, calibrada por [`conventions/profundidade-da-spec.md`](conventions/profundidade-da-spec.md) |
 | Spec → tasks | [`workflows/spec-to-tasks.md`](workflows/spec-to-tasks.md) | `tarefas/<ID>/tasks.md` + `N_task.md` |
+| Tasks → ClickUp | [`workflows/tasks-to-clickup.md`](workflows/tasks-to-clickup.md) | `tarefas/<ID>/clickup.md` + épico e subtarefas publicados, nivelados por [`checklists/tarefa-nivelada.md`](checklists/tarefa-nivelada.md) |
 | Tarefa mudou → spec | [`workflows/atualizar-spec.md`](workflows/atualizar-spec.md) | `spec.md` atualizada + impacto nas tasks e nas premissas |
 | Tasks → código | [`workflows/tasks-to-code.md`](workflows/tasks-to-code.md) | código no repo, testes verdes, entrega didática |
 | Defesa (humano) | [`checklists/defesa-do-codigo.md`](checklists/defesa-do-codigo.md) | você sabe explicar o diff — ou volta ao estágio anterior |

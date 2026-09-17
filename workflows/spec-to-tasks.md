@@ -41,4 +41,6 @@ Task que não cabe em um dia de trabalho de uma pessoa está grande demais. Task
 5. Cada `N_task.md` traz: objetivo, arquivos que provavelmente mudam, critérios de
    aceite, como testar, premissas aplicáveis.
 
-> Próximo: [`tasks-to-code.md`](tasks-to-code.md)
+> Próximo: [`tasks-to-clickup.md`](tasks-to-clickup.md), quando as entregas vão para o
+> board — ou direto [`tasks-to-code.md`](tasks-to-code.md), quando quem decompôs é quem
+> implementa.

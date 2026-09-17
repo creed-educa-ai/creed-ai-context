@@ -35,7 +35,13 @@ limite estourado — para na hora, diz o erro e pede a descrição.
 **O MCP mora num lugar só: o passo de especificação.** `tarefa-to-spec.md` (e o
 `atualizar-spec.md`, que é o mesmo passo rodado de novo) são os únicos workflows que
 falam com o ClickUp. Depois deles, a spec é a fonte: `spec-to-tasks` lê a spec,
-`tasks-to-code` lê a task. `tasks-to-code` ganhou um portão — sem spec e sem tasks,
+`tasks-to-code` lê a task.
+
+> **Emendado pelo [ADR-0008](0008-publicacao-de-tasks-no-clickup.md) (2026-09-17).** A
+> frase acima passa a valer para **leitura**. A escrita ganhou um segundo ponto, um só:
+> `tasks-to-clickup.md`, no fim da decomposição, com rascunho em arquivo e aprovação
+> humana antes de qualquer chamada. `spec-to-tasks` e `tasks-to-code` seguem sem falar
+> com o ClickUp. `tasks-to-code` ganhou um portão — sem spec e sem tasks,
 para e volta para a especificação, pedindo o ID.
 
 Como a tarefa muda no ClickUp depois da spec escrita, existe `/atualizar-spec <ID>`:
