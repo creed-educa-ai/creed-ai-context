@@ -40,6 +40,8 @@ perguntar nada** para começar.
 
 - [ ] Todo material citado está na lista, com ✅ ou ⬜ **e um dono**.
 - [ ] Nenhum "veja o anexo" para material marcado ⬜.
+- [ ] Material anexado nesta rodada aparece como ✅ **com o nome que ganhou no board** —
+      ⬜ que sobrou depois do upload é a tarefa mentindo ao contrário.
 - [ ] Premissa citada aparece com o **texto**, não só com o ID.
 - [ ] Referência a arquivo de outro repositório é permalink, não nome de pasta.
 - [ ] A mensagem final ao humano lista o que falta anexar, subtarefa por subtarefa.
