@@ -6,8 +6,8 @@ ganha.
 
 ## 1. As seis regras
 
-1. **Ler antes de escrever.** Domínio novo? Abra `app/domains/respondentes/` inteiro
-   primeiro. Feature nova? `src/features/respondentes/`. Eles são o molde — copie a
+1. **Ler antes de escrever.** Domínio novo? Abra `app/domains/users/` inteiro
+   primeiro. Feature nova? `src/features/authentication/`. Eles são o molde — copie a
    forma, não invente outra.
 2. **Não inventar padrão.** Não documentado aqui e não existente no código = não é
    padrão. Pergunte ou registre premissa (`../conventions/premissas-e-duvidas.md`).

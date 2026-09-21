@@ -4,14 +4,14 @@ Stack: **Vite · TypeScript · Tailwind · Redux Toolkit · Vitest** (ADR-003).
 
 ## Anatomia de uma feature
 
-`src/features/<feature>/` — molde vivo em `src/features/respondentes/`:
+`src/features/<feature>/` — molde vivo em `src/features/authentication/`:
 
 ```
-features/respondentes/
-├── RespondentesView.tsx      componente de tela
-├── respondentesSlice.ts      estado (Redux Toolkit)
-├── respondentesApi.ts        chamadas HTTP
-└── respondentesSlice.test.ts testes
+features/authentication/
+├── LoginView.tsx               componente de tela
+├── authenticationSlice.ts      estado (Redux Toolkit)
+├── authenticationApi.ts        chamadas HTTP
+└── authenticationSlice.test.ts testes
 ```
 
 Feature nova espelha o **nome do domínio do backend**. Se o backend tem `prismas`,

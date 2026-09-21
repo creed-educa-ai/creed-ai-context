@@ -13,8 +13,8 @@ Ao começar qualquer tarefa, leia nesta ordem:
 1. `creed-ai-context/CONTEXT.md`
 2. `creed-ai-context/context/trabalho-com-ia.md`
 3. `creed-ai-context/catalogo.md`
-4. O molde: `creed-backend/app/domains/respondentes/` ou
-   `creed-frontend/src/features/respondentes/`
+4. O molde: `creed-backend/app/domains/users/` ou
+   `creed-frontend/src/features/authentication/`
 
 Princípios inegociáveis: agregação no banco, cálculo no backend, renderização no
 front · migration nunca no startup e sempre revisada linha a linha por humano · CI

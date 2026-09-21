@@ -7,9 +7,9 @@ model: sonnet
 
 Você vai mexer nas camadas de um domínio que já existe. A régua é
 `creed-ai-context/conventions/camadas-do-back.md`; o molde é
-`app/domains/respondentes/`. Para criar domínio novo, a skill é `dominio-back`.
+`app/domains/users/`. Para criar domínio novo, a skill é `dominio-back`.
 
-<critical>O CORTE, antes de escrever a primeira linha: se a resposta muda quando o PRODUTO muda de ideia, é `service.py`. Se muda quando o BANCO muda de forma, é `repository.py`. "Já existe respondente com esse e-mail? Então 409" é produto; "como eu descubro se existe" é banco.</critical>
+<critical>O CORTE, antes de escrever a primeira linha: se a resposta muda quando o PRODUTO muda de ideia, é `service.py`. Se muda quando o BANCO muda de forma, é `repository.py`. "Já existe usuário com esse e-mail? Então 409" é produto; "como eu descubro se existe" é banco.</critical>
 <critical>`service.py`: classe, recebe as dependências no construtor, NÃO importa `fastapi` nem `sqlalchemy`, não monta query, não recebe `Request`. Levanta exceção de `app/shared/exceptions.py` — nunca devolve `dict` de erro e nunca conhece status code.</critical>
 <critical>`repository.py`: recebe a sessão no construtor, devolve model, tupla ou escalar. NÃO levanta exceção de domínio (devolve `None` e deixa o service decidir), NÃO importa `schemas`, e só dá `flush()` — `commit()` é do `get_db`, porque a unidade de trabalho é a requisição.</critical>
 <critical>`router.py` é fino: recebe, valida via schema, delega, devolve. Sem `if` de regra e SEM importar `models` — o mapeamento model → schema é `@classmethod de_model()` em `schemas.py`.</critical>

@@ -13,8 +13,8 @@ ela está no diretório-pai do workspace: `ages/creed-ai-context/`.
 2. `creed-ai-context/context/trabalho-com-ia.md` — regras de IA
 3. `creed-ai-context/catalogo.md` — repos, domínios, features
 4. O molde do que você vai mexer:
-   `creed-backend/app/domains/respondentes/` ou
-   `creed-frontend/src/features/respondentes/`
+   `creed-backend/app/domains/users/` ou
+   `creed-frontend/src/features/authentication/`
 
 ## Princípios inegociáveis
 

@@ -69,8 +69,8 @@ e ainda não tem decisão.
 Regras que valem para **qualquer** modelo ou ferramenta:
 [`context/trabalho-com-ia.md`](context/trabalho-com-ia.md). Resumo:
 
-- **Ler antes de escrever.** O domínio-exemplo (`app/domains/respondentes/`) e a
-  feature-exemplo (`src/features/respondentes/`) são o molde. Copie a forma deles.
+- **Ler antes de escrever.** O domínio-exemplo (`app/domains/users/`) e a
+  feature-exemplo (`src/features/authentication/`) são o molde. Copie a forma deles.
 - **Não inventar padrão.** Se não está documentado aqui nem existe no código, pergunte
   ou registre premissa — não improvise.
 - **Não commitar por conta própria.** Implementar e revisar é da IA; `git commit`/`push`/
@@ -104,6 +104,12 @@ tarefa (ClickUp) → spec → tasks → código → defesa → review → PR
 | Defesa (humano) | [`checklists/defesa-do-codigo.md`](checklists/defesa-do-codigo.md) | você sabe explicar o diff — ou volta ao estágio anterior |
 | Review | [`workflows/revisao.md`](workflows/revisao.md) | veredito + `review.md` quando aplicável |
 | Dúvidas → reunião | [`workflows/duvidas-to-pauta.md`](workflows/duvidas-to-pauta.md) | `pauta/proxima-reuniao.md` |
+
+**Quem especifica — AGES III e IV — roda os quatro primeiros estágios como uma jornada
+só**, e o manual dela é [`playbooks/jornada-de-discovery.md`](playbooks/jornada-de-discovery.md):
+o que investigar antes de inventar, como calibrar, onde cortar as tasks e como publicar
+no board. A régua do produto final é uma: **mede-se por quem não usa este repositório**
+([`checklists/definition-of-ready.md`](checklists/definition-of-ready.md)).
 
 O pipeline é **proporcional**, e a proporção é medida: cada tarefa é calibrada em dois
 eixos — incerteza de **produto** (P1–P3) e complexidade **técnica** (T1–T3) —, e a

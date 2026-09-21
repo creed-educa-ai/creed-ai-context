@@ -98,7 +98,7 @@ Exemplos do corte — a coluna da direita é o que vai para o ClickUp:
 |---|---|
 | "Agregação em SQL (`COUNT` + `GROUP BY`), não em Python." | "A contagem por organização é feita pelo banco, não pelo código que monta a resposta — é o que segura o tempo de tela quando o número de respondentes crescer. Na prática: `COUNT` + `GROUP BY` na consulta do `repository.py`, e nenhum laço somando em Python." |
 | "Organização sem respondente vem com zeros (LEFT JOIN), não some." | "Uma organização que ainda não tem ninguém respondendo precisa aparecer no relatório zerada. Sumir da lista é pior que aparecer com zero, porque quem lê não sabe se é falha do sistema. Tecnicamente: `LEFT JOIN` em vez de `JOIN`." |
-| "Molde: `app/domains/respondentes/`." | "Já existe um domínio pronto com exatamente esta divisão de camadas — `app/domains/respondentes/` no `creed-backend`. Copie a forma dele (mesmos arquivos, mesma injeção de dependência); **os campos, não** — aqueles são de exemplo." |
+| "Molde: `app/domains/users/`." | "Já existe um domínio pronto com exatamente esta divisão de camadas — `app/domains/users/` no `creed-backend`. Copie a forma dele (mesmos arquivos, mesma injeção de dependência); **os campos, não** — aqueles são de exemplo." |
 | "Premissas aplicáveis: P-012." | "Decidimos, sem confirmar com a cliente, que respondente inativo continua contando no total. Se estiver errado, muda só a cláusula `WHERE` da consulta." |
 | "P2 · T3, spec calibrada." | nada — calibragem é vocabulário interno |
 

@@ -6,7 +6,7 @@ description: Gerir estado no creed-frontend com Redux Toolkit — criar ou alter
 
 Você vai mexer no estado da aplicação. A régua é
 `creed-ai-context/conventions/camadas-do-front.md`; o molde é
-`src/features/respondentes/respondentesSlice.ts` e o teste ao lado dele.
+`src/features/authentication/authenticationSlice.ts` e o teste ao lado dele.
 
 <critical>DECIDA PRIMEIRO SE É ESTADO GLOBAL. Vai ao slice: dado de servidor, status da requisição, erro já virado mensagem. NÃO vai: campo de formulário (react-hook-form), aberto/fechado e aba ativa (useState no componente), valor derivado (seletor, nunca campo do state — campo derivado desincroniza).</critical>
 <critical>Máquina de status única, igual em toda feature: idle, carregando, pronto, erro. Não invente um `loading: boolean` ao lado dela.</critical>

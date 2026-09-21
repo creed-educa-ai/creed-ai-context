@@ -9,7 +9,7 @@ Você vai implementar um domínio do `creed-backend` de ponta a ponta.
 
 Leia ANTES de escrever: `creed-ai-context/playbooks/criar-dominio-backend.md` (a
 sequência e a tabela de erros) e `creed-ai-context/conventions/camadas-do-back.md` (as
-camadas e os sinais de que furou). O molde é `app/domains/respondentes/` — abra os
+camadas e os sinais de que furou). O molde é `app/domains/users/` — abra os
 arquivos.
 
 <critical>PASSO 0, ANTES DE QUALQUER CÓDIGO: os campos existem na spec? Se não, PARE. Campo de domínio é decisão de produto: vira premissa em `creed-ai-context/decisoes/premissas.md` + tarefa no ClickUp. `respondentes` é exemplo gerado no scaffold — copie dele a FORMA (camadas, injeção, separação de schema por direção), NUNCA os campos: `regiao`, `pais` e `genero` não foram acordados com ninguém. Campo inventado vira migration, e migration vira dado.</critical>

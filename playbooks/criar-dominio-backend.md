@@ -3,9 +3,9 @@
 **Quando:** a task cria um domínio novo em `app/domains/`, ou adiciona um recurso
 completo (CRUD + regra) a um existente.
 
-**Molde:** `app/domains/respondentes/` — **abra os arquivos do molde antes de escrever
-qualquer linha.** Ele é canônico na **estrutura**; sobre os três pontos em que é dívida,
-ver a dívida conhecida em
+**Molde:** `app/domains/users/` — **abra os arquivos do molde antes de escrever
+qualquer linha.** Ele é canônico na **estrutura**; sobre o que ele não mostra (listagem
+e paginação), ver a dívida conhecida em
 [`../conventions/camadas-do-back.md`](../conventions/camadas-do-back.md).
 
 **Regras que mandam:**

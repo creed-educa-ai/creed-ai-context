@@ -33,7 +33,7 @@ se pedir outro *repo*, a task estava errada.>
 ## Molde
 
 <Qual arquivo do domínio/feature-exemplo copiar a forma. Ex.:
-`app/domains/respondentes/service.py`>
+`app/domains/users/service.py`>
 
 ## Critérios de aceite
 
