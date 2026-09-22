@@ -16,6 +16,6 @@ Siga `creed-ai-context/workflows/tarefa-to-spec.md`, no papel de
 <critical>Resultado **P1 · T1**: a spec é desnecessária. Diga isso e vá direto para `/tasks` em vez de gerar spec por burocracia.</critical>
 <critical>Lacuna de produto NÃO vira pergunta pendurada: vira premissa em `creed-ai-context/decisoes/premissas.md`, com marcador no artefato, e a spec continua. A cliente só é acessível em reunião marcada.</critical>
 <critical>Use `creed-ai-context/templates/spec-template.md`. Seção que a calibragem dispensou é APAGADA, não preenchida com "N/A".</critical>
-<critical>Valide contra `creed-ai-context/checklists/definition-of-ready.md` antes de encerrar.</critical>
+<critical>Antes de encerrar, confira se dá para escrever a partir desta spec subtarefas que passem no `creed-ai-context/checklists/definition-of-ready.md` — o portão é medido por quem NÃO usa este repositório. Não consegue dizer, para alguma entrega, que arquivo a pessoa abre primeiro e como ela sabe que terminou? Diga o que falta em vez de encerrar.</critical>
 
 Saída: `creed-ai-context/tarefas/<id>-<slug>/spec.md`
