@@ -48,7 +48,7 @@ novo, mudança que o front e o back precisam combinar, regra de quem-pode-o-quê
 | 5 | Listar lacunas de produto | — | — |
 | 6 | Registrar premissas (`P-NNN`) e seguir | escreve em `../decisoes/premissas.md` | você cola no arquivo |
 | 7 | Preencher `spec-template.md` **só com as seções que a calibragem exige** | escreve `../tarefas/<ID>-<slug>/spec.md` | você salva |
-| 8 | Validar contra `../checklists/definition-of-ready.md` | — | — |
+| 8 | Conferir se dá para escrever, a partir desta spec, subtarefas que passem no `../checklists/definition-of-ready.md` | — | — |
 
 ### Passo 0 — conferir o MCP antes de contar com ele
 

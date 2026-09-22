@@ -143,7 +143,7 @@ bem. Se pedir outro repo, a decomposição estava errada — avise em vez de seg
 |---|---|---|
 | `PaginaDe[T]` | `app/shared/paginacao.py` | resposta paginada — não escreva outra |
 | `NotFoundError` | `app/shared/exceptions.py` | 404 com corpo padronizado |
-| Domínio de exemplo completo | `app/domains/respondentes/` | copie a **forma**: arquivos, camadas, injeção |
+| Domínio de exemplo completo | `app/domains/users/` | copie a **forma**: arquivos, camadas, injeção |
 
 ### Contrato
 

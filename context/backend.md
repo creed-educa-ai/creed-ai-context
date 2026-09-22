@@ -4,7 +4,7 @@ Stack: **FastAPI · SQLAlchemy · Alembic · Pydantic · pytest · ruff · mypy*
 
 ## Anatomia de um domínio
 
-`app/domains/<nome>/` — molde vivo em `app/domains/respondentes/`. **Leia o molde antes
+`app/domains/<nome>/` — molde vivo em `app/domains/users/`. **Leia o molde antes
 de escrever o domínio novo.** A tabela abaixo é lembrete, não substituto.
 
 | Arquivo | Faz | Não faz |

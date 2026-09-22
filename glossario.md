@@ -12,7 +12,7 @@ Quais desses termos são esses ainda é decisão aberta do time (pendência do A
 
 | Termo | Definição | Onde aparece | Status |
 |---|---|---|---|
-| **Respondente** | Pessoa que responde aos instrumentos da plataforma | `domains/respondentes`, `features/respondentes` | 🟡 |
+| **Respondente** | Pessoa que responde aos instrumentos da plataforma | `UserRole.RESPONDENTE` no back, `features/respondentes` no front | 🟡 |
 | **Organização** | Instituição à qual respondentes pertencem | `domains/organizacoes` | 🟡 |
 | **Prisma** | Recorte/dimensão de análise aplicada às respostas | `domains/prismas` | 🟡 |
 | **Prognóstico** | Projeção gerada a partir dos prismas | `domains/prognosticos` | 🟡 |

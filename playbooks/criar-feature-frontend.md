@@ -2,8 +2,9 @@
 
 **Quando:** a task cria `src/features/<nome>/` ou acrescenta tela a uma feature.
 
-**Molde:** `src/features/respondentes/` — abra os quatro arquivos antes de começar. Ele é
-canônico na **estrutura**; sobre as cores cruas dele, ver a dívida conhecida em
+**Molde:** `src/features/authentication/` — abra os quatro arquivos antes de começar. Ele
+é canônico na **estrutura**; sobre o que ele não mostra (feature de várias telas), ver a
+dívida conhecida em
 [`../conventions/camadas-do-front.md`](../conventions/camadas-do-front.md).
 
 **Regras que mandam:**

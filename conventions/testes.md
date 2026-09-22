@@ -17,7 +17,7 @@ Um teste de agregação **precisa** de banco real — mock de query não testa `
 
 ```bash
 pytest
-pytest tests/domains/respondentes -q
+pytest tests/domains/users -q
 ```
 
 ## Frontend

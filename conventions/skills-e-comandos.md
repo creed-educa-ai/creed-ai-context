@@ -49,7 +49,7 @@ como saber que o passo terminou certo, ele ainda não é um passo.
 
 | Em vez de | Escreva |
 |---|---|
-| "encontre o arquivo relevante" | o caminho literal: `app/domains/respondentes/service.py` |
+| "encontre o arquivo relevante" | o caminho literal: `app/domains/users/service.py` |
 | "rode os testes" | o comando exato do repo, e o que significa passar |
 | "se necessário, ajuste" | o critério: "se X, faça Y; senão, siga para 4" |
 | "gere a documentação" | o template de `templates/` + as seções obrigatórias |

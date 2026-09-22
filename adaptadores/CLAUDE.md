@@ -15,8 +15,8 @@ ferramentas de IA do time (Codex, Copilot, Cursor).
 1. `creed-ai-context/CONTEXT.md` — princípios, pipeline, prioridade em conflitos
 2. `creed-ai-context/context/trabalho-com-ia.md` — as seis regras
 3. `creed-ai-context/catalogo.md` — o que é cada repo, domínio e feature
-4. O **molde**: `creed-backend/app/domains/respondentes/` ou
-   `creed-frontend/src/features/respondentes/`
+4. O **molde**: `creed-backend/app/domains/users/` ou
+   `creed-frontend/src/features/authentication/`
 
 ## Ao implementar
 

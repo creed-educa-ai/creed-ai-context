@@ -1,6 +1,6 @@
 # Camadas do back
 
-O molde `app/domains/respondentes/` — gerado no scaffold dos projetos — já tem a
+O molde `app/domains/users/` — nascido da CREED-23 — já tem a
 separação certa. Esta convenção diz **por que** ela existe e **como perceber que
 furou** — porque camada furada não dá erro de compilação, só aparece no terceiro
 domínio, quando já é caro.
@@ -195,19 +195,23 @@ está no lugar errado.
 
 ## Dívida conhecida do molde
 
-O `respondentes` é exemplo de scaffold, não código nascido de tarefa, e mostra a idade
-em três pontos — todos endereçados no PR de correção do molde (ADR-0004, item 7):
+> **Mudou.** A lista antiga era do `respondentes`, o domínio de scaffold do commit
+> inicial. Ele foi removido do `creed-backend` — nunca teve tabela e já não servia de
+> exemplo —, e a dívida dele foi junto. O molde agora é `app/domains/users/`.
 
-- `router.py` importa `models` e importa `calcular_idade` direto do módulo do service,
-  por causa do helper `_to_response()`. É exatamente o sinal de camada furada que a
-  tabela acima lista, no arquivo que o time copia.
-- `RespondenteListResponse` repete `itens`/`total`/`pagina`/`tamanho_pagina`, que todo
-  domínio que lista vai copiar. Vira `PaginaDe[RespondenteResponse]`.
-- `calcular_idade()` está no `service.py`, e é função pura — vai para `utils.py`.
+O `users` é canônico nas camadas, nos nomes, na injeção e na separação de schema por
+direção. A lacuna dele é de **cobertura**, não de forma: o `router.py` só tem `POST` e
+`DELETE`, então o molde **não mostra uma listagem**. Quem for escrever o primeiro
+endpoint que lista não tem de onde copiar três coisas:
 
-Até o PR entrar, **o molde é canônico na estrutura** (camadas, nomes, injeção, separação
-de schema por direção) e dívida nesses três pontos. Não refatore de passagem: escopo
-fechado (`../context/trabalho-com-ia.md`, regra 4).
+- o envelope de paginação — use `PaginaDe[T]` de `app/shared/paginacao.py`, que existe
+  e hoje está sem nenhum consumidor no repo;
+- a consulta paginada com total, que é `repository.py` (`offset`/`limit` mais um
+  `COUNT` separado), nunca fatiar lista em Python;
+- os parâmetros de filtro na assinatura do service.
+
+Enquanto isso não existir em código, é o ADR-0004 que vale para esses três pontos. Não
+refatore de passagem: escopo fechado (`../context/trabalho-com-ia.md`, regra 4).
 
 **O molde inclui os testes dele.** `tests/test_respondentes_service.py` também saiu do
 scaffold: mostra a **forma** do teste de regra sem banco, e não é cobertura conquistada

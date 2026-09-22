@@ -1,6 +1,6 @@
 # Camadas do front
 
-O molde `src/features/respondentes/` — gerado no scaffold dos projetos — já tem a
+O molde `src/features/authentication/` — nascido da CREED-23 — já tem a
 separação certa. Esta convenção diz **por que** ela existe e **como perceber que
 furou** — porque camada furada não dá erro de compilação, só aparece na terceira
 feature, quando já é caro.
@@ -72,9 +72,12 @@ mesma função.
 
 ## Dívida conhecida do molde
 
-O `respondentes` é exemplo de scaffold, não código nascido de tarefa, e mostra a idade:
-o `RespondentesView.tsx` usa `text-slate-600`, `border-red-200` e afins — cor crua, não
-token do tema (`../conventions/ui-e-responsividade.md` §1). O molde é canônico na
-**estrutura** (camadas, nomes, i18n, máquina de status); nessa parte específica ele é
-dívida, e feature nova nasce com token. Não refatore o molde de passagem: escopo fechado
-(`../context/trabalho-com-ia.md`, regra 4).
+> **Mudou.** A dívida antiga era a cor crua do `RespondentesView.tsx`, do scaffold. O
+> molde passou a ser `src/features/authentication/`, que usa token de tema e não repete
+> aquele problema.
+
+O que o molde novo **não** mostra: ele tem uma tela só (`LoginView.tsx`), então não há
+exemplo de feature com várias telas nem de navegação entre elas. Para isso, o que existe
+hoje no repo são as telas de demográficos em `src/features/respondentes/` — que são
+trabalho de tarefa, não scaffold, mas guardam estado local e **não falam com o
+backend**: não copie delas a camada de integração.

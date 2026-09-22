@@ -27,10 +27,14 @@ as duas coisas entrega uma tela que o público-alvo não entende.
 
 ### O código existente não foi renomeado
 
-`app/domains/respondentes/` e `src/features/respondentes/` continuam em português, e o
-`PaginaDe[T]` de `app/shared/paginacao.py` também. **Copie deles a forma, não o idioma.**
-É desvio conhecido e aceito, registrado nas Consequências do ADR-0005 — não é permissão
-para nomear coisa nova em português.
+`src/features/respondentes/` continua em português, e o `PaginaDe[T]` de
+`app/shared/paginacao.py` também. É desvio conhecido e aceito, registrado nas
+Consequências do ADR-0005 — não é permissão para nomear coisa nova em português.
+
+O lado do backend deixou de existir: `app/domains/respondentes/` era estrutura de
+scaffold do commit inicial, nunca teve tabela e foi removido. O molde do back passou a
+ser `app/domains/users/`, que já nasceu no idioma desta convenção — então **a ressalva
+"copie a forma, não o idioma" já não vale para ele**.
 
 ## Backend
 

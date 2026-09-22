@@ -14,7 +14,7 @@ Este playbook é a sequência; a regra mora lá.
 |---|---|---|
 | Componente usado por mais de uma feature | `src/components/SeletorIdioma.tsx` + `SeletorIdioma.test.tsx` | `src/components/` |
 | Primitivo de UI (botão, campo, diálogo) | `src/components/ui/field.tsx` + `field.test.tsx` | `src/components/ui/`, via `npx shadcn@latest add` |
-| Tela de uma feature | `src/features/respondentes/RespondentesView.tsx` | `src/features/<feature>/` |
+| Tela de uma feature | `src/features/authentication/LoginView.tsx` | `src/features/<feature>/` |
 
 Abra o molde **antes** de escrever. Ele é a fonte; este arquivo é lembrete.
 

@@ -29,7 +29,7 @@ esteira de IA por webhook assíncrono. (ADR-0007)
 
 ## Backend — `app/domains/<nome>/`
 
-Molde: `app/domains/respondentes/`.
+Molde: `app/domains/users/`.
 
 | Arquivo | Faz | Não faz |
 |---|---|---|
@@ -43,7 +43,7 @@ Domínio não importa `models.py` de outro domínio.
 
 ## Frontend — `src/features/<nome>/`
 
-Molde: `src/features/respondentes/` — `<Feature>View.tsx`, `<feature>Slice.ts`,
+Molde: `src/features/authentication/` — `<Feature>View.tsx`, `<feature>Slice.ts`,
 `<feature>Api.ts`, `<feature>Slice.test.ts`.
 
 Chamada HTTP **só** no `<feature>Api.ts`, caminho relativo `/api/...`.
@@ -56,8 +56,8 @@ Nada de agregação no front. Texto visível via i18n.
 aberta (`Vinculo`, `Setor`, `Prisma`). Model singular, tabela e pasta plural. Nome da
 feature = nome do domínio.
 
-O molde `respondentes` está no **idioma antigo** (`criar`, `PaginaDe`): copie a forma,
-não o idioma. E a tela continua em português — chave de i18n em inglês, valor em `pt-BR`.
+O molde já está no idioma decidido pelo ADR-0005 (inglês em todo identificador).
+O que sobrou do idioma antigo é o `PaginaDe[T]` de `app/shared/paginacao.py`. E a tela continua em português — chave de i18n em inglês, valor em `pt-BR`.
 
 ## Testes
 

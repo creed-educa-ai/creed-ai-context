@@ -30,7 +30,7 @@ apontado nas tasks e no ledger de premissas. **Sem tocar em código.**
 | 4 | Reescrever **só** as seções que mudaram | edita `spec.md` | você aplica |
 | 5 | Cruzar com as tasks (tabela abaixo) | lê `tasks.md` e os `N_task.md` | você confere |
 | 6 | Cruzar com o ledger de premissas (tabela abaixo) | edita `../decisoes/premissas.md` | você aplica |
-| 7 | Revalidar contra `../checklists/definition-of-ready.md` | — | — |
+| 7 | Reconferir se as subtarefas derivadas ainda passam no `../checklists/definition-of-ready.md` | — | — |
 
 ## Impacto nas tasks
 

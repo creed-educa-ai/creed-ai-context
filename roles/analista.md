@@ -30,6 +30,13 @@ perguntar no meio da terça-feira. Portanto:
 
 ## Antes de fechar
 
-Valide contra `../checklists/definition-of-ready.md`. Se você não consegue escrever a
-seção "Como verificar", a spec ainda não está pronta — e o problema não é falta de
-resposta da cliente, é falta de entendimento da tarefa.
+A spec não tem portão próprio: ela está pronta quando dá para escrever, a partir dela,
+subtarefas que passam no `../checklists/definition-of-ready.md` — o portão de quem vai
+implementar, medido por quem **não** usa este repositório.
+
+Na prática, dois testes: se você não consegue escrever a seção "Como verificar", a spec
+ainda não está pronta; se você não consegue dizer que arquivo a pessoa abre primeiro em
+cada entrega, a decomposição é que não vai fechar.
+
+Nos dois casos o problema não é falta de resposta da cliente — é falta de entendimento
+da tarefa. Jornada inteira em `../playbooks/jornada-de-discovery.md`.
