@@ -49,6 +49,21 @@ cliente**. Regras: [`../conventions/premissas-e-duvidas.md`](../conventions/prem
 |---|---|---|---|---|---|---|
 | P-007 | 2026-09-05 | autenticação | O acesso nasce com senha temporária definida por quem cadastra, e o Keycloak exige a troca no primeiro login (`UPDATE_PASSWORD`). Não há convite por e-mail. | **Refutada em 2026-09-08 por decisão de time** (não da cliente): o time já tinha estratégia definida, com precedente de uso corporativo — convite por e-mail com link para o realm do Keycloak. A troca obrigatória deixa de existir; quem define a senha é a página do Keycloak. Substituída por P-012. | 86e348g6u | ❌ refutada |
 | P-011 | 2026-09-08 | autenticação | A troca de senha do primeiro acesso acontece em tela da plataforma: o login responde 409 `password_change_required` e a aplicação pede a senha nova em `POST /authentication/password`. | **Refutada em 2026-09-08, no mesmo dia em que foi registrada**, por decisão de time anterior que eu desconhecia ao registrá-la. A tela não existe no desenho de destino: quem define a senha é a página do Keycloak, alcançada por link no e-mail. Consequência: o 409 e o `POST /authentication/password` saem do contrato, e a tela da PR #11 do `creed-frontend` perde a função. Substituída por P-012. | 86e348g6u | ❌ refutada |
+| P-016 | 2026-09-21 | formulário | O formulário tem **nome**: a tabela `Form` ganha a coluna `name`, obrigatória e **sem unicidade** — dois formulários com o mesmo nome na mesma organização são aceitos. | **Confirmada em 2026-09-21 por decisão dos AGES IV** (não da cliente): a interpretação foi lida e aceita como correta. Fecha a pendência #17 do modelo de dados (*"`Form` não tem título nem descrição — como o gestor identifica um formulário numa lista?"*), que deixa de ser pergunta aberta. O modelo passa a divergir do diagrama até a CREED-334 reconciliá-lo. | 86e3anvgg | ✅ confirmada |
+| P-017 | 2026-09-21 | formulário | O formulário **nasce sempre `draft`**, e `status` não entra no corpo da criação (`POST /api/v1/forms`). A transição para `published`/`closed` nasce com a tarefa que precisar dela. | **Confirmada em 2026-09-21 por decisão dos AGES IV** (não da cliente). Não dependia dela: publicar um formulário sem nenhuma pergunta é impossível enquanto `question` não existir, então nenhuma resposta da cliente derrubaria a regra. O que a cliente ainda pode mudar é **quem** publica e **quando** — isso nasce com o endpoint de transição, e é outra premissa quando existir. | 86e3anvgg | ✅ confirmada |
+| P-018 | 2026-09-21 | formulário | **Formulário é da organização, não de uma pessoa.** A coluna `Form.participant_id` — e a relação `Form → Participant` que ela criava — não entram na primeira migration da tabela. | **Confirmada em 2026-09-21 por decisão dos AGES IV** (não da cliente): a leitura de que a coluna é resquício do mesmo engano do `creator_id` ([C1]) foi aceita. ⚠️ **A premissa fecha; a pendência #21 do modelo NÃO.** *"Existe formulário feito sob medida para uma pessoa específica?"* continua na lista de lacunas de produto do `modelo-de-dados.md` e continua valendo para a cliente — o que fechou foi a decisão de **não criar a coluna agora**, não a pergunta sobre o produto. Se a resposta dela for "existe", a volta é coluna nulável mais a relação: migration de uma linha, sem backfill. | 86e3anvgg | ✅ confirmada |
+
+> **Esta seção tem dois desfechos, não um.** P-007 e P-011 foram **refutadas**; P-016,
+> P-017 e P-018 foram **confirmadas**. As cinco têm em comum o fato de terem sido fechadas
+> **por decisão de time, não da cliente** — o que é legítimo e está escrito no desfecho de
+> cada uma. Premissa confirmada por time continua podendo cair se a cliente discordar;
+> o que ela deixa de ser é bloqueio, e some da pauta.
+>
+> ⚠️ **P-018 é o caso a não confundir:** a premissa fechou, mas a **pendência #21** do
+> [`modelo-de-dados.md`](../context/modelo-de-dados.md) — *"existe formulário feito sob
+> medida para uma pessoa específica?"* — **continua aberta como pergunta de produto** e
+> continua na lista que vai para a cliente. Fechar a premissa decidiu o que o código faz
+> hoje; não decidiu o que o produto é.
 
 > Premissa refutada **não é erro do time** — é o mecanismo funcionando
 > (`../conventions/premissas-e-duvidas.md` → "Ciclo de vida"). P-007 e P-011 caíram por
