@@ -57,6 +57,7 @@ dois logins, mas um só `Participant` — é no participante que as análises se
 | 2026-09-04 | **A meta é uma v1 sólida do banco, para destravar a autenticação** — versionamento de resposta e resultado fica para depois | a devolutiva fecha aqui; a proposta não muda mais sem decisão nova. O que foi adiado, com gatilho de retorno, está em [Adiado de propósito](#adiado-de-propósito); o que a auth ainda vai precisar, em [A v1 e a autenticação](#a-v1-e-a-autenticação) |
 | 2026-09-13 | **`User.password` sai — a credencial mora no Keycloak [C27]** | guardar hash aqui criaria uma segunda fonte de senha e a pergunta sem resposta boa: qual das duas vale no login? Fecha a pendência "`User.password` é nulável" — não há senha nossa. **Ratificada pelo código**, não por reunião: a migration de inauguração subiu sem a coluna |
 | 2026-09-13 | **`User.keycloak_id` entra** (`uuid`, `unique`, `not null`) **[C28]** | é o `sub` do JWT, a única ligação entre o token que chega e a linha da tabela. Sem ele o backend acharia o usuário por e-mail, e e-mail é dado que muda. **Não é FK** — aponta para fora do banco, então a contagem de FKs do cabeçalho não muda |
+| 2026-09-22 | **`Question` ganha `section`** (`QuestionSection`, `not null`, sem default) **[C31]** | o front sabe em que parte do formulário desenhar cada pergunta, e a listagem filtra por ela. Independente do prisma. Valores provisórios (P-020): trocar depois de haver pergunta gravada é `ALTER TYPE` + atualização das linhas. Decisão de time, não da cliente |
 
 ## Pendências
 
@@ -261,7 +262,8 @@ tabela é o nome do diagrama.
 | `documentos` | novo | `Document` — domínio próprio porque, com a seta invertida em [C3], `participantes` **e** `organizacoes` referenciam a mesma tabela, e [`arquitetura.md`](arquitetura.md) proíbe domínio importar `models.py` alheio. A FK se declara por nome (`ForeignKey("documents.id")`), sem import |
 | `organizacoes` | existe | `Organization`, `Setor` |
 | `vinculos` | novo | `Vinculo` |
-| `formularios` | novo | `Form`, `Question`, `QuestionOption` |
+| `forms` | novo (CREED-33) | `Form` |
+| `questions` | novo (CREED-35) | `Question` — nasceu em domínio próprio porque CREED-33 e CREED-35 correm em paralelo, sem ligação de FK entre as duas tabelas ainda. `QuestionOption` fica para a CREED-37 decidir, junto com a amarração entre os dois domínios |
 | `respostas` | novo | `FormResponse`, `Answer` |
 | `prismas` | existe | `Insight`, `InsightPrisma` |
 | `dashboards` | existe | `Dashboard`, **se** a visão salva existir. Senão: domínio sem tabela, só query — que é o normal para dashboard sob demanda |

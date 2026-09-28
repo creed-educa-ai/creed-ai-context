@@ -11,7 +11,7 @@
 // Isto NÃO é o modelo do time. Vira o modelo quando alguém do time aceitar as
 // mudanças, colar no dbdiagram e reexportar por cima de modelo-de-dados.dbml.
 //
-// 14 tabelas · 9 enums · 21 FKs, todas apontando para PK, sem ciclo obrigatório.
+// 14 tabelas · 10 enums · 21 FKs, todas apontando para PK, sem ciclo obrigatório.
 
 // --- Enums ---
 
@@ -26,6 +26,16 @@ Enum Prisma {
 Enum QuestionType {
   objective
   descriptive
+}
+
+// [C31] Seção do formulário: onde a pergunta é desenhada na tela (CREED-35).
+//       NÃO é o prisma: o prisma é a dimensão de análise ([C9]); a seção é o
+//       agrupamento visual. Uma pergunta tem os dois.
+//       Valores PROVISÓRIOS (P-020): o time decidiu que a seção existe, não quais são.
+Enum QuestionSection {
+  profile
+  assessment
+  closing
 }
 
 Enum FormResponseStatus {
@@ -248,6 +258,7 @@ Table Question {
   text string [not null]
   order_index int [not null]
   type QuestionType [not null]
+  section QuestionSection [not null]  // [C31] obrigatória, sem default (P-021)
   prisma Prisma
   required boolean [default: true]
   created_at datetime [default: `now()`]
