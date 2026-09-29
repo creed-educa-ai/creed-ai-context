@@ -62,6 +62,24 @@ que hoje não existe em lugar nenhum do projeto.
 
 ---
 
+## 4. As seções do questionário
+
+**Hoje está assim:** o time montou o questionário em **seções**, com abas no topo, e a
+revisão das respostas separada por seção. Pelo material que a senhora enviou, são **8
+seções**. Dentro de uma seção a pessoa pode pular perguntas e voltar a elas; para passar
+à seção seguinte, precisa ter respondido todas as da seção atual.
+
+**Pergunta:** são mesmo 8 seções, e quais os nomes de cada uma? E a regra de "responder
+a seção inteira antes de seguir" faz sentido para quem vai responder?
+
+**Custo de mudar:** o número e os nomes, **agora baixo** — nenhuma pergunta foi gravada
+no banco ainda. Depois que houver perguntas gravadas, médio. A regra de navegação é
+baixa em qualquer momento: não mexe em dado nenhum.
+
+*(P-023, P-024)*
+
+---
+
 ## Ficou para a próxima
 
 - **P-008** — nenhuma pessoa cria a própria conta sozinha: todo acesso nasce de um

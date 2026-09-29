@@ -74,13 +74,16 @@ está escrito neste harness; o resto é exemplo.
 
 ## Transcrever, não interpretar
 
-- **`snake_case` do backend permanece `snake_case`** no `types/api.ts` (`data_nascimento`,
-  `tamanho_pagina`). Não "arrume" para camelCase: o que chega no JSON é o que o Pydantic
-  serializa.
-- **Opcional e nulo não são a mesma coisa.** `str | None` no schema vira `string | null`;
-  campo com `default` que pode ser omitido no POST vira `campo?:`.
-- **Campo calculado no response** (como `idade`, montado no router) existe na leitura e
-  **não** existe no create.
+- **`snake_case` do backend permanece `snake_case`** no `types/api.ts` (`vinculo_id`,
+  `started_at`, `tamanho_pagina`). Não "arrume" para camelCase: o que chega no JSON é o
+  que o Pydantic serializa.
+- **Opcional e nulo não são a mesma coisa.** `datetime | None` no schema vira
+  `string | null` (como o `submitted_at` do `FormResponseResponse`, nulo enquanto a
+  resposta está em andamento); campo com `default` que pode ser omitido no POST vira
+  `campo?:`.
+- **Campo gerado pelo servidor** existe na leitura e **não** existe no create: o
+  `FormResponseResponse` tem `id`, `status` e `started_at`, e o `FormResponseCreate` só
+  tem `form_id` e `vinculo_id`.
 - **Paginação** já tem forma: `ListaPaginada<T>` com `itens`, `total`, `pagina`,
   `tamanho_pagina`. Não crie uma segunda.
 
