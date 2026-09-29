@@ -1,7 +1,7 @@
 Implemente a task abaixo.
 
 TASK: <cole o N_task.md>
-MOLDE: <cole os arquivos do domínio/feature respondentes correspondentes>
+MOLDE: <cole os arquivos correspondentes do molde: app/domains/users/ no back, src/features/authentication/ no front>
 ARQUIVOS ATUAIS: <cole os arquivos que vão mudar, se já existirem>
 
 Regras:

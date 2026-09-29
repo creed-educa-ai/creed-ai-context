@@ -64,8 +64,9 @@ que hoje não existe em lugar nenhum do projeto.
 
 ## Ficou para a próxima
 
-- **P-008** — não existe "criar conta" pela plataforma: todo acesso nasce de um cadastro
-  feito por um administrador.
+- **P-008** — nenhuma pessoa cria a própria conta sozinha: todo acesso nasce de um
+  cadastro feito por um administrador. A empresa pode pedir cadastro pela plataforma,
+  e o pedido só vira acesso depois da aprovação da equipe CREED.
 - **P-010** — quanto tempo a pessoa fica logada antes de precisar entrar de novo
   (proposto: 8 horas).
 

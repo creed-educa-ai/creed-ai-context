@@ -27,7 +27,7 @@ isso é decisão de produto, não de implementação:
 |---|---|
 | spec da tarefa com os campos | siga; a spec é a fonte |
 | spec sem os campos, ou sem spec | vira premissa no ledger + pergunta na pauta, e o domínio espera ([`premissas-e-duvidas.md`](../conventions/premissas-e-duvidas.md)) |
-| só o molde `respondentes` como referência | é scaffold: copie a **forma**, nunca os campos — `regiao`, `pais` e `genero` são exemplo plausível, não contrato acordado |
+| só o molde `users` como referência | copie a **forma**, nunca os campos — os de `users` valem para usuário, não para o assunto novo |
 
 Campo inventado vira migration, e migration vira dado. É o passo mais barato de fazer e
 o mais caro de pular.
@@ -102,5 +102,5 @@ O último roda os `grep` de camada de
 [`camadas-do-back.md`](../conventions/camadas-do-back.md). Vermelho ali não é estilo: é
 camada furada.
 
-E a checagem que nenhum comando faz: **o domínio novo se parece com `respondentes`?** Se
+E a checagem que nenhum comando faz: **o domínio novo se parece com `users`?** Se
 um colega abrir os dois lado a lado, a diferença deve ser só o assunto.

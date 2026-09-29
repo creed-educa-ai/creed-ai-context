@@ -27,28 +27,35 @@ Antes de escrever uma linha de integração, abra `app/domains/<dominio>/router.
 | Endpoints de verdade, escritos para uma tarefa | transcreva o contrato real e siga |
 | Docstring **"STUB"** e um `APIRouter` sem rota | **PARE.** O domínio não existe |
 | O diretório não existe | **PARE.** O domínio não existe |
-| `respondentes` | **é scaffold**: forma para copiar, não contrato para consumir — ver abaixo |
 
-Hoje, na prática, **nenhum domínio tem contrato acordado**. `organizacoes`, `prismas`,
-`prognosticos`, `relatorios` e `dashboards` são stubs registrados no `main.py` — a rota
-responde, e responde 404. Descobrir isso por tentativa custa uma tarde. E não há migration
-nenhuma: `alembic/versions/` está vazio.
+Hoje têm contrato de verdade **três** domínios:
 
-### `respondentes` é exemplo, não contrato
+| Domínio | Rotas | Tarefa |
+|---|---|---|
+| `authentication` | `POST /authentication/login`, `POST /authentication/renew`, `GET /authentication/session` | CREED-23 |
+| `users` | `POST /users`, `DELETE /users/{id}` | CREED-23 |
+| `responses` | `POST /form-responses` (abre), `PATCH /form-responses/{id}` (finaliza). A tabela `answer` existe, mas ainda **sem rota** | CREED-31 · CREED-34 |
 
-O domínio `respondentes` (e a feature de mesmo nome no front, e o `Respondente` em
-`types/api.ts`) nasceu do **scaffold dos projetos**. Ele é o molde — a forma de router,
-service, repository, schemas, slice e view que todo mundo copia — e continua valendo
-para isso.
+`organizacoes`, `prismas`, `prognosticos`, `relatorios` e `dashboards` são stubs
+registrados no `main.py` — a rota responde, e responde 404. Descobrir isso por tentativa
+custa uma tarde. No banco, `alembic/versions/` tem só as tabelas `user`,
+`form_responses` e `answer`; o resto do modelo existe apenas no `.dbml`.
 
-O que ele **não** é: contrato negociado com a cliente. Ninguém decidiu que respondente
-tem `regiao` e `pais`. Então:
+### O molde é forma, não campo
 
-- copie dele a **forma**: nomes de camada, paginação `ListaPaginada<T>`, formato de
-  resposta, máquina de status;
-- **não** copie os **campos** para um domínio novo, e não trate os dele como acordados;
-- feature que mexa de fato em respondentes precisa de contrato acordado como qualquer
-  outra — o código existente é ponto de partida, não decisão registrada.
+O molde é `users` no back e `authentication` no front: é deles que se copia a forma de
+router, service, repository, schemas, slice e view. Então:
+
+- copie dele a **forma**: nomes de camada, formato de resposta e de erro, a separação
+  entre `<feature>Api.ts`, slice e View;
+- **não** copie os **campos** para um domínio novo — os de `users` valem para usuário,
+  não para o que você está construindo.
+
+**`respondentes` é resíduo do scaffold, não contrato.** O domínio do backend foi removido
+em 2026-09-21; no front sobram a feature `respondentes` (as telas de demográficos), o
+`respondentesApi.ts` e o `Respondente` em `types/api.ts`. A API que eles chamam responde
+404, e ninguém decidiu que respondente tem `regiao` e `pais`. Não use como contrato nem
+como molde.
 
 Na dúvida entre "isto é padrão do projeto" e "isto é resíduo do scaffold": padrão é o que
 está escrito neste harness; o resto é exemplo.

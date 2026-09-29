@@ -33,7 +33,7 @@ Quanto do "como" é novo, espalhado ou irreversível.
 
 | Nível | Vale quando **qualquer** sinal aparece |
 |---|---|
-| **T1** | Um repo · dentro do molde (`respondentes`) · sem contrato novo · sem migration |
+| **T1** | Um repo · dentro do molde (`users` / `authentication`) · sem contrato novo · sem migration |
 | **T2** | Dois repos precisam combinar · contrato de API novo ou alterado · domínio/feature novo seguindo o molde |
 | **T3** | Migration · agregação nova no banco · mudança em contrato **já consumido** · infra (EC2, Amplify, pipeline de deploy) · padrão que não existe no código nem neste harness |
 

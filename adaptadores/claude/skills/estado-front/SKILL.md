@@ -9,7 +9,7 @@ Você vai mexer no estado da aplicação. A régua é
 `src/features/authentication/authenticationSlice.ts` e o teste ao lado dele.
 
 <critical>DECIDA PRIMEIRO SE É ESTADO GLOBAL. Vai ao slice: dado de servidor, status da requisição, erro já virado mensagem. NÃO vai: campo de formulário (react-hook-form), aberto/fechado e aba ativa (useState no componente), valor derivado (seletor, nunca campo do state — campo derivado desincroniza).</critical>
-<critical>Máquina de status única, igual em toda feature: idle, carregando, pronto, erro. Não invente um `loading: boolean` ao lado dela.</critical>
+<critical>Máquina de status única, igual em toda feature: idle, loading, ready, error (em inglês, ADR-0005; o authenticationSlice usa `authenticated` no lugar de `ready` e não é exemplo disso). Não invente um `loading: boolean` ao lado dela.</critical>
 <critical>O slice NÃO faz HTTP. O thunk chama o `<feature>Api.ts`; se ele não existir, quem resolve é a skill `contrato-front` — não coloque `fetch` aqui.</critical>
 <critical>Um thunk, uma responsabilidade. "Carregar e filtrar" são dois — ou o filtro é do backend.</critical>
 <critical>O erro vira mensagem pronta no state; a View não interpreta `ApiError`. Use o status do erro para escolher a mensagem: 404 é vazio, 409 é conflito de regra, 5xx é falha genérica.</critical>
