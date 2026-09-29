@@ -23,12 +23,13 @@ Para a peça de interface isolada (um componente, um ajuste visual), o playbook 
 | O que você encontra | Caminho |
 |---|---|
 | endpoints escritos para uma tarefa | transcreva o contrato real (passo 2) e siga |
-| `respondentes` | é scaffold: copie a FORMA, não os campos — não é contrato acordado |
 | docstring "STUB", ou diretório inexistente | o contrato vira decisão de produto: spec + premissa + tarefa de backend no ClickUp, e o front codifica contra o tipo escrito a partir da spec |
 
-Hoje nenhum domínio tem contrato acordado: os cinco stubs respondem 404 e `respondentes`
-é exemplo gerado no scaffold dos projetos. Pular este passo é o que produz front pronto
-contra campo que nunca existiu.
+Hoje têm contrato de verdade `users`, `authentication` e `responses`; os outros cinco
+domínios são stubs que respondem 404 — a lista atualizada está em
+[`contrato-front-back.md`](../conventions/contrato-front-back.md). `respondentes` não é
+molde nem contrato: o domínio do backend foi removido. Pular este passo é o que produz
+front pronto contra campo que nunca existiu.
 
 ## Ordem
 
@@ -38,10 +39,10 @@ contra campo que nunca existiu.
    opcional e nulo não se misturam; campo calculado existe na leitura e não no create.
 3. **`<feature>Api.ts`** — funções puras sobre o `apiClient`. Só aqui existe HTTP.
    Sem Redux, sem React, sem `try/catch`.
-4. **`<feature>Slice.ts`** — thunks, máquina `idle · carregando · pronto · erro`,
+4. **`<feature>Slice.ts`** — thunks, máquina `idle · loading · ready · error`,
    erro já virando mensagem. O que **não** entra no store está na convenção de camadas.
    Registrar o reducer em `src/app/store.ts`.
-5. **`<Feature>View.tsx`** — a tela. Cobre os **quatro** estados, incluindo `pronto` com
+5. **`<Feature>View.tsx`** — a tela. Cobre os **quatro** estados, incluindo `ready` com
    lista vazia. Sem `fetch`, sem agregação, sem string literal visível.
 6. **Componentes** — procure antes de criar; siga
    [`criar-componente-frontend.md`](criar-componente-frontend.md). Formulário segue

@@ -18,12 +18,13 @@ FastAPI. Organização **por domínio** (ADR-002 §2.1). Cada `app/domains/<nome
 
 | Domínio | Situação |
 |---|---|
-| `respondentes` | **molde** — domínio-exemplo completo |
-| `organizacoes` | — |
-| `prismas` | — |
-| `prognosticos` | — |
-| `relatorios` | — |
-| `dashboards` | — |
+| `users` | **molde** — domínio-exemplo completo (tabela `user`, CREED-23) |
+| `authentication` | login, renovação e sessão via Keycloak; sem tabela própria |
+| `responses` | tabelas `form_responses` e `answer`; rotas de abrir e finalizar resposta |
+| `organizacoes`, `prismas`, `prognosticos`, `relatorios`, `dashboards` | scaffold: pasta criada, nenhuma rota |
+
+`respondentes` foi removido em 2026-09-21: era scaffold do commit inicial e nunca teve
+tabela.
 
 Transversal: `app/core/` (config, database) · `app/shared/` (exceptions) ·
 `alembic/` (migrations) · `tests/`.
@@ -42,8 +43,12 @@ src/features/<feature>/
 
 | Feature | Situação |
 |---|---|
-| `respondentes` | **molde** — feature-exemplo |
-| `dashboards`, `prognosticos`, `relatorios` | — |
+| `authentication` | **molde** — login e sessão, ligada ao backend |
+| `responses` | questionário: onboarding, perguntas, revisão e tela de enviado. Espelha o domínio `responses`; ainda com perguntas de exemplo, sem chamada ao backend |
+| `respondentes` | dados demográficos (3 etapas). Só no front: o domínio do backend foi removido. A tela `RespondentesView` saiu das rotas, mas o `respondentesApi.ts` ainda chama `/api/v1/respondentes`, que responde 404 |
+| `cadastro`, `aguarde-confirmacao` | solicitação de cadastro **da empresa**, que a cliente aprova (não é autocadastro de pessoa, ver P-008). O backend ainda não tem esse fluxo, por isso não há chamada |
+| `boas-vindas`, `sobre` | páginas públicas; não espelham domínio e não chamam o backend |
+| `dashboards`, `prognosticos`, `relatorios` | só `README.md`, sem código |
 
 Transversal: `src/app/` (store, routes, hooks) · `src/components/ui/` ·
 `src/hooks/` · `src/lib/` · `src/i18n/` · `src/types/` · `src/test/`.

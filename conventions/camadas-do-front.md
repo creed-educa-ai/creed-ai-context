@@ -34,7 +34,7 @@ para mudar.** Se mudar a rota do backend obriga a mexer na View, a camada furou.
 | Estado | Onde mora | Por quê |
 |---|---|---|
 | Dado que veio do servidor | slice da feature | é compartilhado entre telas e sobrevive à desmontagem |
-| Status da requisição | slice, na máquina `idle` · `carregando` · `pronto` · `erro` | é o que a View usa para escolher o que desenhar |
+| Status da requisição | slice, na máquina `idle` · `loading` · `ready` · `error` | é o que a View usa para escolher o que desenhar |
 | Erro da requisição | slice, como mensagem já pronta | a View não interpreta `ApiError` |
 | Campos de formulário | `react-hook-form` | ver `formularios.md` |
 | Aberto/fechado, aba ativa, hover | `useState` no componente | ninguém mais precisa saber |
@@ -45,15 +45,20 @@ lugar a mais para desincronizar.
 
 ## A máquina de status
 
-Uma só, igual em toda feature, copiada do `respondentesSlice`:
+Uma só, igual em toda feature, em inglês como todo identificador (ADR-0005):
 
 ```ts
-status: 'idle' | 'carregando' | 'pronto' | 'erro'
+status: 'idle' | 'loading' | 'ready' | 'error'
 ```
 
-A View cobre os quatro casos — inclusive **`pronto` com lista vazia**, que é estado de
+A View cobre os quatro casos — inclusive **`ready` com lista vazia**, que é estado de
 produto (mensagem de vazio), não ausência de estado. Feature que só desenha o caso feliz
 volta na review.
+
+> **Decidido em 2026-09-29**, no lugar da versão em português (`idle` · `carregando` ·
+> `pronto` · `erro`). Dois slices ainda não seguem: o `authenticationSlice` (o molde)
+> usa `authenticated` no lugar de `ready`, e o `respondentesSlice`, resíduo do
+> scaffold, está na versão antiga. Feature nova segue a máquina acima, não os dois.
 
 ## Onde mora o compartilhado
 
@@ -78,6 +83,14 @@ mesma função.
 
 O que o molde novo **não** mostra: ele tem uma tela só (`LoginView.tsx`), então não há
 exemplo de feature com várias telas nem de navegação entre elas. Para isso, o que existe
-hoje no repo são as telas de demográficos em `src/features/respondentes/` — que são
-trabalho de tarefa, não scaffold, mas guardam estado local e **não falam com o
-backend**: não copie delas a camada de integração.
+hoje no repo:
+
+- `src/features/responses/` — o questionário (onboarding, perguntas, revisão, enviado):
+  estado da navegação num componente só (`FormView.tsx`), componentes da feature no
+  `Question.tsx`, passagem de dados entre telas pelo `state` da rota. É o exemplo mais
+  completo de fluxo com várias telas;
+- `src/features/respondentes/` — as telas de demográficos, com o rascunho num slice.
+
+Os dois são trabalho de tarefa, não scaffold, mas **não falam com o backend** (as
+perguntas do `responses` são dados de exemplo): copie deles a navegação, nunca a
+camada de integração.

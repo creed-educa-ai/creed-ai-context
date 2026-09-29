@@ -22,7 +22,7 @@ Depois do meu ok, cada task no formato:
 **Depende de:** <task ou nenhuma>
 ## Objetivo                          (uma frase, um entregável)
 ## Arquivos que provavelmente mudam
-## Molde                             (qual arquivo de respondentes copiar a forma)
+## Molde                             (qual arquivo de users/authentication copiar a forma)
 ## Critérios de aceite
 ## Como testar                       (comando + casos: feliz e borda)
 ## Premissas aplicáveis

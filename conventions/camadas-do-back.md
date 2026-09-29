@@ -55,8 +55,8 @@ o banco obriga a mexer no service, a camada furou.
 > ⚠️ **Mudou.** Esta seção separava as camadas por **idioma** — service em português
 > (`criar`), repository em inglês (`get_by_id`). Com o
 > [ADR-0005](../decisoes/adrs/0005-idioma-do-codigo.md) o código é inglês dos dois lados,
-> e o sinal de idioma acabou. O molde `respondentes` ainda mostra a forma antiga: é
-> resíduo datado, não exemplo a copiar.
+> e o sinal de idioma acabou. O `respondentes`, que mostrava a forma antiga, foi
+> removido em 2026-09-21; o molde `users` já nasceu em inglês.
 
 O sinal que sobrou é mais forte, porque nunca dependeu de idioma: **o service nomeia o
 caso de uso, o repository nomeia o acesso.**
@@ -170,7 +170,7 @@ A permissão é declarada, não tácita: comentário no topo do `repository.py` 
 tabelas alheias ele lê e por quê, mais a entrada na lista de exceções de
 `tests/test_arquitetura.py`.
 
-O custo aceito é acoplamento por schema — migration em `respondentes` pode quebrar
+O custo aceito é acoplamento por schema — migration em `responses` pode quebrar
 `dashboards` sem o diff mostrar. É por isso que query de domínio de leitura **precisa**
 de teste de repository contra banco real (`testes.md`), não de mock.
 
@@ -219,6 +219,6 @@ por nenhuma task. Vale como exemplo de como escrever o seu; não vale como prova
 separação de camadas já está pagando — isso só aparece no primeiro domínio nascido de
 tarefa real.
 
-E a dívida que não é do molde: `respondentes` é **forma**, não contrato. `regiao`,
-`pais` e `genero` são exemplo plausível, não campo acordado com a cliente. Campo novo é
-decisão de produto e vira premissa no ledger (`contrato-front-back.md`).
+E a dívida que não é do molde: o molde é **forma**, não contrato. Os campos de `users`
+valem para usuário, não para o assunto novo. Campo novo é decisão de produto e vira
+premissa no ledger (`contrato-front-back.md`).

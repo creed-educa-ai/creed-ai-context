@@ -71,7 +71,8 @@ login (P-008).
 - **Telas** de gestão de usuário (listar, criar, editar usuário pela interface). O épico
   entrega o backend de `users`; a tela é tarefa própria, depois.
 - Recuperação de senha por e-mail — não existe serviço de e-mail na arquitetura (P-009).
-- Autocadastro / tela de "criar conta" (P-008).
+- Autocadastro de pessoa / tela de "criar conta" individual (P-008). A solicitação de
+  cadastro de empresa, aprovada pela cliente, não é autocadastro e não é escopo deste épico.
 - MFA, login social, SSO institucional da PUCRS.
 - Auditoria de acesso (quem entrou quando). Log de aplicação sim, tabela não.
 - Troca de vínculo dentro da sessão ("mudar de organização sem deslogar") — com [C2] são
@@ -353,7 +354,7 @@ refresh token no meio da tela.
 |---|---|---|
 | P-006 | Os papéis são **`admin`, `gestor`, `respondente`** — a lista do diagrama, não a de [P-003](../../decisoes/premissas.md). | baixo hoje, **alto depois** |
 | ~~P-007~~ | ~~O acesso nasce com senha temporária, e o Keycloak exige a troca no primeiro login.~~ **❌ Refutada em 2026-09-08** — substituída por **P-012**: o primeiro acesso é por e-mail com link para o realm do Keycloak, e a plataforma não tem tela de troca de senha. No interim, senha **definitiva** pelo admin, com `temporary: false` no provisionamento. Ver [`contrato-api.md`](contrato-api.md) → "O que caiu, e por quê". | baixo |
-| P-008 | **Não existe autocadastro.** Todo login nasce da cadeia Organização → Participante → Vínculo → Usuário, por alguém com papel `admin`. | baixo |
+| P-008 | **Não existe autocadastro de pessoa.** Todo login nasce da cadeia Organização → Participante → Vínculo → Usuário, por alguém com papel `admin`. A **empresa** pode solicitar cadastro, que a cliente aprova — isso não é autocadastro (escopo esclarecido em 2026-09-29). | baixo |
 | P-009 | **"Esqueci minha senha" não existe nesta entrega.** Quem perde a senha pede a um `admin`, que emite outra temporária. | médio |
 | P-010 | Sessão: `access_token` de **15 minutos**, `refresh_token` de **8 horas**, sem renovação deslizante além disso. | baixo |
 

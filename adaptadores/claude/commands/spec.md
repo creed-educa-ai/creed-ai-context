@@ -10,7 +10,7 @@ Você vai transformar a tarefa **$ARGUMENTS** em uma spec.
 Siga `creed-ai-context/workflows/tarefa-to-spec.md`, no papel de
 `creed-ai-context/roles/analista.md`.
 
-<critical>Leia ANTES de escrever: `creed-ai-context/CONTEXT.md`, `creed-ai-context/catalogo.md`, `creed-ai-context/glossario.md` e o molde do repo afetado (`respondentes`).</critical>
+<critical>Leia ANTES de escrever: `creed-ai-context/CONTEXT.md`, `creed-ai-context/catalogo.md`, `creed-ai-context/glossario.md` e o molde do repo afetado (`app/domains/users/` no back, `src/features/authentication/` no front).</critical>
 <critical>Comece pelo passo 0 do workflow: confira o MCP `clickup`. Se as ferramentas `mcp__clickup__*` não estiverem na sessão, rode `claude mcp get clickup` UMA vez, da raiz do workspace, e classifique pela tabela do passo 0 — registrado sem OAuth: diga em uma linha para abrir `/mcp` e autenticar; não registrado: diga o comando do setup. Nos dois casos, peça a descrição colada e siga. Nunca invente o conteúdo da tarefa, nunca bloqueie a spec por causa do MCP e nunca tente autenticar sozinho.</critical>
 <critical>Passo 3 do workflow: calibre P × T por `creed-ai-context/conventions/profundidade-da-spec.md` ANTES de escrever. A calibragem decide QUAIS seções existem — escreva só elas, e grave o bloco no cabeçalho da spec, com o sinal observado em cada eixo. Se a sessão já trouxe uma calibragem do `/calibrar`, use aquela em vez de refazer.</critical>
 <critical>Resultado **P1 · T1**: a spec é desnecessária. Diga isso e vá direto para `/tasks` em vez de gerar spec por burocracia.</critical>
