@@ -143,9 +143,17 @@ Tabela nova `participants`. Vem do bloco `Participant` de
 - **Descartada, importar `app.domains.documents.models`:** a regra proíbe, e o
   `tests/test_arquitetura.py` existe para pegar isso.
 - **Descartada, confiar só na FK do banco e traduzir o `IntegrityError`:** a violação de
-  FK e a de `unique` chegam como a mesma exceção. Separar as duas exige ler o nome da
-  constraint na mensagem do driver, o que é esperto demais para o nível do time e quebra
-  se o nome mudar.
+  FK e a de `unique` chegam como a mesma exceção, e separar as duas pela mensagem do
+  driver como caminho **principal** quebra em silêncio se o nome da constraint mudar.
+
+**Atualizado em 2026-09-29 (review do PR #28 do backend):** as perguntas do service
+continuam sendo o caminho principal. Mas dois cadastros simultâneos com o mesmo
+documento passam os dois pela pergunta do 409, e o segundo `INSERT` bate na
+`uq_participants_document_id`. Para esse caso, e só para ele, o repository lê o nome da
+constraint no `IntegrityError` e devolve `None`, que o service traduz em 409. Qualquer
+outra violação, a de FK inclusive, é relançada. É o mesmo precedente de
+`app/domains/questions/repository.py`. O risco de a constraint mudar de nome continua, e
+nenhum teste o cobre: a suíte não roda contra banco (verificado à mão no PR).
 
 O "já ligado a outro participante" (409) é pergunta ao **próprio** repository:
 `get_by_document_id`.
