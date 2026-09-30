@@ -28,18 +28,35 @@ Antes de escrever uma linha de integração, abra `app/domains/<dominio>/router.
 | Docstring **"STUB"** e um `APIRouter` sem rota | **PARE.** O domínio não existe |
 | O diretório não existe | **PARE.** O domínio não existe |
 
-Hoje têm contrato de verdade **três** domínios:
+Hoje, na `dev` do back (depois do creed-backend#31, CREED-47, em 2026-09-30), têm
+contrato de verdade **sete** domínios. Todas as rotas exigem token, menos o login e a
+renovação.
 
-| Domínio | Rotas | Tarefa |
-|---|---|---|
-| `authentication` | `POST /authentication/login`, `POST /authentication/renew`, `GET /authentication/session` | CREED-23 |
-| `users` | `POST /users`, `DELETE /users/{id}` | CREED-23 |
-| `responses` | `POST /form-responses` (abre), `PATCH /form-responses/{id}` (finaliza). A tabela `answer` existe, mas ainda **sem rota** | CREED-31 · CREED-34 |
+| Domínio | Rotas | Quem pode | Tarefa |
+|---|---|---|---|
+| `authentication` | `POST /authentication/login`, `POST /authentication/renew`, `GET /authentication/session` | todos | CREED-23 |
+| `users` | `POST /users`, `DELETE /users/{id}` | admin | CREED-23 · CREED-32 |
+| `links` | `POST /organizations/{organization_id}/links` | admin | CREED-32 |
+| `participants` | `POST /participants`, `GET /participants/{id}` | admin | CREED-36 |
+| `forms` | `POST /forms` (admin e gestor), `GET /forms/{id}` (qualquer papel, na própria organização) | ver coluna | CREED-33 · CREED-47 |
+| `questions` | `POST /questions` (admin e gestor), `GET /forms/{form_id}/questions` (qualquer papel) | ver coluna | CREED-35 · CREED-47 |
+| `responses` | `POST /form-responses` (abre, com o vínculo do login), `POST` e `GET /form-responses/{id}/answers` (grava e lê; **só descritiva**), `PATCH /form-responses/{id}` (envia) | quem abriu a resposta | CREED-31 · CREED-34 · CREED-47 |
+
+Quem consome hoje: o front usa `authentication` e, desde a CREED-48, `forms`,
+`questions` e `responses` (o questionário). As rotas só de admin e gestor ainda não têm
+tela.
+
+**Contrato provisório, escrito no front antes do back:** as alternativas de pergunta
+objetiva (`QuestionOptionResponse`, campo `options` em `QuestionResponse`), a partir da
+tabela `QuestionOption` do modelo, e a escala como objetiva de 1 a 5. Premissas P-039 e
+P-040; o back ainda não devolve `options`, e quem define o formato final é a CREED-37.
 
 `organizacoes`, `prismas`, `prognosticos`, `relatorios` e `dashboards` são stubs
 registrados no `main.py` — a rota responde, e responde 404. Descobrir isso por tentativa
-custa uma tarde. No banco, `alembic/versions/` tem só as tabelas `user`,
-`form_responses` e `answer`; o resto do modelo existe apenas no `.dbml`.
+custa uma tarde. No banco, as tabelas que existem são `user`, `links`, `participants`,
+`documents` (sem rota), `form`, `questions`, `form_responses` e `answer`. Organização e
+setor ainda não têm tabela (CREED-38 e CREED-39); o resto do modelo existe apenas no
+`.dbml`.
 
 ### O molde é forma, não campo
 
