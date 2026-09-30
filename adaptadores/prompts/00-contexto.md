@@ -33,7 +33,8 @@ PRINCÍPIOS INEGOCIÁVEIS
 NOMES
 Inglês em todo identificador: pasta, classe, método, rota, schema, chave de i18n
 (ADR-0005). Português só no termo que a cliente usa em reunião — lista ainda aberta
-(Vinculo, Setor, Prisma). Model no singular, tabela e pasta no plural.
+(Prisma). Vínculo e setor já são Link e Department; valores de enum seguem em
+português. Model no singular, tabela e pasta no plural.
 O molde já está em inglês (ADR-0005). Resíduo do idioma antigo: PaginaDe[T].
 A TELA continua em português: chave de i18n em inglês, valor em pt-BR.
 

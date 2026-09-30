@@ -45,9 +45,12 @@ atual impedem o DDL de subir. A devolutiva fechou em 2026-09-04 e a correção e
 o caminho é colar no dbdiagram, reexportar por cima e só então migrar o resto.
 
 ⚠️ **E a `user` que subiu diverge do modelo do time** — ela tem `name` e `role` como
-coluna e não tem `vinculo_id`. A divergência está descrita em
-[`context/modelo-de-dados.md`](context/modelo-de-dados.md) → "A v1 e a autenticação",
-e ainda não tem decisão.
+coluna e não tem o `vinculo_id` do diagrama. A divergência está descrita em
+[`context/modelo-de-dados.md`](context/modelo-de-dados.md) → "A v1 e a autenticação".
+**Decidido em 2026-09-24:** o papel vai para o vínculo (`Link.role`) e `user` ganha
+`link_id`, na [CREED-32](tarefas/86e3anvg2-vinculo-table-context/spec.md). `name` fica
+até `Participant` existir. No código, vínculo e setor são `Link` e `Department`
+(ADR-0005, decidido em 2026-09-29); o `.dbml` segue com os nomes do diagrama.
 
 ## Princípios inegociáveis
 

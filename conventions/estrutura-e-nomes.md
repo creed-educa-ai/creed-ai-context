@@ -16,10 +16,11 @@ Rota, service, repository, schema, dependência e teste ninguém mostra para a c
 inglês, sempre. Sem acento e sem cedilha em identificador, no que sobrar em português
 (`prognosticos`, não `prognósticos`).
 
-> 🟡 **A lista dos termos expostos ainda não está fechada** — `Vinculo`, `Setor`,
-> `Prisma`, `Prognostico` e `Respondente` são os candidatos, e a decisão é do time.
-> Prazo: antes da primeira migration, porque dois deles são nome de tabela. Ver a
-> pendência do [ADR-0005](../decisoes/adrs/0005-idioma-do-codigo.md).
+> 🟡 **A lista dos termos expostos ainda não está fechada** — `Prisma`, `Prognostico` e
+> `Respondente` são os candidatos, e a decisão é do time. Vínculo e setor já fecharam em
+> inglês: `Link` e `Department` (2026-09-29). Valores de enum ficam em português por
+> enquanto (`emprego`, `gestor`). Ver a pendência do
+> [ADR-0005](../decisoes/adrs/0005-idioma-do-codigo.md).
 
 **A tela continua em português.** Código em inglês não é interface em inglês: a chave de
 i18n é inglês (`auth.login.submit`), o valor em `pt-BR` é o que a cliente lê. Confundir
