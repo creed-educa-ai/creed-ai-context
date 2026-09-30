@@ -242,6 +242,15 @@ CREED-35 e a CREED-37 entram nesta mesma pasta.
 `tests/test_arquitetura.py` proíbe um domínio importar o outro por dentro, e a pergunta
 precisa do formulário — a CREED-35 nasceria já pedindo exceção na lista de permitidos.
 
+> ⚠️ **Revisto em 2026-09-22, pela spec da CREED-35.** Esta decisão supunha que as
+> entregas viriam em sequência. O time decidiu entregar a CREED-33 e a CREED-35 **em
+> paralelo**, e por isso `Question` nasce num domínio próprio, `app/domains/questions/`.
+> Juntar os dois domínios, ou liberar a leitura entre eles, passa a ser trabalho da
+> amarração. O motivo está em
+> [`../86e3anvpm-question-crud-api/spec.md`](../86e3anvpm-question-crud-api/spec.md) →
+> "Abordagem técnica", item 1. Esta tarefa não muda: `forms` continua com `Form` e mais
+> nada.
+
 **2. A tabela ganha `name`, que o modelo não tem.** É a pendência #17 do modelo,
 resolvida por premissa (P-016) em vez de ficar aberta. O épico pede, e é o que permite
 distinguir dois formulários numa lista — sem ele o gestor escolhe por UUID.

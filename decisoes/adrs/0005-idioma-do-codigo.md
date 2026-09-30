@@ -130,14 +130,22 @@ drop+create. Depois da primeira migration, mudar de ideia custa dado.
 
 | Termo | Aparece em conversa com a cliente? | Se ficar | Se for inglês |
 |---|---|---|---|
-| `Vinculo` | provavelmente sim — é o conceito central do modelo | `Vinculo`, `vinculo_id` | `Engagement`, `engagement_id` |
-| `Setor` | provavelmente sim | `Setor`, `setor_id` | `Department`, `department_id` |
+| `Vinculo` | provavelmente sim — é o conceito central do modelo | `Vinculo`, `vinculo_id` | **decidido em 2026-09-29: `Link`, `link_id`** |
+| `Setor` | provavelmente sim | `Setor`, `setor_id` | **decidido em 2026-09-29: `Department`, `department_id`** |
 | `Prisma` | **sim** — são os cinco prismas do método dela | `Prisma`, `InsightPrisma` | `Prism` |
 | `Prognostico` | sim | `Prognostico` | `Forecast` |
 | `Respondente` | sim | `Respondente` | `Respondent` |
 
 Não é pergunta para a cliente — ela não decide nome de tabela. É o time olhando o
 [`glossario.md`](../../glossario.md) e marcando quais palavras ela de fato usa.
+
+**2026-09-29 — `Vinculo` e `Setor` fechados: inglês, `Link` e `Department`.** O time
+decidiu que só o vocabulário de código muda; **valores** de enum (`emprego`, `gestor`,
+`respondente`…) ficam em português por enquanto. A CREED-32 aplicou isso antes de a
+primeira tabela subir (`links`, `user.link_id`, `links.department_id`). Isso refuta a
+P-029, que propunha manter os dois em português. O `.dbml` do time continua com os nomes
+do diagrama, e `form_responses.vinculo_id` continua com o nome antigo até ganhar
+migration própria. Seguem abertos `Prisma`, `Prognostico` e `Respondente`.
 
 ## Pendência herdada: a numeração dos ADRs
 

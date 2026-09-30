@@ -53,8 +53,8 @@ Nada de agregação no front. Texto visível via i18n.
 
 **Inglês em todo identificador** — pasta, classe, método, rota, schema, chave de i18n
 (ADR-0005). Português só no termo que a cliente usa em reunião, e essa lista ainda está
-aberta (`Vinculo`, `Setor`, `Prisma`). Model singular, tabela e pasta plural. Nome da
-feature = nome do domínio.
+aberta (`Prisma`). Vínculo e setor já são `Link` e `Department`; valores de enum seguem
+em português. Model singular, tabela e pasta plural. Nome da feature = nome do domínio.
 
 O molde já está no idioma decidido pelo ADR-0005 (inglês em todo identificador).
 O que sobrou do idioma antigo é o `PaginaDe[T]` de `app/shared/paginacao.py`. E a tela continua em português — chave de i18n em inglês, valor em `pt-BR`.

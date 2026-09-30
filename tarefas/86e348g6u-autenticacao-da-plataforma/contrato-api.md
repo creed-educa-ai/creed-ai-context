@@ -56,9 +56,9 @@ pode entrar depois** do #14: invertida a ordem, o login cai em 404 na janela ent
 | `GET /users` · `PATCH /users/{id}` | **não existem** | |
 | — | **`DELETE /users/{user_id}`** (204) | existe e não está no contrato |
 
-**`UserCreate` diverge de verdade.** O alvo é `{vinculo_id, email, initial_password}`;
-o implementado é **`{keycloak_id, name, email}`**. A razão é que `Vinculo` ainda não tem
-tabela, então o papel virou coluna do `user` e o vínculo não é pedido. Enquanto isso, quem
+**`UserCreate` diverge de verdade.** O alvo é `{link_id, email, initial_password}`;
+o implementado é **`{keycloak_id, name, email}`**. A razão é que o vínculo ainda não tem
+tabela na `dev` (chega com a CREED-32, como `links`), então o papel virou coluna do `user` e o vínculo não é pedido. Enquanto isso, quem
 provisiona cria o usuário no Keycloak primeiro e passa o `sub` — não há senha no payload,
 coerente com a P-012.
 
@@ -72,22 +72,26 @@ não 503 — o service traduz indisponibilidade para erro de credencial. É o pa
 
 ## Os payloads
 
+> **`link_id` é o `vinculo_id` do diagrama.** No código, vínculo é `Link` desde
+> 2026-09-29 ([ADR-0005](../../decisoes/adrs/0005-idioma-do-codigo.md), pendência de
+> vocabulário). O front ainda tipa `vinculo_id` em `src/types/api.ts` e precisa acompanhar.
+
 ```
 LoginRequest             { email, password }
 RenewRequest             { refresh_token }
 
 Session                  { access_token, refresh_token, expires_in, user: UserSession }
-UserSession              { id, email, role, vinculo_id, organization_id, organization_name }
+UserSession              { id, email, role, link_id, organization_id, organization_name }
 
-UserCreate               { vinculo_id, email, initial_password }
+UserCreate               { link_id, email, initial_password }
 UserUpdate               { status? }
-User                     { id, email, status, role, vinculo_id, organization_id, created_at }
+User                     { id, email, status, role, link_id, organization_id, created_at }
 Page<T>                  { items, total, page, page_size }
 ```
 
 Três observações que evitam bug de transcrição:
 
-- **`role` e `organization_id` do `User` são derivados** — vêm de `Vinculo`, não de
+- **`role` e `organization_id` do `User` são derivados** — vêm do vínculo (`Link`), não de
   coluna da tabela `User`. Existem na leitura e **não** existem no `UserCreate`, do mesmo
   jeito que `idade` no molde de `respondentes`.
 - **Não há `role` no `UserCreate`.** O papel é do vínculo, e o vínculo já existe quando o
@@ -147,7 +151,7 @@ disparam **um** refresh, não cinco.
 |---|---|---|
 | 401 | sem token · token inválido/expirado · credencial errada · `status = inactive` · claim divergente do banco | renova **uma vez**; falhou, limpa a sessão e vai para `/login` |
 | 403 | autenticado, mas o papel não alcança a rota | "acesso negado" — **não desloga** |
-| 404 | `vinculo_id` ou `user_id` que não existe, **ou é de outra organização** | mensagem de não encontrado |
+| 404 | `link_id` ou `user_id` que não existe, **ou é de outra organização** | mensagem de não encontrado |
 | 409 | e-mail já tem acesso | erro de formulário no cadastro |
 | 422 | payload não bate com o schema **ou** senha recusada pela política do realm | ver abaixo — em desenvolvimento, quase sempre é bug do front |
 | 503 | Keycloak fora do ar | "tente novamente" — **nunca** "senha inválida", e **não** limpa a sessão |
@@ -195,7 +199,7 @@ export interface UserSession {
   id: string;
   email: string;
   role: Role;
-  vinculo_id: string;
+  link_id: string;
   organization_id: string;
   organization_name: string;
 }
@@ -217,13 +221,13 @@ export interface User {
   email: string;
   status: RecordStatus;
   role: Role;
-  vinculo_id: string;
+  link_id: string;
   organization_id: string;
   created_at: string;
 }
 
 export interface UserCreate {
-  vinculo_id: string;
+  link_id: string;
   email: string;
   // Senha definitiva, passada à pessoa fora da plataforma (P-012). Este campo
   // some quando o envio de e-mail entrar — aí o Keycloak manda o link do realm.
@@ -282,7 +286,7 @@ para não ser descoberto no review.
 | 1 | **`Page[T]` em inglês** — `app/shared/paginacao.py` vira `pagination.py`, campos `items/total/page/page_size`, query `page`/`page_size` | você | 1 arquivo + 2 imports no back, 1 interface + 2 referências no front, **hoje**. Depois da entrega 4, `users` é o molde e todo domínio novo copia o envelope — o mesmo rename passa a custar N domínios × 2 repos. Fecha o ⚠️ da spec |
 | 2 | **Primeiro acesso não passa pela plataforma** — provisionamento com `temporary: false`, sem ação obrigatória, sem 409 e sem tela de senha | você | é o desenho de destino (P-012): o convite por e-mail leva à página do realm do Keycloak. Como lá também não há tela nossa, tirá-la agora não é dívida — é remover uma tela que o destino não tem. **Substituiu** a decisão anterior (409 + `POST /authentication/password`), que caiu junto com P-007 e P-011 |
 | 3 | **503 quando o Keycloak está fora** | agente | a spec só mapeava 401/403/409. Sem o 503, indisponibilidade vira "senha inválida" e o usuário troca a senha que estava certa |
-| 4 | **404 para `vinculo_id`/`user_id` de outra organização** — mesma resposta de "não existe" | agente | dizer "existe, mas não é sua" vaza cadastro de outra organização. Segue o mapeamento `NotFoundError → 404` do molde |
+| 4 | **404 para `link_id`/`user_id` de outra organização** — mesma resposta de "não existe" | agente | dizer "existe, mas não é sua" vaza cadastro de outra organização. Segue o mapeamento `NotFoundError → 404` do molde |
 | 5 | **`logout` idempotente** — refresh já inválido também devolve 204 | agente | o usuário está saindo; travá-lo numa tela que ele quer abandonar é o pior desfecho para um erro que não muda nada |
 | 6 | **`GET /users` exige `admin`, e o recorte é sempre a organização do vínculo de quem chama** — `organization_id` de outra organização responde 403 | agente | a spec diz que cadastro de usuário é do `admin`, mas não fixou o papel da listagem. O recorte por vínculo é o mesmo de [C2]; esconder no front não é autorização |
 
@@ -295,13 +299,14 @@ diretas do molde e do modelo. Se alguma incomodar, o custo de mudar é uma linha
 Coisas que este contrato **não** resolve e que alguém vai esbarrar:
 
 - **Não há endpoint para trocar o papel.** O critério de aceite da spec exige que "mudar
-  `Vinculo.role` reflita na realm role", mas `role` mora em `Vinculo`, e não há rota para
-  escrever lá. Dois caminhos, nenhum escolhido: `PATCH /vinculos/{id}` (domínio que não
-  existe) ou `role` dentro do `UserUpdate` (o domínio `users` escrevendo em `Vinculo`).
+  `Vinculo.role` reflita na realm role", mas `role` mora no vínculo (`Link`), e não há rota para
+  escrever lá. Dois caminhos, nenhum escolhido: uma rota de escrita no domínio `links` (que a
+  CREED-32 criou só com o `POST`) ou `role` dentro do `UserUpdate` (o domínio `users`
+  escrevendo em `Link`).
   **Precisa de tarefa própria antes da entrega 3 fechar** — o espelhamento de papel (D4) é
   metade do critério de aceite e não tem por onde ser exercitado.
 - **Não há como listar vínculos sem acesso.** A tela de cadastro precisa escolher um
-  `vinculo_id`, e sem essa rota o admin digita UUID na mão. Telas de gestão estão fora do
+  `link_id`, e sem essa rota o admin digita UUID na mão. Telas de gestão estão fora do
   épico, mas é isto que trava a primeira delas.
 - **O mock não guarda estado** (ver [`mock/README.md`](mock/README.md)): o token que ele
   devolve não é aceito por ele depois. O fluxo login → usar token → renovar só fecha de
