@@ -29,11 +29,14 @@ primeiro a descobrir vai ser o revisor, e depois a cliente.
 - [ ] Sei o que está no slice, o que está na View, e por que a divisão é essa.
 - [ ] Sei o que a tela mostra durante o carregamento e no erro do backend.
 
-## Migration, se houver
+## Banco, se `models.py` mudou
 
-- [ ] Li o arquivo **linha a linha** e sei o que cada operação faz no banco.
+- [ ] Li a migration temporária **linha a linha** e sei o que cada operação faz no banco.
 - [ ] Sei dizer se alguma operação perde dado, e o que acontece se rodar duas vezes.
-- [ ] Rodei `alembic heads` e veio **um** head.
+- [ ] Sei o que o autogenerate **não** reproduz da minha mudança, e isso está na seção
+      "Banco" do PR — é o que o AGES III vai ler para consolidar.
+- [ ] Desfiz a temporária com `alembic downgrade` antes de apagar, e `alembic current`
+      bate com `alembic heads`.
 
 ## Se você não passou
 
