@@ -35,8 +35,10 @@ o mais caro de pular.
 ## Ordem
 
 1. **`models.py`** — tabela SQLAlchemy. Classe no singular, tabela no plural.
-2. **Migration** — [`criar-migration.md`](criar-migration.md). Não pule para o passo 3
-   antes da migration existir; schema é o que trava o resto.
+2. **Migration** — [`criar-migration.md`](criar-migration.md), fluxo A. Não pule para
+   o passo 3 antes da migration existir; schema é o que trava o resto. Ela é
+   **temporária**: sai com `alembic downgrade` antes do PR, e o que o autogenerate não
+   sabe vai na seção "Banco" ([ADR-0009](../decisoes/adrs/0009-migration-consolidada-por-sprint.md)).
 3. **`schemas.py`** — Pydantic **separado por direção**: `<Entidade>Create`,
    `<Entidade>Update`, `<Entidade>Response`. Nunca um schema servindo entrada e saída.
    Listagem é `PaginaDe[<Entidade>Response]` de `app/shared/paginacao.py` — não escreva

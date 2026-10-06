@@ -21,9 +21,14 @@ Regras:
   sem resposta no molde/convenção): apresente 2 opções com trade-off e a sua
   recomendação, e espere minha resposta. Máximo 2 paradas. Dúvida de PRODUTO não para:
   vira premissa, você diz que adotou e segue.
-- Se houver migration: proponha o arquivo E termine avisando que ele precisa de leitura
-  humana linha a linha, listando os pontos de atenção concretos (drop que devia ser
-  rename, nullable=False em tabela com dados, down_revision, índice faltando).
+- Se a task muda models.py: a migration é TEMPORÁRIA (ADR-0009). Gere para testar no
+  banco local, mas ela não entra no diff. Termine com o texto da seção "Banco" do PR
+  (o que mudou + cada ajuste manual: rename, backfill, server_default) e o lembrete de
+  rodar `alembic downgrade` ANTES de apagar o arquivo.
+- Migration que vai para o repositório (só na branch de consolidação): termine avisando
+  que ela precisa de leitura humana linha a linha, listando os pontos de atenção
+  concretos (drop que devia ser rename, nullable=False em tabela com dados,
+  down_revision, índice faltando).
 
 Termine EXPLICANDO, nesta ordem — explique decisão, não sintaxe:
 
