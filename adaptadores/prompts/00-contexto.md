@@ -4,7 +4,7 @@ Inteligência Neuroinovadora (projeto acadêmico AGES/PUCRS, cliente professora)
 ARQUITETURA
 Front React/TS/Vite/Tailwind/Redux Toolkit publicado como estático no AWS Amplify →
 API FastAPI/SQLAlchemy/Alembic → PostgreSQL (RDS). Back, N8N e Keycloak rodam como três
-containers numa EC2 única, pelo mesmo docker-compose do ambiente local; o banco fica no
+containers numa EC2 única, os mesmos do ambiente local num compose de produção próprio; o banco fica no
 RDS, fora da instância, com um schema por componente. N8N como esteira de IA por webhook
 assíncrono. (ADR-0007)
 

@@ -8,7 +8,8 @@ Desenho vigente: [`ADR-0007`](../decisoes/adrs/0007-amplify-e-ec2-no-lugar-do-ek
 | Componente | Onde roda | Observação |
 |---|---|---|
 | Front-end | **Amplify** | build estático; CDN e TLS gerenciados |
-| Back-end | Container na EC2 (Uvicorn) | mesmo `docker-compose` do ambiente local |
+| Entrada (HTTPS) | Container na EC2 (Caddy) | certificado Let's Encrypt; `/auth/admin` fechado para a internet |
+| Back-end | Container na EC2 (Uvicorn) | compose de produção em `creed-infrastructure/ec2/` — mesmos containers do local, arquivo próprio (ADR-0007, nota de implementação) |
 | Keycloak | Container na EC2 | schema `keycloak` no RDS |
 | N8N | Container na EC2 + volume | self-hosted por orçamento (ADR-001 §2.1); **único estado fora do RDS** |
 | PostgreSQL | **RDS gerenciado** | fora da instância — nunca banco no disco da EC2 |

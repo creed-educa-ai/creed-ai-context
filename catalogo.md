@@ -55,9 +55,10 @@ Transversal: `src/app/` (store, routes, hooks) · `src/components/ui/` ·
 
 ## creed-infrastructure
 
-Notas de deploy. Componentes: front (**Amplify**, build estático) · back, N8N e
-Keycloak (três containers numa **EC2 única**, pelo mesmo `docker-compose` do ambiente
-local) · PostgreSQL **no RDS**, fora da instância, um schema por componente.
+Compose de produção da EC2 (`ec2/`: Caddy na frente, Keycloak atrás) e notas de
+deploy. Componentes: front (**Amplify**, build estático) · back, N8N e Keycloak (três
+containers numa **EC2 única** — os mesmos do ambiente local, num compose de produção
+próprio) · PostgreSQL **no RDS**, fora da instância, um schema por componente.
 
 `migration-job.yaml` continua versionado como referência de um desenho **aposentado**
 ([ADR-0007](decisoes/adrs/0007-amplify-e-ec2-no-lugar-do-eks.md)) — nada o consome.

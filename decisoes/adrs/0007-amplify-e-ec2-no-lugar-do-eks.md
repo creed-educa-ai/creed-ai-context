@@ -46,6 +46,9 @@ como três containers numa **EC2 única**, orquestrados pelo mesmo `docker-compo
 roda na máquina de quem desenvolve. O PostgreSQL continua no **RDS**, fora da instância,
 com um schema por componente.
 
+> ⚠️ Os containers são os mesmos, mas o compose de produção virou arquivo próprio. Ver
+> [Nota de implementação](#nota-de-implementação--dois-composes-2026-10-09).
+
 O princípio inegociável de que **migration nunca roda no startup do container**
 continua valendo; muda só o mecanismo: um **passo dedicado no pipeline** (container
 descartável rodando `alembic upgrade head`) no lugar do Job com `helm.sh/hook`.
@@ -66,6 +69,8 @@ descartável rodando `alembic upgrade head`) no lugar do Job com `helm.sh/hook`.
 - **Local e ambiente real viram a mesma topologia.** O `docker-compose` deixa de ser
   aproximação e passa a ser o artefato de deploy. Um componente novo entra nos dois
   lugares no mesmo commit.
+  > ⚠️ **Não se confirmou na implementação:** a produção ganhou compose próprio. Ver
+  > [Nota de implementação](#nota-de-implementação--dois-composes-2026-10-09).
 - **O Keycloak deixa de estar fora do escopo por falta de plataforma.** O que subiu na
   entrega 2 é o que sobe na instância.
 - **Amplify entrega build, CDN, TLS e preview por PR** sem ninguém manter — e o front
@@ -98,6 +103,33 @@ Voltar ao EKS significa: escrever manifest, service e secret para os três conta
 `migration-job.yaml` — que continua versionado exatamente por isso — e devolver o front
 a um pod Nginx. O que **não** se recupera de graça é o tempo: a decisão só faz sentido
 reverter se aparecer dono de infra e uma necessidade de escala que hoje não existe.
+
+## Nota de implementação — dois composes (2026-10-09)
+
+Ao montar a EC2 ([CREED-281](https://app.clickup.com/t/86e3na5jg)), a produção ganhou
+um compose próprio, em `creed-infrastructure/ec2/`, separado do `docker-compose.yml`
+local do `creed-backend`. Os **componentes são os mesmos** — back, Keycloak, N8N, nas
+mesmas imagens e versões —; o que os cerca, não:
+
+| | Local (`creed-backend/docker-compose.yml`) | Produção (`creed-infrastructure/ec2/`) |
+|---|---|---|
+| Banco | Postgres em container | RDS, fora da instância |
+| Keycloak | `start-dev`, admin `admin`/`admin` | `start`, segredos vindos do `.env` da instância |
+| Entrada | cada serviço publica a própria porta | só o Caddy (80/443, HTTPS); o resto fechado ou preso a `127.0.0.1` |
+| Segredos | valores de desenvolvimento no próprio arquivo | `.env` só na instância, fora do git |
+
+O `realm-creed.json` continua **um arquivo só**, lido pelos dois composes: o que muda
+entre ambientes (segredo do client, `sslRequired`) chega por variável de ambiente.
+
+**Descartado:** compose base + arquivo de sobreposição de produção
+(`docker-compose.yml` + `docker-compose.prod.yml`). Ficaria mais perto do "mesmo
+artefato", mas, com diferença em quase todo serviço, a sobreposição esconderia a
+produção em vez de mostrá-la — e obrigaria o arquivo de produção a morar no
+`creed-backend`, junto do código.
+
+**Consequência:** a vantagem "um componente novo entra nos dois lugares no mesmo
+commit" **deixa de valer**. Componente novo, ou versão nova de imagem, entra nos dois
+arquivos — em dois repositórios, portanto em dois PRs.
 
 ## Pendências
 
