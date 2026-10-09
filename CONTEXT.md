@@ -15,7 +15,7 @@ Três repositórios, um workspace:
 |---|---|---|
 | `creed-backend/` | API, domínios, migrations | FastAPI · SQLAlchemy · Alembic · Pydantic |
 | `creed-frontend/` | SPA por feature | React · TS · Vite · Tailwind · Redux Toolkit · Vitest |
-| `creed-infrastructure/` | Notas de deploy e o Job de migration aposentado | EC2 · Docker Compose · Amplify |
+| `creed-infrastructure/` | Compose de produção da EC2 (`ec2/`), notas de deploy e o Job de migration aposentado | EC2 · Docker Compose · Amplify |
 
 Detalhe por repo em [`catalogo.md`](catalogo.md). Termos do domínio em [`glossario.md`](glossario.md).
 Quem é quem — e quem revisa PR — em [`equipe.md`](equipe.md).
@@ -23,7 +23,7 @@ Quem é quem — e quem revisa PR — em [`equipe.md`](equipe.md).
 ## Arquitetura em uma frase
 
 Cliente (mobile/desktop) → front estático no **Amplify** → back, N8N e Keycloak como
-três containers numa **EC2 única** (mesmo `docker-compose` do ambiente local) →
+três containers numa **EC2 única** (os mesmos do ambiente local, num compose de produção próprio) →
 PostgreSQL no **RDS**, um schema por componente. A esteira de IA (N8N) é consumida por
 webhook assíncrono. Ver [`context/arquitetura.md`](context/arquitetura.md) e
 [`ADR-0007`](decisoes/adrs/0007-amplify-e-ec2-no-lugar-do-eks.md).

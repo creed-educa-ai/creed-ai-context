@@ -33,9 +33,10 @@ schemas: app                      │
 
 **Duas peças de compute, não um cluster.** O front é build estático publicado no
 **Amplify** — não há Nginx nosso servindo arquivo. Back, N8N e Keycloak são três
-containers numa **EC2 única**, orquestrados pelo mesmo `docker-compose` que roda na
-máquina de quem desenvolve. Local e ambiente real passam a ter a mesma topologia: o que
-sobe na sua máquina é o que sobe na instância.
+containers numa **EC2 única** — os mesmos que sobem na máquina de quem desenvolve, mas
+num compose de produção próprio (`creed-infrastructure/ec2/`): sem Postgres, porque o
+banco é o RDS, e com o **Caddy** na frente cuidando do HTTPS. Componente novo entra nos
+dois composes (ADR-0007, nota de implementação).
 
 **Keycloak e N8N também gravam no RDS**, cada um no seu schema — RDS único, schema por
 componente. Nenhum dos dois tem banco próprio, e é por isso que os três schemas estão

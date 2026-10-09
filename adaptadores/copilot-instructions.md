@@ -10,8 +10,8 @@ quando ela estiver acessível, ela prevalece.
 ## Arquitetura em uma frase
 
 Front (React/Vite) estático no **Amplify** → API (FastAPI) → PostgreSQL (RDS). Back,
-N8N e Keycloak são três containers numa **EC2 única**, pelo mesmo `docker-compose` do
-ambiente local. Banco no RDS, fora da instância, um schema por componente. N8N como
+N8N e Keycloak são três containers numa **EC2 única** — os mesmos do ambiente local,
+num compose de produção próprio (`creed-infrastructure/ec2/`). Banco no RDS, fora da instância, um schema por componente. N8N como
 esteira de IA por webhook assíncrono. (ADR-0007)
 
 ## Princípios inegociáveis
