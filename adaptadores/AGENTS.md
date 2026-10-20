@@ -39,7 +39,9 @@ Workflows em `creed-ai-context/workflows/`. Playbooks técnicos em
 - **Não versione por conta própria**: nada de `git add`/`commit`/`push`/branch/PR sem
   pedido explícito. Leitura (`status`, `diff`, `log`) é livre.
 - **Escopo fechado**: só o que a task pede entra no diff.
-- **Migration**: proponha e avise que precisa de leitura humana linha a linha.
+- **Migration**: PR de tarefa sobe sem ela (ADR-0009). A temporária testa no banco
+  local e sai com `alembic downgrade` antes do PR; o que o autogenerate não sabe vai
+  na seção "Banco". A consolidada precisa de leitura humana linha a linha.
 - **Nunca** rode `alembic upgrade` fora do banco local, nem `kubectl`/`helm`/`aws`
   contra ambiente real.
 - **Nunca** coloque credencial, `.env` real ou dado pessoal de respondente em código,

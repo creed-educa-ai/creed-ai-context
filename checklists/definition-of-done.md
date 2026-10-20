@@ -24,10 +24,14 @@ Uma task só está pronta quando **todas** valem:
 - [ ] **Suíte local rodada por um humano** e verde:
       backend `ruff check . && mypy app && pytest` · front `npm run check`.
 
-## Migration (se houver)
-- [ ] Arquivo lido **linha a linha** por um humano.
-- [ ] `alembic heads` retorna um único head.
-- [ ] Mudança destrutiva quebrada em passos.
+## Banco (se `models.py` mudou)
+- [ ] Migration temporária lida **linha a linha** por um humano, e testada local.
+- [ ] Desfeita com `alembic downgrade` e apagada: nada em `alembic/versions/` no diff
+      (ADR-0009).
+- [ ] Seção "Banco" do PR diz o que mudou e cada ajuste manual — ou "nenhum ajuste
+      manual".
+- [ ] Mudança destrutiva quebrada em passos, e o PR diz em qual está.
+- [ ] Consolidação (só AGES III): `alembic check` limpo e `alembic heads` com um head.
 
 ## Rastro
 - [ ] Premissa usada está no ledger e marcada no artefato.

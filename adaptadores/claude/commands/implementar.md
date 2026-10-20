@@ -17,7 +17,7 @@ Siga `creed-ai-context/workflows/tasks-to-code.md`, no papel de
 <critical>Escreva no nível de `creed-ai-context/conventions/nivel-de-codigo.md`: um colega entende o arquivo em uma passada. Nada da lista do §3 entra sem justificativa escrita no encerramento.</critical>
 <critical>Testes junto com o código: caso feliz + pelo menos um caso de borda; correção de bug tem teste que falha sem a correção (`conventions/testes.md`).</critical>
 <critical>NUNCA rode `git add`, `git commit`, `git push`, não crie branch e não abra PR. Deixe no working tree.</critical>
-<critical>Se a task tem migration: proponha, e encerre avisando que precisa de leitura humana linha a linha, com os pontos de atenção concretos.</critical>
+<critical>Se a task muda `models.py`: a migration é TEMPORÁRIA (ADR-0009) — gere para testar no banco local, mas ela não entra no diff entregue. Encerre com o texto da seção "Banco" do PR e o lembrete de `alembic downgrade` antes de apagar o arquivo. Migration que vai para o repositório só na branch de consolidação, e aí encerre avisando que precisa de leitura humana linha a linha, com os pontos de atenção concretos.</critical>
 <critical>Rode a suíte do repo e reporte o resultado real — nunca afirme que passou sem ter rodado.</critical>
 <critical>Escopo fechado: nada além da task no diff. Problema ao lado se anota no encerramento, não se conserta.</critical>
 <critical>ENCERRE no formato de `creed-ai-context/templates/entrega-didatica.md` — todas as seções, incluindo "O que descartei" e "Para você conseguir defender". Explique decisão, não sintaxe. Encerramento sem as seções didáticas é entrega incompleta.</critical>

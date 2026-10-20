@@ -10,7 +10,10 @@ O custo do review escala com o risco, não com a burocracia.
 | **Padrão** | endpoint, componente, regra de negócio dentro do molde | checklist abaixo |
 | **Sensível** | migration, autenticação, contrato de API, agregação de indicador, infra | checklist + **passada com modelo pesado** + segunda leitura humana |
 
-Migration é **sempre** Sensível, mesmo que tenha uma linha.
+Migration é **sempre** Sensível, mesmo que tenha uma linha. Desde o
+[ADR-0009](../decisoes/adrs/0009-migration-consolidada-por-sprint.md), quem traz
+migration é o **PR de consolidação**. O PR de tarefa que só muda `models.py` segue o
+tier do resto do diff, e o revisor confere a seção "Banco".
 
 A passada com modelo pesado não é automática: a review em modelo médio vai até o
 veredito e **para**, dizendo o que falta. Como escalar:
@@ -33,7 +36,10 @@ veredito e **para**, dizendo o que falta. Como escalar:
 - [ ] Mudança de contrato de API tem o par front/back no mesmo PR — ou é aditiva.
 
 ### Dados
-- [ ] Migration revisada linha a linha; sem `drop` que devia ser rename.
+- [ ] PR de tarefa: nada em `alembic/versions/`; se `models.py` mudou, a seção
+      "Banco" bate com o diff e nomeia todo rename, backfill e default (ADR-0009).
+- [ ] PR de consolidação: migration revisada linha a linha; sem `drop` que devia ser
+      rename; cada ajuste pedido nas seções "Banco" está no arquivo.
 - [ ] Índice para coluna nova usada em filtro/agregação.
 
 ### Segurança

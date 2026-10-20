@@ -80,8 +80,9 @@ Regras:
 - **Recomende uma.** Parada sem recomendação empurra o trabalho de volta.
 - **"Decide você" é resposta válida**: implemente a recomendada e registre no
   encerramento que a escolha foi do agente, não do humano. Não finja consenso.
-- **Não pare por migration**: migration não é bifurcação, é proposta que precisa de
-  leitura humana linha a linha (`../playbooks/criar-migration.md`).
+- **Não pare por migration**: migration não é bifurcação. Na tarefa ela é temporária e
+  não sobe; o que precisa de leitura humana é a seção "Banco" do PR
+  (`../playbooks/criar-migration.md`, fluxo A).
 - Estourou o limite de 2? As demais viram decisão do agente, registradas no encerramento.
 
 ## Playbooks

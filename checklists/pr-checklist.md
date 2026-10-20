@@ -32,8 +32,9 @@
 ## Decisões de design
 - <bifurcação> → <opção>, por @fulano   (ou "nenhuma")
 
-## Migration
-- <arquivo> — revisado linha a linha por @fulano   (ou "nenhuma")
+## Banco
+- <o que mudou no schema> · ajustes manuais: <rename/backfill/default> ou "nenhum"
+  (ou "models.py não mudou"; PR de consolidação: <arquivo> — revisado linha a linha por @fulano)
 
 IA: <ferramenta/modelo> — <o que fez> · revisão humana: @fulano
 Tarefa: <link ClickUp>
