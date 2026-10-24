@@ -39,3 +39,5 @@ esse documento existe para permitir. **7 fecha atrás da 6.**
   nada: as 7 entregas rodam inteiras em ambiente local. Sem tarefa no board.
 - **Convite de primeiro acesso por e-mail** — premissa P-012, subtarefa CREED-23.8 no
   ClickUp. Adiada de propósito; no interim a senha é definitiva e passada por fora.
+  Retomada em 2026-10-24, com spec própria:
+  [`../86e35vhxm-convite-de-primeiro-acesso/spec.md`](../86e35vhxm-convite-de-primeiro-acesso/spec.md).
