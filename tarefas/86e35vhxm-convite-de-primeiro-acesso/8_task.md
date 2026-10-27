@@ -3,7 +3,7 @@
 **Repo:** `creed-ai-context`, com base na `main`.
 **Depende de:** tasks 2 a 7. Cada documento descreve o que já está no código ou na
 produção.
-**Branch sugerida:** `docs/86e35vhxm-convite-de-primeiro-acesso`
+**Branch sugerida:** `docs/86e35vhxm-documentos-do-convite`
 
 ## Objetivo
 
@@ -13,26 +13,23 @@ ledger, pauta e glossário descrevem o convite como ele ficou.
 
 ## Contexto que você não tem como adivinhar
 
-- **A spec, a revisão e as premissas P-045 a P-053 não esperam esta task.** Foram escritas
-  em 24/10, sem commit, e sobem num PR de docs **antes** de a implementação começar:
-  premissa sem commit não existe para o time. O `decisoes/premissas.md` também tem, sem
-  commit, as P-041 a P-044 do ADR-0010. Separe as duas frentes com `git add -p`, ou suba
-  as duas juntas.
+- **A spec, a revisão e as premissas P-045 a P-053 não esperam esta task.** Já estão na
+  `main` desde o creed-ai-context#36, e o adendo do Gmail desde o #37. Esta task cuida só
+  do que descreve o convite **depois** de ele existir no código e na produção.
 - **ADR-0006.** O adendo do provedor já existe (2026-10-27: Gmail do projeto por SMTP,
-  sem SES). Falta acrescentar a ele:
-  - a falta de domínio (o link sai com IP);
-  - o script de ajuste do realm (D11).
+  sem SES) e já cita o script de ajuste do realm. Falta acrescentar a ele que, sem
+  domínio, o link do convite sai com o IP do servidor.
 
   O status sai de "Proposto" se o time confirmar.
 - **O que cada documento diz hoje e passa a dizer:**
 
   | Documento | Hoje | Depois |
   |---|---|---|
-  | `context/arquitetura.md` | diagrama com "Provedor de e-mail (fora da AWS)"; provedor "não escolhido" | SMTP do Gmail do projeto; o fluxo com membros, reenvio e reset |
-  | `context/infraestrutura.md` | parâmetros sem SMTP | `SMTP_*` no `.env` da EC2, e que as credenciais do Gmail ficam com o dono da conta, não no Parameter Store |
+  | `context/arquitetura.md` | o provedor já está certo desde o #37: o "fora da AWS" do diagrama passou a ser verdade, porque o Gmail fica fora da AWS. O fluxo do convite só tem o `POST /users` | o fluxo com membros, reenvio e redefinição |
+  | `context/infraestrutura.md` | a tabela "Onde ficam os segredos" não tem o SMTP | uma linha para a conta do Gmail do projeto e a senha de app: ficam com o dono da conta e só no `.env` da EC2, como exceção à regra do Parameter Store, e a linha diz como a conta passa para a turma seguinte |
   | `tarefas/86e348g6u-…/contrato-api.md` | `UserCreate { link_id, email, initial_password }`; "o 503 ainda não acontece" | `UserCreate { name, email, link_id }`; rotas de membros, reenvio e reset; 503 |
   | `tarefas/86e348g6u-…/spec.md` | "Não entra: recuperação de senha por e-mail — não existe serviço de e-mail" | aponta para a 23.8 |
-  | `pauta/proxima-reuniao.md`, item 3 | descreve a P-007, refutada | pergunta à cliente o que as P-045 a P-053 decidiram sem ela |
+  | `pauta/proxima-reuniao.md`, item 3 | descreve a P-007, refutada, e diz que a plataforma não envia e-mail | pergunta à cliente o que as P-045 a P-053 decidiram sem ela, e se o remetente `@gmail.com` serve até haver domínio |
   | `glossario.md` | sem convite, membro e mentorando | os três termos |
   | `catalogo.md` | `organizacoes` como scaffold; sem `links`, `participants`, `forms` e `questions` | o estado de hoje |
 
@@ -68,18 +65,24 @@ ledger, pauta e glossário descrevem o convite como ele ficou.
 ## Critérios de aceite
 
 - [ ] A busca do "Como testar" só acha texto histórico, marcado como tal.
-- [ ] O ADR-0006 tem região, identidade, porta e o caminho de ajuste do realm de produção.
+- [ ] O ADR-0006 diz que, sem domínio, o link sai com o IP do servidor. Provedor, porta,
+      credenciais e script já estão no adendo de 27/10.
+- [ ] `context/infraestrutura.md` diz onde ficam a conta do Gmail e a senha de app, e como
+      elas passam para a turma seguinte.
 - [ ] O contrato da CREED-23 bate com o OpenAPI do back depois das tasks 2 a 4.
 - [ ] A P-009 está em "Fechadas", com o desfecho, e nenhuma premissa sumiu.
 - [ ] O item 3 da pauta pergunta o que ainda depende da cliente: validade do link, texto
-      do e-mail, mentorando e empresa aprovada.
+      do e-mail, remetente `@gmail.com`, mentorando e empresa aprovada.
 
 ## Como testar
 
 ```bash
 cd creed-ai-context
-grep -rn -i "fora da AWS\|initial_password\|não existe envio de e-mail\|não existe serviço de e-mail" --include=*.md .
+grep -rn -i "initial_password\|não existe envio de e-mail\|não existe serviço de e-mail\|não envia e-mail\|email-smtp\|sandbox do SES" --include=*.md --exclude-dir=86e35vhxm-convite-de-primeiro-acesso .
 ```
+
+A pasta da própria 23.8 fica fora da busca, porque cita esses termos para dizer o que
+muda.
 
 Leitura: alguém que não participou da 23.8 lê a seção "Autenticação e e-mail" de
 `context/arquitetura.md` e consegue dizer como uma pessoa ganha acesso.

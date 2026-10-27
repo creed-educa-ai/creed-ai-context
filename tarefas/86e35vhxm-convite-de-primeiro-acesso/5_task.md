@@ -38,6 +38,8 @@ CREED, onde ficam esse admin e, depois, os mentorandos.
   arm64) também mexe no `Dockerfile`: o conflito é de uma linha.
 - **Em produção**, depois do release, por quem tem acesso à EC2:
   `docker compose run --rm back python -m scripts.convidar_primeiro_admin --email <e-mail> --nome "<nome>"`.
+  O e-mail sai do Gmail do projeto, uma conta nova cujo primeiro e-mail de teste caiu no
+  spam (adendo do ADR-0006). Avise a pessoa convidada para olhar o spam.
 
 ## Arquivos que provavelmente mudam
 

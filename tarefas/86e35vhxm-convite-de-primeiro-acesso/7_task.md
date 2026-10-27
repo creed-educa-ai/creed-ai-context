@@ -1,6 +1,7 @@
 # Task 7 — Produção recebe o SMTP e os ajustes do realm
 
-**Repo:** `creed-infrastructure`, mais passos no console da AWS, fora do git.
+**Repo:** `creed-infrastructure`, mais um passo humano fora do git: as credenciais do
+Gmail do projeto no `.env` da EC2.
 **Depende de:** task 1, que dá a forma do `realm-creed.json` que o script aplica. Rodar em
 produção depende do release das tasks 1–5 na `main` do back, e o release depende da
 consolidação das migrations (CREED-57, ADR-0009).
@@ -55,14 +56,25 @@ e sem clique no console.
 
 ## Arquivos que provavelmente mudam
 
-- `ec2/.env.example`: `SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM`, `SMTP_USER` e
-  `SMTP_PASSWORD`, com o aviso "Parameter Store, nunca no git", e `FRONTEND_URL`.
+- `ec2/.env.example`:
+  - `SMTP_HOST=smtp.gmail.com` e `SMTP_PORT=587`;
+  - `SMTP_USER` e `SMTP_FROM`, com o aviso de que os dois são o mesmo Gmail;
+  - `SMTP_PASSWORD`, com o aviso: "senha de app do Google, com o dono da conta (Enzo);
+    nunca no git e, pelo adendo do ADR-0006, fora do Parameter Store";
+  - `FRONTEND_URL`.
 - `ec2/docker-compose.yml`:
   - no `keycloak`: as `SMTP_*` (com `SMTP_AUTH: "true"`, `SMTP_STARTTLS: "true"` e
     `SMTP_SSL: "false"`) e `CREED_FRONTEND_URL: ${FRONTEND_URL}`;
   - no `back`: `FRONTEND_URL`.
 - `ec2/realm/aplicar-ajustes.sh` (novo).
 - `ec2/README.md`: seções "E-mail (SMTP)" e "Ajustar o realm depois da primeira subida".
+  A seção de e-mail diz três coisas:
+  - as credenciais do Gmail são **exceção** à regra "todo segredo novo vai também para o
+    Parameter Store" do próprio README;
+  - quem é o dono da conta;
+  - o que fazer quando a senha de app for revogada (o Google revoga quando a senha da conta
+    muda, e a senha de app só funciona com a verificação em duas etapas ligada): gerar
+    outra, atualizar o `.env` e rodar o `aplicar-ajustes.sh` de novo.
 
 ## Molde
 
@@ -81,8 +93,11 @@ e sem clique no console.
       mostra os valores (a senha aparece mascarada).
 - [x] De dentro da EC2, um envio pelo `smtp.gmail.com:587` chega (feito em 2026-10-27).
 - [ ] Depois do script, o *Test connection* do realm `creed` segue passando.
+- [ ] O README diz que as credenciais do Gmail são exceção ao Parameter Store e o que
+      fazer quando a senha de app for revogada.
 - [ ] Depois do release e da task 5:
-  - [ ] o convite do primeiro admin chega a um endereço real;
+  - [ ] o convite do primeiro admin chega a um endereço real. Olhe também o spam: a conta
+        do Gmail é nova;
   - [ ] o link abre `https://<IP>/auth/realms/creed/login-actions/...` com certificado
         válido;
   - [ ] o login em produção devolve 200, o que fecha o último critério da CREED-283.
