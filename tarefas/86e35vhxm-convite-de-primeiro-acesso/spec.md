@@ -33,7 +33,7 @@
 | Eixo | Nível | Sinal observado |
 |---|---|---|
 | Produto | P3 | **Regra de permissão nova**: o `gestor` passa a criar acesso na própria organização (P-045 ajusta a P-008). **Ciclo de vida novo** do acesso: convite, reenvio e redefinição de senha. **Nove premissas novas** (P-045 a P-053), duas de custo médio (P-048 e P-053). |
-| Técnico | T3 | **Infra**: realm de produção que não relê o arquivo, SES, compose e `.env` da EC2, `Dockerfile`. **Padrão que não existe no código**: cliente da Admin API do Keycloak e compensação entre dois sistemas. **Mudança em contrato publicado**: o `POST /users` perde `keycloak_id`, e o login passa a responder 503 (hoje 401). Três repositórios, mais o harness. |
+| Técnico | T3 | **Infra**: realm de produção que não relê o arquivo, SMTP do Gmail, compose e `.env` da EC2, `Dockerfile`. **Padrão que não existe no código**: cliente da Admin API do Keycloak e compensação entre dois sistemas. **Mudança em contrato publicado**: o `POST /users` perde `keycloak_id`, e o login passa a responder 503 (hoje 401). Três repositórios, mais o harness. |
 
 Dispensadas nesta calibragem: nenhuma.
 
@@ -104,7 +104,8 @@ vínculo.
 11. **Produção**:
     - `.env` e compose da EC2 com as variáveis de SMTP;
     - script versionado que aplica os ajustes no realm que já existe (D11);
-    - SES pronto. É passo humano; o roteiro está na revisão, §10.
+    - SMTP do Gmail do projeto (adendo de 2026-10-27 do ADR-0006). As credenciais são
+      passo humano do Enzo, no `.env` da EC2.
 12. **Documentos**: adendo ao ADR-0006, contrato da CREED-23, arquitetura,
     infraestrutura, ledger e pauta.
 
@@ -397,7 +398,7 @@ Cada entrega é um PR, com back e front sempre separados (CONTRIBUTING).
 | 4 | **Reenviar e redefinir**: `POST /users/{user_id}/invitation`, `POST /authentication/password-reset` | back | 2 | `app/domains/authentication/service.py` | 204 para e-mail com e sem acesso, e um e-mail só no Mailpit |
 | 5 | **Primeiro admin**: `scripts/convidar_primeiro_admin.py` e `COPY scripts` no `Dockerfile` | back | 2 | `scripts/seed_local.py` (molde de script) | rodado duas vezes no local, convida na primeira e reenvia na segunda |
 | 6 | **Front**: rotas, `RecuperarSenhaView`, `organizationsApi.inviteMember`, nome no `AddMemberForm` | front | o contrato acima (não espera o back) | `src/app/routes.tsx` | `npm run check` verde; `/primeiro-acesso` não existe; `/recuperar-senha` só pede o e-mail |
-| 7 | **Produção**: `.env` e compose da EC2, `aplicar-ajustes.sh`, README; SES e Parameter Store (passo humano) | infra + AWS | 1 (forma do realm) e o release que leva 2–5 à `main` | `ec2/docker-compose.yml` | o `kcadm get` mostra SMTP, idioma e política aplicados, e um convite real chega fora do sandbox |
+| 7 | **Produção**: `.env` e compose da EC2, `aplicar-ajustes.sh`, README; credenciais do Gmail no `.env` (passo humano) | infra + EC2 | 1 (forma do realm) e o release que leva 2–5 à `main` | `ec2/docker-compose.yml` | o `kcadm get` mostra SMTP, idioma e política aplicados, e um convite real chega a um endereço de fora do time |
 | 8 | **Documentos** | harness | entra em cada PR | `decisoes/adrs/0006-e-mail-transacional.md` | nenhum documento diz mais que "não existe envio de e-mail" |
 
 A 1 e a 6 podem começar já. A 3, a 4 e a 5 só depois da 2, porque mexem no mesmo
@@ -406,10 +407,12 @@ consolidação e do release (CREED-57, ADR-0009).
 
 **Documentos da entrega 8**, cada item no PR que o torna verdade:
 
-- ADR-0006: adendo com região, identidade, sandbox e porta do SES, mais a D11; e o status.
+- ADR-0006: o adendo do provedor já existe (Gmail por SMTP, 2026-10-27); falta a D11, a
+  falta de domínio e o status.
 - `contrato-api.md` da CREED-23: `UserCreate`, rotas novas, 503.
 - `context/arquitetura.md`: o diagrama ainda diz "provedor de e-mail (fora da AWS)".
-- `context/infraestrutura.md`: parâmetros `SMTP_*` no Parameter Store.
+- `context/infraestrutura.md`: `SMTP_*` no `.env` da EC2; as credenciais do Gmail ficam
+  com o dono da conta, fora do Parameter Store.
 - Ledger:
   - a P-009 é refutada, porque o reset passa a existir;
   - a P-012, a P-013 e as P-003/P-004 de 07/09 são atualizadas.
@@ -454,7 +457,7 @@ consolidação e do release (CREED-57, ADR-0009).
 - [ ] Em produção:
   - [ ] o `aplicar-ajustes.sh` aplica SMTP, idioma, política, redirect e perfil sem
         reimportar o realm;
-  - [ ] um convite real chega a um endereço fora do sandbox do SES.
+  - [ ] um convite real chega a um endereço de fora do time.
 - [ ] Back: `ruff check . && ruff format --check . && mypy app && pytest` e
       `pre-commit run mypy --all-files` verdes. Front: `npm run check` verde.
 
@@ -524,16 +527,15 @@ curl -s -w '\n%{http_code}\n' -X POST \
     - `/recuperar-senha` pede o e-mail e responde com a mesma mensagem para os dois
       e-mails do passo 9.
 
-Produção, por pessoa com acesso à AWS e à EC2 (roteiro completo na revisão, §10):
+Produção, por pessoa com acesso à EC2 (o SMTP é o do Gmail: adendo do ADR-0006):
 
-15. SES: identidade verificada, saída do sandbox pedida, credencial SMTP criada, e
-    `/creed/prod/SMTP_*` no Parameter Store e no `/opt/creed/.env`.
-16. De dentro da EC2,
-    `openssl s_client -starttls smtp -connect email-smtp.<região>.amazonaws.com:587 -crlf`
-    tem que negociar TLS.
+15. As `SMTP_*` do Gmail do projeto no `/opt/creed/.env` (Enzo, que guarda as
+    credenciais).
+16. ~~TLS até o servidor SMTP de dentro da EC2~~ — feito em 2026-10-27: um envio pelo
+    `smtp.gmail.com:587` saiu da EC2 e chegou.
 17. Rode `./realm/aplicar-ajustes.sh` e depois
     `docker compose exec keycloak /opt/keycloak/bin/kcadm.sh get realms/creed --fields smtpServer,defaultLocale,passwordPolicy`.
-18. Teste de envio para `success@simulator.amazonses.com`, que funciona até no sandbox.
+18. *Test connection* na aba Email do realm `creed`, depois do script.
 19. Depois do release, rode
     `docker compose run --rm back python -m scripts.convidar_primeiro_admin --email <e-mail da professora> --nome "<nome>"`:
     - o convite chega;
@@ -574,9 +576,10 @@ A **P-009** ("esqueci minha senha não existe") deixa de valer quando a entrega 
   phishing. **Sinal:** e-mail que não chega na caixa de entrada, ou que chega marcado.
   **Mitigação:** um domínio (decisão de infra); antes de convidar a cliente, testar com
   contas Gmail e Outlook.
-- **Sandbox do SES.** O convite só chega a endereço verificado. **Sinal:** "Email address
-  is not verified" no log do Keycloak e 503 no convite. **Mitigação:** pedir a saída do
-  sandbox no primeiro passo da entrega 7.
+- **Conta do Gmail sem reputação.** O primeiro e-mail de teste (2026-10-27) caiu no spam.
+  **Sinal:** convite que a pessoa diz não ter recebido. **Mitigação:** avisar quem recebe
+  o primeiro convite para olhar o spam. Limite de cerca de 500 destinatários por dia,
+  folgado para este uso.
 - **SMTP fora do ar trava o cadastro.** É o preço da D7. **Sinal:** 503 em todo convite.
   **Mitigação:** a mensagem pede para tentar de novo, e o reenvio cobre o link vencido.
 - **Commit que falha depois do e-mail enviado.** O commit roda depois que a rota termina
@@ -596,7 +599,8 @@ A **P-009** ("esqueci minha senha não existe") deixa de valer quando a entrega 
 - **Enumeração no reset durante falha.** O 503 só aparece para e-mail com acesso, e só
   enquanto o SMTP está fora. Aceito.
 - **Sem limite de envio.** Alguém pode disparar vários resets para o mesmo e-mail.
-  **Sinal:** volume anormal no SES. Aceito nesta entrega.
+  **Sinal:** volume anormal na caixa de enviados do Gmail do projeto. Aceito nesta
+  entrega.
 - **Consolidação e release.** Sem a CREED-57, o fluxo não sobe num banco limpo; sem
   release, nada chega à produção.
 - **Comportamentos do Keycloak 26 ainda não testados aqui.** São três:

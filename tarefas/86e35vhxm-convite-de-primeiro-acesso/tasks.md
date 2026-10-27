@@ -51,7 +51,8 @@ PR #47 (guarda do DELETE) ──┐
 - a consolidação das migrations (CREED-57, backlog). Sem ela, o fluxo não sobe num banco
   limpo, porque falta a tabela `organizations`;
 - o acesso à AWS (Enzo, dono da CREED-28);
-- o pedido de saída do sandbox do SES, que a AWS pode levar um dia para responder.
+- as credenciais do Gmail do projeto, que ficam com o Enzo: o SMTP de produção é o do
+  Google, não o SES (adendo de 2026-10-27 do ADR-0006).
 
 **Tamanho:**
 

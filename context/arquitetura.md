@@ -94,7 +94,8 @@ Duas consequências de desenho que valem lembrar:
   Com o front no Amplify e o Keycloak na EC2, os dois hostnames são **diferentes** —
   o do realm nunca é o do Amplify.
 
-O provedor de SMTP de ambiente real ainda não está escolhido — ver
+Em produção, o Keycloak envia pelo **SMTP do Gmail do projeto** (`smtp.gmail.com:587`);
+o SES fica para quando houver domínio próprio — ver o adendo do
 [`ADR-0006`](../decisoes/adrs/0006-e-mail-transacional.md). Local é Mailpit, e é
 suficiente para desenvolver e demonstrar o fluxo inteiro.
 
@@ -129,7 +130,6 @@ isso que o contrato é escrito antes (`tarefas/<ID>/contrato-api.md`).
   ponto do desenho que exige backup de disco, não só de RDS.
 - **Tamanho da EC2** e o que acontece quando ela morre. Back e Keycloak voltam sem perda
   (estado no RDS); o N8N não volta sem o volume.
-- **E-mail transacional**: existe domínio e acesso a DNS para verificar identidade de
-  remetente, e a conta AWS pode ter SES fora do sandbox? Mesma conversa com a agência —
-  ver [`ADR-0006`](../decisoes/adrs/0006-e-mail-transacional.md). Não bloqueia nada
-  enquanto o local for Mailpit.
+- ~~**E-mail transacional**~~ — resolvido em 2026-10-27: Gmail do projeto por SMTP,
+  sem domínio e sem SES. Ver o adendo do
+  [`ADR-0006`](../decisoes/adrs/0006-e-mail-transacional.md).

@@ -19,9 +19,10 @@ realm, sem clique na UI. Nenhuma rota do back muda nesta task.
   **sem o prefixo `env.`**. Com `${env.X}` a substituição falha em silêncio, e o erro só
   aparece na hora do envio (testado no ADR-0006). Os valores locais ficam no
   `docker-compose.yml`, como já acontece com `${CREED_BACKEND_CLIENT_SECRET}`.
-- **O SES exige TLS.** O bloco `smtpServer` do ADR-0006 não tem `starttls` nem `ssl`; os
-  dois entram aqui, também como placeholder. No local os dois são `false`; em produção
-  (task 7), `starttls` é `true`.
+- **O SMTP de produção exige TLS.** É o do Gmail (`smtp.gmail.com:587`, adendo do
+  ADR-0006). O bloco `smtpServer` do ADR-0006 não tem `starttls` nem `ssl`; os dois entram
+  aqui, também como placeholder. No local os dois são `false`; em produção (task 7),
+  `starttls` é `true`.
 - **A política de senha quebra o seed.** Com `length(8)`, a Admin API recusa criar o
   usuário de dev com a senha `dev`. A senha do seed muda nesta task (sugestão:
   `dev-creed`), e o README muda junto.

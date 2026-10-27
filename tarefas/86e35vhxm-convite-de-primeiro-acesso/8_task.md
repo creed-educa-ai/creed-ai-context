@@ -18,10 +18,8 @@ ledger, pauta e glossário descrevem o convite como ele ficou.
   premissa sem commit não existe para o time. O `decisoes/premissas.md` também tem, sem
   commit, as P-041 a P-044 do ADR-0010. Separe as duas frentes com `git add -p`, ou suba
   as duas juntas.
-- **ADR-0006.** O adendo é o que o próprio ADR prevê ("Sim → SES, e este ADR ganha um
-  adendo com região e identidade"). Ele registra:
-  - região, identidade e se a conta está no sandbox ou em produção;
-  - porta 587 com STARTTLS;
+- **ADR-0006.** O adendo do provedor já existe (2026-10-27: Gmail do projeto por SMTP,
+  sem SES). Falta acrescentar a ele:
   - a falta de domínio (o link sai com IP);
   - o script de ajuste do realm (D11).
 
@@ -30,8 +28,8 @@ ledger, pauta e glossário descrevem o convite como ele ficou.
 
   | Documento | Hoje | Depois |
   |---|---|---|
-  | `context/arquitetura.md` | diagrama com "Provedor de e-mail (fora da AWS)"; provedor "não escolhido" | SES na conta AWS; o fluxo com membros, reenvio e reset |
-  | `context/infraestrutura.md` | parâmetros sem SMTP | `SMTP_*` no Parameter Store, com o tipo |
+  | `context/arquitetura.md` | diagrama com "Provedor de e-mail (fora da AWS)"; provedor "não escolhido" | SMTP do Gmail do projeto; o fluxo com membros, reenvio e reset |
+  | `context/infraestrutura.md` | parâmetros sem SMTP | `SMTP_*` no `.env` da EC2, e que as credenciais do Gmail ficam com o dono da conta, não no Parameter Store |
   | `tarefas/86e348g6u-…/contrato-api.md` | `UserCreate { link_id, email, initial_password }`; "o 503 ainda não acontece" | `UserCreate { name, email, link_id }`; rotas de membros, reenvio e reset; 503 |
   | `tarefas/86e348g6u-…/spec.md` | "Não entra: recuperação de senha por e-mail — não existe serviço de e-mail" | aponta para a 23.8 |
   | `pauta/proxima-reuniao.md`, item 3 | descreve a P-007, refutada | pergunta à cliente o que as P-045 a P-053 decidiram sem ela |
