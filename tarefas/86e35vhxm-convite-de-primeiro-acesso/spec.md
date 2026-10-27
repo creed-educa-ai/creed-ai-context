@@ -7,8 +7,20 @@
 >
 > A entrada é a revisão do mesmo dia,
 > [`revisao-23.8.md`](../86e348g6u-autenticacao-da-plataforma/revisao-23.8.md). Ela tem o
-> levantamento de git, o que mudou desde a spec do épico e o roteiro da AWS em detalhe
-> (§10). Esta spec usa as conclusões e não repete o levantamento.
+> levantamento de git e o que mudou desde a spec do épico. Esta spec usa as conclusões e
+> não repete o levantamento. O roteiro da AWS da revisão (§10) está superado: veja abaixo.
+>
+> **Refinada em 2026-10-27** pelo adendo do
+> [ADR-0006](../../decisoes/adrs/0006-e-mail-transacional.md), que entrou no
+> [creed-ai-context#37](https://github.com/creed-educa-ai/creed-ai-context/pull/37). O
+> provedor de produção passou a ser o **Gmail do projeto por SMTP**, no lugar do SES: sem
+> domínio, o SES não tinha remetente que passasse no DMARC. O #37 já tinha trocado o SES
+> pelo Gmail na calibragem, no escopo, no corte, nos critérios e no "Como verificar". Este
+> refino acertou o que ficou para trás:
+> - **Não entra:** o domínio próprio e o SES;
+> - **Documentos da entrega 8:** o adendo já existe;
+> - **Riscos:** o remetente agora passa no DMARC, e o que sobra é o link com IP; entram a
+>   senha de app revogada e a conta com uma pessoa só.
 >
 > ⚠️ **A descrição da 23.8 no ClickUp (08/09) está desatualizada.** A tabela
 > "Hoje/Depois" dela diz que o `POST /users` recebe `initial_password`, e ele nunca
@@ -106,8 +118,8 @@ vínculo.
     - script versionado que aplica os ajustes no realm que já existe (D11);
     - SMTP do Gmail do projeto (adendo de 2026-10-27 do ADR-0006). As credenciais são
       passo humano do Enzo, no `.env` da EC2.
-12. **Documentos**: adendo ao ADR-0006, contrato da CREED-23, arquitetura,
-    infraestrutura, ledger e pauta.
+12. **Documentos**: complemento do adendo do ADR-0006 (link com IP e status), contrato
+    da CREED-23, arquitetura, infraestrutura, ledger e pauta.
 
 **Não entra:**
 
@@ -129,7 +141,11 @@ vínculo.
   protegida. Também fica de fora o `apiClient` tratar o 503 da renovação sem limpar a
   sessão.
 - **Limite de envios** de "esqueci minha senha".
-- **Domínio próprio** para o remetente e para o link: decisão de infra (ver Riscos).
+- **Domínio próprio e o SES.** Sem domínio, o SES não tem remetente que passe no DMARC,
+  e o provedor de produção é o Gmail do projeto (adendo do ADR-0006). Quando houver
+  domínio, a troca é só de valores: as `SMTP_*` no `.env` e o script de ajuste do realm. O
+  back não muda, porque quem fala SMTP é o Keycloak. Até lá, o link do convite sai com o
+  IP do servidor (ver Riscos).
 - **SMTP para os convites do editor do N8N**.
 - **Consolidação das migrations** (CREED-57): é pré-requisito, não parte (ver "Dados").
 
@@ -148,7 +164,7 @@ vínculo.
 | `creed-backend` | `app/external_services/keycloak/admin.py` (novo) · `app/domains/users/` (`service.py`, `schemas.py`, `router.py`, `router_members.py` novo, `dependencies.py`) · `app/domains/authentication/` (`service.py`, `schemas.py`, `router.py`) · um método de composição em `app/domains/participants/service.py` e outro em `app/domains/links/service.py` · `app/shared/exceptions.py` · `app/shared/enums.py` (recebe `Roles` e `LinkType`) · `app/core/config.py` · `app/main.py` · `docker/keycloak/realm-creed.json` · `docker-compose.yml` · `.env.example` · `scripts/convidar_primeiro_admin.py` (novo) · `scripts/seed_local.py` · `Dockerfile` · `README.md` · `tests/` |
 | `creed-frontend` | `src/app/routes.tsx` · `src/features/authentication/` (sai a `AlterarSenhaView`, entra a `RecuperarSenhaView`; `authenticationApi.ts`, `authenticationSlice.ts`) · `src/features/organizations/` (`AddMemberForm.tsx`, `addMemberSchema.ts`, `organizationsApi.ts` novo) · `src/lib/validadores.ts` · `src/types/api.ts` · `src/i18n/locales/` (pt-BR, en, es) |
 | `creed-infrastructure` | `ec2/.env.example` · `ec2/docker-compose.yml` · `ec2/realm/aplicar-ajustes.sh` (novo) · `ec2/README.md` |
-| `creed-ai-context` | ADR-0006 (adendo) · `tarefas/86e348g6u-…/contrato-api.md` · `context/arquitetura.md` · `context/infraestrutura.md` · `decisoes/premissas.md` · `pauta/proxima-reuniao.md` · `glossario.md` |
+| `creed-ai-context` | ADR-0006 (complemento do adendo: link com IP e status) · `tarefas/86e348g6u-…/contrato-api.md` · `context/arquitetura.md` · `context/infraestrutura.md` · `decisoes/premissas.md` · `pauta/proxima-reuniao.md` · `glossario.md` |
 
 **Nome do domínio e da feature.** No back, o convite é do domínio **`users`**, dono do
 acesso, e a rota de membros fica num segundo router, como `questions/router_options.py`.
@@ -173,7 +189,7 @@ Prefixo `/api/v1`. O corpo de erro tem o formato de sempre (`{"detail": "..."}`)
 | Método | Rota | O que muda |
 |---|---|---|
 | POST | `/users` | `UserCreate` perde `keycloak_id`: o back cria o usuário no Keycloak e grava o id que ele devolve. Passa a mandar o convite. Ganha 503 e o 409 de e-mail que já existe no Keycloak |
-| DELETE | `/users/{user_id}` | apaga também no Keycloak e ganha 503. A guarda de `admin` vem de um PR separado, em andamento em 24/10 (revisão, B7) |
+| DELETE | `/users/{user_id}` | apaga também no Keycloak e ganha 503. A guarda de `admin` veio de um PR separado, o [creed-backend#47](https://github.com/creed-educa-ai/creed-backend/pull/47), mergeado na `dev` em 27/10 (revisão, B7) |
 | POST | `/authentication/login` · `/authentication/renew` | Keycloak fora do ar responde **503**, não 401. O front já mostra "serviço indisponível" para todo erro que não seja 401 (`authenticationSlice.ts`) |
 
 ### Schemas
@@ -402,21 +418,28 @@ Cada entrega é um PR, com back e front sempre separados (CONTRIBUTING).
 | 8 | **Documentos** | harness | entra em cada PR | `decisoes/adrs/0006-e-mail-transacional.md` | nenhum documento diz mais que "não existe envio de e-mail" |
 
 A 1 e a 6 podem começar já. A 3, a 4 e a 5 só depois da 2, porque mexem no mesmo
-`users/service.py`. A 7 depende de quem tem acesso à AWS (Enzo, dono da CREED-28), da
-consolidação e do release (CREED-57, ADR-0009).
+`users/service.py`. A 7 depende de quem tem acesso à EC2 e às credenciais do Gmail do
+projeto (Enzo, dono da CREED-28), da consolidação e do release (CREED-57, ADR-0009).
 
 **Documentos da entrega 8**, cada item no PR que o torna verdade:
 
-- ADR-0006: o adendo do provedor já existe (Gmail por SMTP, 2026-10-27); falta a D11, a
-  falta de domínio e o status.
+- ADR-0006: o adendo do provedor já existe (Gmail por SMTP, 2026-10-27) e já cita o
+  script de ajuste do realm (D11). Faltam duas coisas:
+  - dizer que, sem domínio, o link do convite sai com o IP do servidor;
+  - o status, que ainda é "Proposto".
 - `contrato-api.md` da CREED-23: `UserCreate`, rotas novas, 503.
-- `context/arquitetura.md`: o diagrama ainda diz "provedor de e-mail (fora da AWS)".
-- `context/infraestrutura.md`: `SMTP_*` no `.env` da EC2; as credenciais do Gmail ficam
-  com o dono da conta, fora do Parameter Store.
+- `context/arquitetura.md`: o provedor já está certo desde o #37, e o "fora da AWS" do
+  diagrama passou a ser verdade, porque o Gmail fica fora da AWS. Falta o fluxo do convite
+  com membros, reenvio e redefinição.
+- `context/infraestrutura.md`: na tabela "Onde ficam os segredos", uma linha para a conta
+  do Gmail do projeto e a senha de app. Elas ficam com o dono da conta e só no `.env` da
+  EC2, como exceção à regra do Parameter Store, e a linha diz como passar a conta para a
+  turma seguinte.
 - Ledger:
   - a P-009 é refutada, porque o reset passa a existir;
   - a P-012, a P-013 e as P-003/P-004 de 07/09 são atualizadas.
-- Pauta, item 3: reescrever com as P-045 a P-053.
+- Pauta, item 3: reescrever com as P-045 a P-053 e com o remetente `@gmail.com`, que a
+  cliente vai ver nos convites (limite aceito no adendo do ADR-0006).
 - Glossário: convite, membro, mentorando.
 
 ## Critérios de aceite
@@ -538,7 +561,8 @@ Produção, por pessoa com acesso à EC2 (o SMTP é o do Gmail: adendo do ADR-00
 18. *Test connection* na aba Email do realm `creed`, depois do script.
 19. Depois do release, rode
     `docker compose run --rm back python -m scripts.convidar_primeiro_admin --email <e-mail da professora> --nome "<nome>"`:
-    - o convite chega;
+    - o convite chega. Avise a professora antes para olhar também o spam: a conta do
+      Gmail é nova, e o primeiro e-mail de teste caiu lá;
     - o link abre `https://<IP>/auth/...`;
     - o login em produção devolve 200, o que fecha o último critério da CREED-283.
 
@@ -572,10 +596,23 @@ A **P-009** ("esqueci minha senha não existe") deixa de valer quando a entrega 
 
 ## Riscos
 
-- **Remetente sem domínio e link com IP.** O convite cai na caixa de spam, ou tem cara de
-  phishing. **Sinal:** e-mail que não chega na caixa de entrada, ou que chega marcado.
-  **Mitigação:** um domínio (decisão de infra); antes de convidar a cliente, testar com
-  contas Gmail e Outlook.
+- **Link com IP.** O remetente passa no SPF, DKIM e DMARC desde que o e-mail sai pelo
+  servidor do Google (adendo do ADR-0006). O que sobra é o link, que aponta para
+  `https://<IP>/auth/...`. Link para IP tem cara de phishing, para os filtros e para as
+  pessoas. **Sinal:** o convite chega marcado como suspeito, ou a pessoa tem medo de
+  clicar. **Mitigação:** um domínio próprio (decisão de infra); antes de convidar a
+  cliente, testar com contas Gmail e Outlook.
+- **Senha de app revogada.** O Google revoga as senhas de app quando a senha da conta muda,
+  e a senha de app só funciona com a verificação em duas etapas ligada. Pela D7, todo
+  convite e todo reset passam a dar 503. **Sinal:**
+  `535-5.7.8 Username and Password not accepted` no log do Keycloak. **Mitigação:** só o
+  dono da conta (Enzo) mexe nela. Para trocar, gera uma senha de app nova, atualiza o
+  `.env` e roda o `aplicar-ajustes.sh` de novo. O README da EC2 diz isso (entrega 7).
+- **Conta com uma pessoa só.** As credenciais do Gmail ficam com o Enzo, fora do Parameter
+  Store (adendo do ADR-0006). Se ele sair sem passar a conta, a primeira revogação para o
+  envio de vez. **Sinal:** ninguém do time sabe entrar na conta do Gmail do projeto.
+  **Mitigação:** a passagem da conta entra em `context/infraestrutura.md` (entrega 8) e
+  na troca de turma.
 - **Conta do Gmail sem reputação.** O primeiro e-mail de teste (2026-10-27) caiu no spam.
   **Sinal:** convite que a pessoa diz não ter recebido. **Mitigação:** avisar quem recebe
   o primeiro convite para olhar o spam. Limite de cerca de 500 destinatários por dia,

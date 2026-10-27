@@ -7,6 +7,12 @@
 > (atualizadas nesta data), o ClickUp e o harness.
 >
 > Endereços de produção aparecem como `<IP>`, igual ao `creed-infrastructure/ec2/README.md`.
+>
+> **Atualização de 2026-10-27.** O provedor de e-mail de produção é o **Gmail do projeto
+> por SMTP**, não o SES (adendo do
+> [ADR-0006](../../decisoes/adrs/0006-e-mail-transacional.md)). Esta revisão fica como
+> registro de 24/10. Onde ela fala de SES, sandbox, região ou Parameter Store para o SMTP,
+> vale o adendo. A spec da 23.8 já foi refinada com isso.
 
 ## Resumo
 

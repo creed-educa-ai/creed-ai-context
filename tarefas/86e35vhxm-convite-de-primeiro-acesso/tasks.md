@@ -34,8 +34,8 @@ PR #47 (guarda do DELETE) ──┐
 
 - **A 1 vem primeiro.** Ela cria as settings que a 2 lê e o Mailpit que prova a 2.
 - **A 2 depois do [creed-backend#47](https://github.com/creed-educa-ai/creed-backend/pull/47).**
-  É a guarda de `admin` no `DELETE /users`, aberta em 24/10. A 2 também mexe no `DELETE`,
-  e rebasear depois é retrabalho.
+  É a guarda de `admin` no `DELETE /users`, mergeada na `dev` em 27/10. A 2 também mexe no
+  `DELETE`: comece da `dev` atual, que já tem a guarda.
 - **A 3, a 4 e a 5 depois da 2.** A 3 e a 4, nessa ordem: as duas mexem em
   `users/service.py`, `users/router.py` e `tests/test_openapi.py`. A 5 só toca `scripts/`
   e `Dockerfile`, então pode andar junto com a 3 e a 4.
@@ -50,9 +50,10 @@ PR #47 (guarda do DELETE) ──┐
 
 - a consolidação das migrations (CREED-57, backlog). Sem ela, o fluxo não sobe num banco
   limpo, porque falta a tabela `organizations`;
-- o acesso à AWS (Enzo, dono da CREED-28);
+- o acesso à EC2 (Enzo, dono da CREED-28);
 - as credenciais do Gmail do projeto, que ficam com o Enzo: o SMTP de produção é o do
-  Google, não o SES (adendo de 2026-10-27 do ADR-0006).
+  Google, não o SES (adendo de 2026-10-27 do ADR-0006). A senha de app vai para o
+  `/opt/creed/.env` antes da task 7.
 
 **Tamanho:**
 
