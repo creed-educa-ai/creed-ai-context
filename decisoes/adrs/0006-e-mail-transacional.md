@@ -167,6 +167,58 @@ Item de pauta, não de PR:
 
 Enquanto a resposta não vem, nada trava: o item 1 cobre desenvolvimento e demonstração.
 
+## Adendo — provedor de produção: Gmail do projeto por SMTP (2026-10-27)
+
+A resposta acima não chegou, e o projeto não tem domínio. O provedor real ficou sendo o
+**Gmail do projeto**, com o Keycloak enviando pelo **servidor SMTP do próprio Google**. O
+SES está **descartado enquanto não houver domínio próprio**.
+
+**Por que não o SES:** sem domínio, a única identidade possível no SES é um endereço
+avulso, e todo endereço à mão era de provedor que não deixa a AWS falar por ele:
+
+| Remetente | DMARC do domínio (consultado em 2026-10-27) | Pelo SES |
+|---|---|---|
+| `@edu.pucrs.br` | `p=reject` | **recusado** pelos provedores de quem recebe |
+| `@gmail.com` | `p=none` | entregue, mas **falhando** no DMARC — spam provável |
+
+Some-se o *sandbox*, que só entrega a endereços verificados um a um, e o pedido de saída,
+que a AWS tende a negar para remetente de provedor gratuito. Pelo SMTP do Google, o
+e-mail sai do servidor autorizado para `@gmail.com`: SPF, DKIM e DMARC passam, e não há
+sandbox.
+
+**Configuração:**
+
+| Campo | Valor |
+|---|---|
+| `host` / `port` | `smtp.gmail.com` / `587` |
+| `starttls` / `ssl` | `true` / `false` |
+| `auth` | `true` |
+| `user` | o Gmail do projeto |
+| `password` | **senha de app** do Google (exige verificação em duas etapas na conta), nunca a senha da conta |
+| `from` | **o mesmo Gmail**: o Google reescreve qualquer outro remetente |
+| `fromDisplayName` | `CREED.ai Educa` |
+
+**Verificado em 2026-10-27:** envio de dentro da EC2 pela porta 587 (Python `smtplib`;
+o `curl-minimal` do Amazon Linux 2023 não fala SMTP) e *Test connection* do Keycloak de
+produção, no realm `creed`. Essa configuração foi feita **pelo console**, como teste: a
+fonte continua sendo o `realm-creed.json` com placeholders, aplicado em produção pelo
+script da CREED-23.8 (task 7), que sobrescreve o que o console gravou.
+
+**Onde estão as credenciais:** a conta e a senha de app ficam com o dono da conta,
+Enzo (CREED-28), que preenche as `SMTP_*` no `/opt/creed/.env` da EC2. Não estão no
+Parameter Store.
+
+**Limites aceitos:**
+- **Spam no começo.** Conta nova não tem reputação: o primeiro e-mail de teste caiu no
+  spam. Avisar quem recebe o primeiro convite.
+- **Cerca de 500 destinatários por dia**, o limite de uma conta Gmail comum. Sobra para
+  convites e redefinição de senha.
+- **Remetente `@gmail.com`**, menos oficial para a cliente.
+
+**Como trocar:** com domínio próprio, o SES volta à mesa. A troca é só de valores
+(`SMTP_*` no `.env` e o script de ajustes do realm): nada no código do back muda, porque
+quem fala SMTP é o Keycloak (item 4).
+
 ## Como reverter
 
 Cada item é independente e nenhum cria dependência de código:

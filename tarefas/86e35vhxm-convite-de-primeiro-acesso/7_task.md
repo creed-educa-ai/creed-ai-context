@@ -8,8 +8,8 @@ consolidação das migrations (CREED-57, ADR-0009).
 
 ## Objetivo
 
-O Keycloak de produção passa a mandar e-mail pelo SMTP da AWS, com os mesmos ajustes de
-realm do ambiente local. Os ajustes chegam por um script versionado, sem reimportar o realm
+O Keycloak de produção passa a mandar e-mail pelo SMTP do Gmail do projeto, com os mesmos
+ajustes de realm do ambiente local. Os ajustes chegam por um script versionado, sem reimportar o realm
 e sem clique no console.
 
 ## Contexto que você não tem como adivinhar
@@ -34,24 +34,21 @@ e sem clique no console.
   - **Login:** `kcadm.sh config credentials --server http://localhost:8080/auth --realm master --user <admin pessoal>`. A senha é pedida no terminal.
   - **Senha do SMTP:** vai pela entrada padrão (`-f -`), nunca na linha de comando.
   - **Pacotes:** o script precisa de `jq` e de `envsubst` (pacote `gettext`) na EC2.
-- **SMTP da AWS:**
-  - host `email-smtp.<região>.amazonaws.com`;
-  - porta **587** com `starttls=true` (a porta 25 é limitada pela AWS em EC2);
-  - `auth=true`, com usuário e senha da **credencial SMTP** do SES, que não é a chave IAM
-    comum;
-  - o `from` precisa ser uma identidade verificada no SES.
-- **Nada disso está registrado hoje.** A infraestrutura não tem `SMTP_*` no `.env.example`
-  nem no Parameter Store (`context/infraestrutura.md`). O passo humano abaixo vem primeiro.
-- **Passo humano no console da AWS** (dono: Enzo, CREED-28; o roteiro completo está na
-  revisão, §10):
-  1. confirmar a região, a identidade verificada (domínio ou e-mail) e se a conta está no
-     sandbox;
-  2. se estiver no sandbox, pedir *production access*. Sem isso, o convite só chega a
-     endereço verificado;
-  3. criar a credencial SMTP;
-  4. gravar no Parameter Store, e as mesmas linhas no `/opt/creed/.env`:
-     - `/creed/prod/SMTP_HOST`, `SMTP_PORT` e `SMTP_FROM` como `String`;
-     - `/creed/prod/SMTP_USER` e `SMTP_PASSWORD` como `SecureString`.
+- **SMTP do Gmail, não o SES** (adendo de 2026-10-27 do ADR-0006). Sem domínio, o SES
+  não tinha remetente que passasse no DMARC.
+  - host `smtp.gmail.com`, porta **587** com `starttls=true` e `ssl=false`;
+  - `auth=true`; o usuário é o Gmail do projeto e a senha é uma **senha de app** do Google,
+    não a senha da conta;
+  - o `from` é **o próprio Gmail**: o Google reescreve qualquer outro remetente, então
+    `nao-responda@...` não funciona. O `fromDisplayName` segue `CREED.ai Educa`.
+- **Já testado em produção** (2026-10-27): a EC2 envia pela 587, e o *Test connection* do
+  realm `creed` passou. Essa configuração foi feita **pelo console**, só como teste. O
+  script desta task sobrescreve com os valores do `.env`, e a partir dele o arquivo volta a
+  ser a fonte.
+- **Passo humano** (dono: Enzo, CREED-28): as credenciais do Gmail ficam com ele, não no
+  Parameter Store. Antes de o script rodar, ele grava no `/opt/creed/.env`:
+  `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, `SMTP_FROM` e `SMTP_USER` (o Gmail do
+  projeto) e `SMTP_PASSWORD` (a senha de app).
 - **O compose também recebe as variáveis**, mesmo que o import já tenha passado: se o realm
   for recriado do zero, o arquivo continua honesto. O back recebe `FRONTEND_URL` (a URL do
   Amplify) e, se for preciso outra validade, `KEYCLOAK_INVITE_LIFESPAN_SECONDS`.
@@ -82,10 +79,8 @@ e sem clique no console.
 - [ ] Na EC2, o script roda duas vezes sem erro, e
       `kcadm.sh get realms/creed --fields smtpServer,defaultLocale,passwordPolicy,internationalizationEnabled`
       mostra os valores (a senha aparece mascarada).
-- [ ] De dentro da EC2,
-      `openssl s_client -starttls smtp -connect email-smtp.<região>.amazonaws.com:587 -crlf`
-      negocia TLS.
-- [ ] Um envio para `success@simulator.amazonses.com` aparece nas estatísticas do SES.
+- [x] De dentro da EC2, um envio pelo `smtp.gmail.com:587` chega (feito em 2026-10-27).
+- [ ] Depois do script, o *Test connection* do realm `creed` segue passando.
 - [ ] Depois do release e da task 5:
   - [ ] o convite do primeiro admin chega a um endereço real;
   - [ ] o link abre `https://<IP>/auth/realms/creed/login-actions/...` com certificado
@@ -104,7 +99,7 @@ bash -n realm/aplicar-ajustes.sh && shellcheck realm/aplicar-ajustes.sh
 docker compose exec keycloak /opt/keycloak/bin/kcadm.sh get realms/creed --fields smtpServer,defaultLocale,passwordPolicy
 ```
 
-- **Caso feliz:** o `kcadm get` mostra os valores, e o simulador do SES registra o envio.
+- **Caso feliz:** o `kcadm get` mostra os valores, e o *Test connection* do realm passa.
 - **Caso de borda:** rodar o script de novo não muda nada nem falha.
 
 ## Premissas aplicáveis

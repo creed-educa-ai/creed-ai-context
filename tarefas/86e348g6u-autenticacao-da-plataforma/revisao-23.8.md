@@ -286,6 +286,12 @@ Esqueci minha senha            ─▶ back (sempre 202) ─▶ execute-actions-e
 
 ## 10. AWS: o que fazer para o e-mail sair de verdade
 
+> **Superada em 2026-10-27.** O provedor de produção é o **SMTP do Gmail do projeto**, não
+> o SES: sem domínio, nenhum remetente passava no DMARC pelo SES. Esta seção fica como
+> registro da revisão de 24/10. O que vale está no adendo do
+> [`ADR-0006`](../../decisoes/adrs/0006-e-mail-transacional.md) e na
+> [task 7](../86e35vhxm-convite-de-primeiro-acesso/7_task.md).
+
 Roteiro para quem tem acesso ao console e à EC2. A IA não abre `ssh` nem roda `aws`
 (`context/infraestrutura.md`).
 
