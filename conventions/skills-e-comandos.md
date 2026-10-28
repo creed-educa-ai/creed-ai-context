@@ -30,6 +30,17 @@ Suba um degrau só quando o degrau de baixo **errou de verdade**, com o erro
 descrito no PR. Suposição de que "vai ficar melhor com o modelo grande" não é
 justificativa.
 
+**Exceção: parametrização proposital.** Quem vai rodar a automação pode fixar um
+degrau acima da tabela sem esperar o erro, quando o custo foi escolhido e não herdado.
+Vale com as três condições juntas:
+
+- **Escrita no arquivo da automação**, por passo: qual passo sobe, para qual modelo,
+  quem decidiu e quando, e o motivo (ex.: uso pontual, numa sessão que já roda no
+  modelo pesado). Sessão que "por acaso" estava no modelo grande não é parametrização.
+- **Não muda o padrão do dia a dia.** O comando que o time inteiro roda continua no
+  degrau da tabela; a exceção mora na automação que a pede.
+- **Não vira precedente.** A próxima automação parte da tabela de novo.
+
 Corolários:
 
 - **Um passo pesado não torna a automação pesada.** Isole o julgamento num passo e
@@ -88,7 +99,8 @@ ver `../adaptadores/README.md`. Editar o arquivo instalado é trabalho perdido.
 
 ## 4. Antes de abrir o PR da automação nova
 
-- [ ] `model:` declarado, e é o degrau mais baixo que dá conta.
+- [ ] `model:` declarado, e é o degrau mais baixo que dá conta — ou a parametrização
+      proposital está escrita no arquivo, com as três condições de §1.
 - [ ] Todo passo tem entrada, ação e saída verificável.
 - [ ] Nenhum caminho de arquivo descrito em prosa — todos literais.
 - [ ] Toda decisão tem critério e caso padrão.

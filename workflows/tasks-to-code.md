@@ -9,7 +9,9 @@ Código no working tree, testes verdes, entrega didática, task marcada em `task
 
 ## Princípios
 
-- **Uma task por vez.** Não implemente duas em paralelo — o diff fica irrevisável.
+- **Uma task por vez por repo.** Duas no mesmo working tree deixam o diff irrevisável.
+  Em repos diferentes cada diff continua revisável sozinho, e elas podem andar juntas
+  (`../playbooks/orquestrar-tarefa.md`).
 - **Ler antes de escrever:** task → spec → molde (`respondentes`) → `context/` do repo.
 - **Copiar a forma do molde**, não inventar estrutura.
 - **Teste junto**, não depois.
@@ -92,6 +94,7 @@ Regras:
 | domínio novo no backend | `../playbooks/criar-dominio-backend.md` |
 | feature nova no front | `../playbooks/criar-feature-frontend.md` |
 | mudança de schema | `../playbooks/criar-migration.md` |
+| várias tasks da tarefa numa sessão só | `../playbooks/orquestrar-tarefa.md` |
 | versionar e abrir PR | `../playbooks/abrir-pr.md` |
 
 ## Encerramento
