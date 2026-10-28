@@ -225,8 +225,9 @@ GET  /api/v1/form-responses/{id}/insight   → {status, content, created_at}, co
 - **O insight demora no mínimo um ciclo do worker** (~3 s) mais o tempo da esteira, e o
   front faz polling. Aceito: o insight já era assíncrono para quem responde.
 - **Mais um container na EC2**, com `mem_limit` próprio (um processo Python, na casa de
-  `192m`), somado a `1g` do Keycloak, `768m` do N8N e `384m` do back. O tamanho da
-  instância já era pendência do ADR-0007 e fica mais apertado.
+  `192m`), somado a `1g` do Keycloak, `1536m` do N8N e `384m` do back. Cabe na
+  `t4g.medium` (4 GB) desde 2026-10-28, quando o N8N passou de `768m` para `1536m`
+  depois de travar sem heap (ADR-0007, pendência "Tamanho da instância").
 - **O `deploy.sh` vai precisar recriar o worker junto com o back** (`up -d --no-deps back
   insight-worker`), depois da migration, a partir da integração. Sem isso, um worker antigo roda contra o
   schema novo. E como o compose de produção é aplicado à mão, a entrada do serviço na
@@ -267,7 +268,8 @@ desenho, porque a tela precisa delas.
 - [ ] **Onde nasce o cálculo** cujo resultado vai no payload. Ele ainda não existe, e as
       objetivas dependem da CREED-37. Se o dono do cálculo precisar ler `insights`, o
       ciclo de import volta e esta tabela de encaixe precisa ser revista.
-- [ ] **O tamanho da EC2** com o quinto container (ADR-0007).
+- [x] **O tamanho da EC2** com o quinto container (ADR-0007). Resolvido em 2026-10-28
+      com a `t4g.medium`.
 - [ ] **Teste de carga local** antes do aceite: 50 a 100 envios simultâneos contra um N8N
       com o Bedrock simulado. Precisa mostrar nenhum insight perdido, nenhum duplicado,
       `dispatched` nunca acima de `INSIGHT_MAX_IN_FLIGHT`, e que o webhook com o limite

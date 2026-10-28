@@ -42,6 +42,15 @@ Parâmetros existentes: `POSTGRES_PASSWORD` e `KEYCLOAK_CLIENT_SECRET` (`SecureS
 (`String`). Na fase do N8N entram `N8N_ENCRYPTION_KEY` — sem ela as credenciais
 salvas nos workflows ficam ilegíveis — e `N8N_CALLBACK_SECRET`.
 
+**Exceção à regra do nome:** `N8N_BEDROCK_ACCESS_KEY_ID` e
+`N8N_BEDROCK_SECRET_ACCESS_KEY` (`SecureString`, desde 2026-10-28) **não existem no
+`.env`**. São a chave do usuário IAM que o N8N usa para chamar o Bedrock, e o N8N
+guarda credencial no próprio banco, criptografada pela `N8N_ENCRYPTION_KEY`. O
+Parameter Store é a única cópia fora do N8N.
+
+**Instância:** `t4g.medium` (4 GB) desde 2026-10-28. O porquê e os números estão no
+`creed-infrastructure/diario-de-campo-ec2.md`, 2026-10-28.
+
 ## O que a IA pode e não pode fazer aqui
 
 **Pode:** ler manifests e explicar, propor mudança no `docker-compose` e no passo de
