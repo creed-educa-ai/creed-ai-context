@@ -643,7 +643,7 @@ Isso libera `users/service.py` e `users/dependencies.py` para importar de `app.d
 
 Por isso `UserResponse.role` vira `str`: `users/schemas.py` não pode importar o enum `Roles`. O `de_model()` passa a receber o usuário **e** os dados do vínculo (por exemplo, `role: str` e `organization_id: uuid.UUID` como argumentos). A forma exata é sua: a mais simples que passe no `mypy` e no teste de arquitetura. Diga no pull request qual escolheu.
 
-`keycloak_id` e `name` continuam no cadastro. O formato final do contrato (com `initial_password` no lugar de `keycloak_id`) depende de criar o usuário no Keycloak pela API, e isso não entra aqui.
+`keycloak_id` e `name` continuam no cadastro. O formato final do contrato (com `initial_password` no lugar de `keycloak_id`) depende de criar o usuário no Keycloak pela API, e isso não entra aqui. *Histórico: o formato final saiu na CREED-23.8 (2026-10-29) como `{name, email, link_id}`, sem `initial_password`.*
 
 ### A regra do cadastro, em ordem
 

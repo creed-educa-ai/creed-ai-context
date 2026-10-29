@@ -118,7 +118,7 @@ pre-commit run mypy --all-files
 curl -s -w '\n%{http_code}\n' -X POST \
   http://localhost:8000/api/v1/organizations/00000000-0000-0000-0000-000000000001/members \
   -H "Authorization: Bearer <access_token>" -H 'Content-Type: application/json' \
-  -d '{"name":"Pessoa Teste","email":"pessoa@creed.local","role":"gestor"}'
+  -d '{"name":"Pessoa Teste","email":"pessoa@creed.example.com","role":"gestor"}'
 ```
 
 - **Caso feliz:** 201, e o e-mail chega.

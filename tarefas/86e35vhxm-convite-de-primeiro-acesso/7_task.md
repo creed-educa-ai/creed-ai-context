@@ -23,7 +23,10 @@ e sem clique no console.
   1. lê os blocos do `realm-creed.json` no clone que a EC2 já tem
      (`/opt/creed/creed-backend/docker/keycloak/realm-creed.json`, o mesmo que o compose
      monta). É uma fonte só;
-  2. troca os `${VAR}` pelos valores do `/opt/creed/.env`, com `envsubst`;
+  2. troca os `${VAR}` pelos valores do `/opt/creed/.env`, com `jq`, só nos atributos e
+     no redirect. *Corrigido em 2026-10-29: a task pedia `envsubst`, mas ele apagaria as
+     chaves `${username}`, `${email}`, `${firstName}` e `${lastName}` do perfil e não
+     escapa JSON (creed-infrastructure#10);*
   3. aplica com `kcadm.sh` dentro do container:
      - os atributos do realm: `internationalizationEnabled`, `supportedLocales`,
        `defaultLocale`, `passwordPolicy` e `smtpServer`;
@@ -32,9 +35,11 @@ e sem clique no console.
   4. mostra o resultado com `kcadm.sh get`.
 
   Detalhes de execução:
-  - **Login:** `kcadm.sh config credentials --server http://localhost:8080/auth --realm master --user <admin pessoal>`. A senha é pedida no terminal.
+  - **Login:** `kcadm.sh config credentials --server http://localhost:8080/auth --realm master --user <admin pessoal>`.
+    O admin é o argumento obrigatório do script (`./realm/aplicar-ajustes.sh <seu admin>`),
+    e a senha é pedida no terminal.
   - **Senha do SMTP:** vai pela entrada padrão (`-f -`), nunca na linha de comando.
-  - **Pacotes:** o script precisa de `jq` e de `envsubst` (pacote `gettext`) na EC2.
+  - **Pacotes:** o script precisa do `jq` 1.6 ou mais novo na EC2.
 - **SMTP do Gmail, não o SES** (adendo de 2026-10-27 do ADR-0006). Sem domínio, o SES
   não tinha remetente que passasse no DMARC.
   - host `smtp.gmail.com`, porta **587** com `starttls=true` e `ssl=false`;
@@ -89,8 +94,9 @@ e sem clique no console.
       novas.
 - [ ] `bash -n realm/aplicar-ajustes.sh` e `shellcheck` passam sem erro.
 - [ ] Na EC2, o script roda duas vezes sem erro, e
-      `kcadm.sh get realms/creed --fields smtpServer,defaultLocale,passwordPolicy,internationalizationEnabled`
-      mostra os valores (a senha aparece mascarada).
+      `kcadm.sh get realms/creed --fields 'smtpServer(*),defaultLocale,passwordPolicy,internationalizationEnabled'`
+      mostra os valores (a senha aparece mascarada). Sem o `(*)`, o `smtpServer` aparece
+      vazio, mesmo preenchido.
 - [x] De dentro da EC2, um envio pelo `smtp.gmail.com:587` chega (feito em 2026-10-27).
 - [ ] Depois do script, o *Test connection* do realm `creed` segue passando.
 - [ ] O README diz que as credenciais do Gmail são exceção ao Parameter Store e o que
@@ -110,8 +116,8 @@ docker compose --env-file .env.example config > /dev/null && echo ok
 bash -n realm/aplicar-ajustes.sh && shellcheck realm/aplicar-ajustes.sh
 
 # na EC2, como ec2-user, com o .env preenchido
-./realm/aplicar-ajustes.sh
-docker compose exec keycloak /opt/keycloak/bin/kcadm.sh get realms/creed --fields smtpServer,defaultLocale,passwordPolicy
+./realm/aplicar-ajustes.sh <seu admin do realm master>
+docker compose exec keycloak /opt/keycloak/bin/kcadm.sh get realms/creed --fields 'smtpServer(*),defaultLocale,passwordPolicy'
 ```
 
 - **Caso feliz:** o `kcadm get` mostra os valores, e o *Test connection* do realm passa.

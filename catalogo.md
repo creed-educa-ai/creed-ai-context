@@ -18,10 +18,22 @@ FastAPI. Organização **por domínio** (ADR-002 §2.1). Cada `app/domains/<nome
 
 | Domínio | Situação |
 |---|---|
-| `users` | **molde** — domínio-exemplo completo (tabela `user`, CREED-23) |
-| `authentication` | login, renovação e sessão via Keycloak; sem tabela própria |
+| `users` | **molde** — domínio-exemplo completo (tabela `user`, CREED-23). Com a CREED-23.8, cria o acesso nos dois lados (banco e Keycloak) e manda o convite; convite de membro num segundo router (`router_members.py`, `POST /organizations/{organization_id}/members`), reenvio e remoção |
+| `authentication` | login, renovação, sessão e "esqueci minha senha" via Keycloak; sem tabela própria |
+| `organizacoes` | tabela `organizations`; criar, listar, ler e editar organização (`/organizacoes`). O nome do domínio segue em português (ADR-0005, item 4) |
+| `participants` | tabela `participants`; criar e ler participante |
+| `links` | tabela `links` (o vínculo); criar vínculo em `/organizations/{organization_id}/links` |
+| `department` | tabela `departments` (o setor); criar e ler |
+| `forms` | tabela `form`; criar e ler formulário |
+| `questions` | tabelas `questions` e `question_options`; criar pergunta, listar por formulário, criar alternativa (`router_options.py`) |
 | `responses` | tabelas `form_responses` e `answer`; rotas de abrir e finalizar resposta |
-| `organizacoes`, `prismas`, `prognosticos`, `relatorios`, `dashboards` | scaffold: pasta criada, nenhuma rota |
+| `documents`, `demographics`, `insights` | só tabela, sem rota |
+| `prismas`, `prognosticos`, `relatorios` | scaffold: router sem rota, sem tabela |
+| `dashboards` | tabela `dashboards`, router sem rota |
+
+Situação conferida em 2026-10-29 contra o OpenAPI do back, com os PRs da CREED-23.8 (#49 a
+#53) ainda fora da `dev`. Parte das tabelas existe só em `models.py`, sem migration, até a
+consolidação (CREED-57, ADR-0009).
 
 `respondentes` foi removido em 2026-09-21: era scaffold do commit inicial e nunca teve
 tabela.
@@ -43,7 +55,9 @@ src/features/<feature>/
 
 | Feature | Situação |
 |---|---|
-| `authentication` | **molde** — login e sessão, ligada ao backend |
+| `authentication` | **molde** — login e sessão, ligada ao backend; "esqueci minha senha" (`/reset-password`) só pede o e-mail. Não há tela de definir senha: quem define é a página do Keycloak (CREED-23.8) |
+| `organizations` | painel da empresa: lista de membros ainda em memória; o `AddMemberForm` pede nome, e-mail e papel, e o `organizationsApi.inviteMember` chama o convite de membro do backend (creed-frontend#52, ainda fora da `dev`). A página que liga o formulário é da CREED-50 |
+| `mentees`, `organizations-admin`, `painel-de-controle`, `superadm` | telas do painel de controle (mentorandos, empresas, questionário, super adm), sem chamada ao backend |
 | `responses` | questionário: onboarding, perguntas, revisão e tela de enviado. Espelha o domínio `responses`; ainda com perguntas de exemplo, sem chamada ao backend |
 | `respondentes` | dados demográficos (3 etapas). Só no front: o domínio do backend foi removido. A tela `RespondentesView` saiu das rotas, mas o `respondentesApi.ts` ainda chama `/api/v1/respondentes`, que responde 404 |
 | `cadastro`, `aguarde-confirmacao` | solicitação de cadastro **da empresa**, que a cliente aprova (não é autocadastro de pessoa, ver P-008). O backend ainda não tem esse fluxo, por isso não há chamada |

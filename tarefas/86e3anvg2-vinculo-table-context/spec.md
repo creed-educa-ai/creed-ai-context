@@ -140,7 +140,7 @@ entrar.
   (PR #28), mas mover o nome é outra tarefa.
 - **`UserCreate` no formato final** (`{link_id, email, initial_password}`). Esta
   tarefa só acrescenta `link_id`. `keycloak_id` e `name` continuam no payload,
-  porque o cadastro no Keycloak ainda é manual (P-012).
+  porque o cadastro no Keycloak ainda é manual (P-012). *Histórico: o formato final saiu na CREED-23.8 (2026-10-29) como `{name, email, link_id}`, sem `initial_password`.*
 - **Front, além do tipo da sessão.** A sessão troca `vinculo_id` por `link_id`
   (ADR-0005), e isso é renomeação, não mudança aditiva. Por isso o `creed-frontend`
   precisa de um PR par que renomeie o campo em `src/types/api.ts` e nas fixtures de

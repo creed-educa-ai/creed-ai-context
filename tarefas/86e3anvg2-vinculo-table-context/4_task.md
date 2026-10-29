@@ -33,7 +33,7 @@ passe no `mypy` e no teste de arquitetura, e diga no PR qual foi.
 
 **`keycloak_id` e `name` continuam no `UserCreate`.** O formato final do contrato
 (`{link_id, email, initial_password}`) depende de provisionar o usuário no Keycloak
-pela API, e isso não entra aqui (spec, "Não entra").
+pela API, e isso não entra aqui (spec, "Não entra"). *Histórico: o formato final saiu na CREED-23.8 (2026-10-29) como `{name, email, link_id}`, sem `initial_password`.*
 
 ## Arquivos que provavelmente mudam
 

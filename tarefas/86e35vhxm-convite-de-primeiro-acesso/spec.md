@@ -27,6 +27,19 @@
 > recebeu: recebe o `keycloak_id` de um usuário criado à mão no realm, e o back não fala
 > com a Admin API. O provisionamento que a 23.3 prometeu (decisão D4 do épico) entra aqui.
 >
+> **Corrigida em 2026-10-29 pela task 8**, depois de as tasks 1 a 7 terem PR
+> (creed-backend#49 a #53, creed-frontend#52 e creed-infrastructure#10). Acertos do que a
+> implementação mostrou:
+> - as rotas do front são `/first-access` (removida) e `/reset-password`: a navegação as
+>   renomeou depois da spec;
+> - os e-mails de teste são `@creed.example.com`, porque o `EmailStr` do back responde 422
+>   para `@creed.local`;
+> - a D11 troca os `${VAR}` com `jq`, não com `envsubst`, e o script recebe o admin como
+>   argumento;
+> - a imagem do back leva de `scripts/` só o script do primeiro admin, não o seed;
+> - P-057 a P-060 entraram em "Premissas", e dois riscos novos em "Riscos": a enumeração
+>   por tempo no reset e a cota do Gmail.
+>
 > **Duas decisões do Luís, em 2026-10-24, antes da spec** (as paradas da revisão, §11):
 > - **D7 — tudo ou nada.** Se o convite não sai (SMTP ou Keycloak fora do ar), nada é
 >   criado: o usuário do realm é apagado, o banco volta, e a resposta é 503.
@@ -110,8 +123,8 @@ vínculo.
 9. **Primeiro admin por convite**: script que roda na EC2 e convida o admin sem senha
    conhecida (P-052), na organização da CREED (P-048).
 10. **Front**:
-    - saem a rota `/primeiro-acesso` e a tela falsa de nova senha;
-    - `/recuperar-senha` vira um formulário de e-mail;
+    - saem a rota `/first-access` e a tela falsa de nova senha;
+    - `/reset-password` vira um formulário de e-mail;
     - o `AddMemberForm` ganha o campo nome (P-046) e a chamada à API de membros.
 11. **Produção**:
     - `.env` e compose da EC2 com as variáveis de SMTP;
@@ -164,7 +177,7 @@ vínculo.
 | `creed-backend` | `app/external_services/keycloak/admin.py` (novo) · `app/domains/users/` (`service.py`, `schemas.py`, `router.py`, `router_members.py` novo, `dependencies.py`) · `app/domains/authentication/` (`service.py`, `schemas.py`, `router.py`) · um método de composição em `app/domains/participants/service.py` e outro em `app/domains/links/service.py` · `app/shared/exceptions.py` · `app/shared/enums.py` (recebe `Roles` e `LinkType`) · `app/core/config.py` · `app/main.py` · `docker/keycloak/realm-creed.json` · `docker-compose.yml` · `.env.example` · `scripts/convidar_primeiro_admin.py` (novo) · `scripts/seed_local.py` · `Dockerfile` · `README.md` · `tests/` |
 | `creed-frontend` | `src/app/routes.tsx` · `src/features/authentication/` (sai a `AlterarSenhaView`, entra a `RecuperarSenhaView`; `authenticationApi.ts`, `authenticationSlice.ts`) · `src/features/organizations/` (`AddMemberForm.tsx`, `addMemberSchema.ts`, `organizationsApi.ts` novo) · `src/lib/validadores.ts` · `src/types/api.ts` · `src/i18n/locales/` (pt-BR, en, es) |
 | `creed-infrastructure` | `ec2/.env.example` · `ec2/docker-compose.yml` · `ec2/realm/aplicar-ajustes.sh` (novo) · `ec2/README.md` |
-| `creed-ai-context` | ADR-0006 (complemento do adendo: link com IP e status) · `tarefas/86e348g6u-…/contrato-api.md` · `context/arquitetura.md` · `context/infraestrutura.md` · `decisoes/premissas.md` · `pauta/proxima-reuniao.md` · `glossario.md` |
+| `creed-ai-context` | ADR-0006 (complemento do adendo: link com IP e status) · `tarefas/86e348g6u-…/contrato-api.md` e `spec.md` · `context/arquitetura.md` · `context/infraestrutura.md` · `decisoes/premissas.md` · `pauta/proxima-reuniao.md` · `glossario.md` · `catalogo.md` |
 
 **Nome do domínio e da feature.** No back, o convite é do domínio **`users`**, dono do
 acesso, e a rota de membros fica num segundo router, como `questions/router_options.py`.
@@ -382,11 +395,18 @@ muda no `realm-creed.json` não chega sozinho à produção.
 O script `creed-infrastructure/ec2/realm/aplicar-ajustes.sh`:
 
 1. lê os blocos do próprio `realm-creed.json`, no clone que a EC2 já tem;
-2. troca os `${VAR}` pelos valores do `/opt/creed/.env`;
+2. troca os `${VAR}` pelos valores do `/opt/creed/.env`, com `jq`, só nos atributos e no
+   redirect;
 3. aplica com `kcadm.sh`, dentro do container do Keycloak.
 
-Quem roda é uma pessoa, com o próprio admin no realm `master`. A senha do SMTP vai pela
-entrada padrão, nunca pela linha de comando. O script precisa de `jq` e `envsubst` na EC2.
+Quem roda é uma pessoa, com o próprio admin no realm `master`, passado como argumento
+(`./realm/aplicar-ajustes.sh <seu admin>`). A senha do SMTP vai pela entrada padrão, nunca
+pela linha de comando. O script precisa do `jq` 1.6 ou mais novo na EC2.
+
+**Descartado — `envsubst`** (o que esta spec dizia até 2026-10-29): sem lista de variáveis,
+ele apaga as chaves `${username}`, `${email}`, `${firstName}` e `${lastName}` do perfil, que
+são do Keycloak, e não escapa JSON, então uma senha com `"` ou `\` quebraria o corpo
+(creed-infrastructure#10).
 
 **Descartado — console pelo túnel SSH**: é o clique que a 23.2 proíbe, e não deixa rastro.
 **Descartado — `kc.sh import --override`**: apaga e recria o realm, com os usuários.
@@ -412,8 +432,8 @@ Cada entrega é um PR, com back e front sempre separados (CONTRIBUTING).
 | 2 | **Cadastro nos dois lados**: `admin.py`, `ServiceUnavailableError`, `POST /users` (D7), `DELETE` limpando o Keycloak, 503 no login e na renovação | back | 1, para o teste real (o código anda com HTTP falso) | `app/external_services/keycloak/admin.py`, com `scripts/seed_local.py` aberto ao lado | criar cria nos dois lados e o convite chega; com o Mailpit parado, 503 e nada sobra |
 | 3 | **Membros**: `MemberService`, `router_members.py`, `Roles`/`LinkType` em `shared/enums.py`, métodos de composição em `participants` e `links` | back | 2 | `app/domains/users/service.py` | todos os códigos da tabela "Novo" cobertos por teste de router e de service |
 | 4 | **Reenviar e redefinir**: `POST /users/{user_id}/invitation`, `POST /authentication/password-reset` | back | 2 | `app/domains/authentication/service.py` | 204 para e-mail com e sem acesso, e um e-mail só no Mailpit |
-| 5 | **Primeiro admin**: `scripts/convidar_primeiro_admin.py` e `COPY scripts` no `Dockerfile` | back | 2 | `scripts/seed_local.py` (molde de script) | rodado duas vezes no local, convida na primeira e reenvia na segunda |
-| 6 | **Front**: rotas, `RecuperarSenhaView`, `organizationsApi.inviteMember`, nome no `AddMemberForm` | front | o contrato acima (não espera o back) | `src/app/routes.tsx` | `npm run check` verde; `/primeiro-acesso` não existe; `/recuperar-senha` só pede o e-mail |
+| 5 | **Primeiro admin**: `scripts/convidar_primeiro_admin.py`, copiado pelo nome no `Dockerfile` (o `seed_local.py` fica fora da imagem) | back | 2 | `scripts/seed_local.py` (molde de script) | rodado duas vezes no local, convida na primeira e reenvia na segunda |
+| 6 | **Front**: rotas, `RecuperarSenhaView`, `organizationsApi.inviteMember`, nome no `AddMemberForm` | front | o contrato acima (não espera o back) | `src/app/routes.tsx` | `npm run check` verde; `/first-access` não existe; `/reset-password` só pede o e-mail |
 | 7 | **Produção**: `.env` e compose da EC2, `aplicar-ajustes.sh`, README; credenciais do Gmail no `.env` (passo humano) | infra + EC2 | 1 (forma do realm) e o release que leva 2–5 à `main` | `ec2/docker-compose.yml` | o `kcadm get` mostra SMTP, idioma e política aplicados, e um convite real chega a um endereço de fora do time |
 | 8 | **Documentos** | harness | entra em cada PR | `decisoes/adrs/0006-e-mail-transacional.md` | nenhum documento diz mais que "não existe envio de e-mail" |
 
@@ -471,7 +491,7 @@ projeto (Enzo, dono da CREED-28), da consolidação e do release (CREED-57, ADR-
 - [ ] Login e renovação com o Keycloak fora do ar devolvem 503, não 401.
 - [ ] `DELETE /users/{user_id}` apaga também no Keycloak, e o mesmo e-mail pode ser
       convidado de novo.
-- [ ] O front não tem mais `/primeiro-acesso` nem `AlterarSenhaView`. `/recuperar-senha`
+- [ ] O front não tem mais `/first-access` nem `AlterarSenhaView`. `/reset-password`
       pede só o e-mail e mostra a mesma mensagem para qualquer e-mail.
 - [ ] O `AddMemberForm` pede nome, e-mail e papel, e `organizationsApi.inviteMember` chama
       a rota nova.
@@ -515,7 +535,7 @@ curl -s -X POST http://localhost:8000/api/v1/authentication/login \
 curl -s -w '\n%{http_code}\n' -X POST \
   http://localhost:8000/api/v1/organizations/00000000-0000-0000-0000-000000000001/members \
   -H "Authorization: Bearer <access_token>" -H 'Content-Type: application/json' \
-  -d '{"name":"Pessoa Teste","email":"pessoa@creed.local","role":"gestor"}'
+  -d '{"name":"Pessoa Teste","email":"pessoa@creed.example.com","role":"gestor"}'
 ```
 
 5. No Mailpit, abra o link:
@@ -524,7 +544,7 @@ curl -s -w '\n%{http_code}\n' -X POST \
    - clique em "voltar": a página tem que cair em `http://localhost:5173/login`;
    - entre com a senha nova: espera 200.
 6. Repita o passo 4 com o mesmo e-mail: espera 409, sem e-mail novo.
-7. Rode `docker compose stop mailpit` e convide `outra@creed.local`: espera 503. Confira
+7. Rode `docker compose stop mailpit` e convide `outra@creed.example.com`: espera 503. Confira
    que não sobrou nada:
    - no console do Keycloak, o usuário não existe;
    - no banco, as contagens não mudam (rode antes e depois):
@@ -535,19 +555,19 @@ curl -s -w '\n%{http_code}\n' -X POST \
 
    Depois, `docker compose start mailpit`.
 8. Logado como o gestor do passo 5, convide com `"role":"admin"`: espera 403.
-9. Reset: `POST /api/v1/authentication/password-reset` com `{"email":"pessoa@creed.local"}`
-   e com `{"email":"ninguem@creed.local"}`. Espera 204 nos dois, e um e-mail só no Mailpit.
+9. Reset: `POST /api/v1/authentication/password-reset` com `{"email":"pessoa@creed.example.com"}`
+   e com `{"email":"ninguem@creed.example.com"}`. Espera 204 nos dois, e um e-mail só no Mailpit.
 10. Reenvio: `POST /api/v1/users/<id do usuário>/invitation` como admin. Espera 204 e um
     e-mail novo.
 11. Delete: `DELETE /api/v1/users/<id>` como admin. Espera 204, o usuário some do Keycloak,
     e o passo 4 com o mesmo e-mail volta a dar 201.
 12. Rode `docker compose stop keycloak`: o login do passo 3 tem que devolver 503.
 13. Script: rode duas vezes
-    `python -m scripts.convidar_primeiro_admin --email admin2@creed.local --nome "Admin Dois"`.
+    `python -m scripts.convidar_primeiro_admin --email admin2@creed.example.com --nome "Admin Dois"`.
     Espera um convite e um reenvio no Mailpit.
 14. Front (`npm run dev`):
-    - `http://localhost:5173/primeiro-acesso` não abre tela de senha;
-    - `/recuperar-senha` pede o e-mail e responde com a mesma mensagem para os dois
+    - `http://localhost:5173/first-access` não abre tela de senha;
+    - `/reset-password` pede o e-mail e responde com a mesma mensagem para os dois
       e-mails do passo 9.
 
 Produção, por pessoa com acesso à EC2 (o SMTP é o do Gmail: adendo do ADR-0006):
@@ -556,8 +576,9 @@ Produção, por pessoa com acesso à EC2 (o SMTP é o do Gmail: adendo do ADR-00
     credenciais).
 16. ~~TLS até o servidor SMTP de dentro da EC2~~ — feito em 2026-10-27: um envio pelo
     `smtp.gmail.com:587` saiu da EC2 e chegou.
-17. Rode `./realm/aplicar-ajustes.sh` e depois
-    `docker compose exec keycloak /opt/keycloak/bin/kcadm.sh get realms/creed --fields smtpServer,defaultLocale,passwordPolicy`.
+17. Rode `./realm/aplicar-ajustes.sh <seu admin do realm master>` e depois
+    `docker compose exec keycloak /opt/keycloak/bin/kcadm.sh get realms/creed --fields 'smtpServer(*),defaultLocale,passwordPolicy'`.
+    Sem o `(*)`, o `smtpServer` aparece vazio, mesmo preenchido.
 18. *Test connection* na aba Email do realm `creed`, depois do script.
 19. Depois do release, rode
     `docker compose run --rm back python -m scripts.convidar_primeiro_admin --email <e-mail da professora> --nome "<nome>"`:
@@ -579,10 +600,16 @@ Produção, por pessoa com acesso à EC2 (o SMTP é o do Gmail: adendo do ADR-00
 | P-051 | Depois de definir a senha, a pessoa volta ao login da plataforma por um link; não há login automático | baixo |
 | P-052 | O primeiro admin de produção nasce por convite, pelo script, e a primeira convidada é a professora; ninguém nasce com senha conhecida | baixo |
 | P-053 | Na aprovação de uma empresa (CREED-591), o convite vai para o e-mail informado no cadastro, em nome de quem cadastrou, como `gestor` | médio |
+| P-057 | Organização inativa recebe convite como uma ativa: o convite de membro não confere o status da organização | baixo |
+| P-058 | O reenvio não olha o papel nem o status do acesso de destino: o `gestor` reenvia para qualquer usuário da própria organização, inclusive `admin` ou inativo. Reenviar não dá papel nem reativa | baixo |
+| P-059 | A organização da CREED nasce como "CREED.ai Educa", com o endereço "[A informar] Endereço da CREED", até a cliente informar os dela | baixo |
+| P-060 | Se o e-mail dado ao script do primeiro admin já tem acesso ativo, o script só reenvia o convite, sem mudar papel, organização nem status; acesso inativo não é reativado | baixo |
 
-As nove estão abertas em [`decisoes/premissas.md`](../../decisoes/premissas.md). No código,
+As treze estão abertas em [`decisoes/premissas.md`](../../decisoes/premissas.md). No código,
 cada uma ganha o marcador `🟡 Premissa P-0NN` onde é aplicada. A revisão sugeria começar
-na P-041, mas as P-041 a P-044 foram usadas no mesmo dia pelo ADR-0010.
+na P-041, mas as P-041 a P-044 foram usadas no mesmo dia pelo ADR-0010. As P-057 a P-060
+nasceram na implementação (tasks 3, 4 e 5), e as P-054 a P-056, entre elas, são da
+navegação.
 
 Também usadas:
 
@@ -592,7 +619,8 @@ Também usadas:
 - **P-033**: recorte por organização.
 - **P-004 de 07/09**: os 8 caracteres, que vão do front para o realm.
 
-A **P-009** ("esqueci minha senha não existe") deixa de valer quando a entrega 4 entrar.
+A **P-009** ("esqueci minha senha não existe") foi refutada em 2026-10-29, com o reset da
+entrega 4 (creed-backend#52). O desfecho está em "Fechadas", no ledger.
 
 ## Riscos
 
@@ -635,9 +663,20 @@ A **P-009** ("esqueci minha senha não existe") deixa de valer quando a entrega 
   troca entra na entrega 1.
 - **Enumeração no reset durante falha.** O 503 só aparece para e-mail com acesso, e só
   enquanto o SMTP está fora. Aceito.
-- **Sem limite de envio.** Alguém pode disparar vários resets para o mesmo e-mail.
-  **Sinal:** volume anormal na caixa de enviados do Gmail do projeto. Aceito nesta
-  entrega.
+- **Enumeração por tempo no reset.** Status, corpo e cabeçalhos são iguais para qualquer
+  e-mail, mas o tempo não é: contra o realm local e o Mailpit, a mediana foi **278 ms com
+  acesso** (três chamadas ao Keycloak e o SMTP) e **6 ms sem acesso** (uma consulta ao
+  banco). Um pedido basta para saber se um e-mail tem cadastro, e com o Gmail a diferença
+  tende a crescer. **Aceito pelo Luís em 2026-10-29** (parada de decisão da task 4,
+  creed-backend#52). A rota não promete tempo igual. **Mitigação futura:** mandar o e-mail
+  fora da requisição, o que muda o contrato (o 503 do reset deixa de existir) e o front.
+- **Sem limite de envio, e a cota do Gmail.** A rota de reset é pública. Um laço anônimo de
+  pedidos para e-mails com acesso esgota a cota da conta (cerca de 500 destinatários por
+  dia), e pela D7 todo convite e todo cadastro passam a dar 503 até o dia seguinte, além de
+  queimar a reputação da conta nova. Cada pedido também custa três chamadas ao Keycloak.
+  **Sinal:** volume anormal na caixa de enviados do Gmail do projeto, ou 503 em todo
+  convite com `Daily user sending limit exceeded` no log do Keycloak. **Mitigação:** limite
+  de envios (fora desta entrega). Aceito nesta entrega (revisão da task 4).
 - **Consolidação e release.** Sem a CREED-57, o fluxo não sobe num banco limpo; sem
   release, nada chega à produção.
 - **Comportamentos do Keycloak 26 ainda não testados aqui.** São três:

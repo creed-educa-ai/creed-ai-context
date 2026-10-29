@@ -8,6 +8,11 @@
 > já — é o que a CREED-23.8 precisa para ser desenvolvida e demonstrada. A parte de
 > ambiente real depende de uma resposta da agência que ainda não temos (pendência ao
 > final).
+>
+> *Revisto em 2026-10-29:* segue **Proposto**. A pendência da agência foi resolvida sem
+> ela (adendo de 2026-10-27), e a CREED-23.8 implementou o ADR
+> ([nota de implementação](#nota-de-implementação--creed-238-2026-10-29)), mas a
+> confirmação em reunião interna ainda não aconteceu.
 
 ## Contexto
 
@@ -214,10 +219,39 @@ Parameter Store.
 - **Cerca de 500 destinatários por dia**, o limite de uma conta Gmail comum. Sobra para
   convites e redefinição de senha.
 - **Remetente `@gmail.com`**, menos oficial para a cliente.
+- **Link do convite com o IP do servidor.** Sem domínio, o `KC_HOSTNAME` de produção é
+  `https://<IP>/auth`, e o link do e-mail sai como
+  `https://<IP>/auth/realms/creed/login-actions/...`. O remetente passa no DMARC, mas link
+  para IP tem cara de phishing, para os filtros e para as pessoas. Antes de convidar a
+  cliente, testar com contas Gmail e Outlook. Com domínio, o link muda pelo `PUBLIC_HOST`
+  do `.env` da EC2, sem código. *(Acrescentado em 2026-10-29, CREED-23.8.)*
 
 **Como trocar:** com domínio próprio, o SES volta à mesa. A troca é só de valores
 (`SMTP_*` no `.env` e o script de ajustes do realm): nada no código do back muda, porque
 quem fala SMTP é o Keycloak (item 4).
+
+## Nota de implementação — CREED-23.8 (2026-10-29)
+
+A [CREED-23.8](https://app.clickup.com/t/86e35vhxm) pôs o ADR em código, nas tasks 1 a 7
+(creed-backend#49 a #53, creed-frontend#52, creed-infrastructure#10). O que ficou
+diferente do texto acima:
+
+- **As `SMTP_*` locais moram no `docker-compose.yml`**, no serviço `keycloak`, e não no
+  `.env.example` do back, como dizia a primeira consequência ruim: quem lê é o Keycloak, e
+  nenhum valor local é segredo. Em produção, vêm do `/opt/creed/.env` da EC2.
+- **O bloco `smtpServer` ganhou `starttls` e `ssl`**, também por placeholder: a porta 587
+  do Gmail só aceita login depois do STARTTLS.
+- **O realm de produção recebe os ajustes por script** (`ec2/realm/aplicar-ajustes.sh`),
+  porque o `--import-realm` não relê um realm que já existe. O script lê o mesmo
+  `realm-creed.json` e troca os `${VAR}` com `jq`.
+- **O item 4 continua de pé.** O back chama `execute-actions-email` na Admin API, para o
+  convite, o reenvio e o "esqueci minha senha", e nunca abre conexão SMTP.
+- **O envio é parte da requisição.** Pela D7 da spec da 23.8, se o e-mail não sai, o
+  acesso não é criado e a resposta é 503.
+- **A P-009 ("esqueci minha senha" não existe) foi refutada**, como a segunda
+  consequência boa previa, mas não "sem código adicional": o pedido passa por uma rota do
+  back (D10 da spec da 23.8), para o front só falar com o nosso back e o realm continuar
+  com `resetPasswordAllowed: false`.
 
 ## Como reverter
 

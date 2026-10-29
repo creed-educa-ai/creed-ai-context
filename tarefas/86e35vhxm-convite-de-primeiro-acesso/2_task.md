@@ -145,7 +145,7 @@ De ponta a ponta, com o ambiente da task 1 de pé e o admin de dev logado. O `<l
 # caso feliz: 201 e um e-mail no Mailpit
 curl -s -w '\n%{http_code}\n' -X POST http://localhost:8000/api/v1/users \
   -H "Authorization: Bearer <access_token>" -H 'Content-Type: application/json' \
-  -d '{"name":"Pessoa Teste","email":"pessoa@creed.local","link_id":"<link_id>"}'
+  -d '{"name":"Pessoa Teste","email":"pessoa@creed.example.com","link_id":"<link_id>"}'
 
 # caso de borda: com o Mailpit parado, repita com outro e-mail e outro vínculo.
 # Espera 503, e nada no Keycloak nem no banco.

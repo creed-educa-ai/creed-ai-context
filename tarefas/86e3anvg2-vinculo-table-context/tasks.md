@@ -52,7 +52,7 @@ task 1 e a task 6 dizem o que fazer. Resumo: quem mescla por último roda
 - **Enviar o papel ao Keycloak** (a D4 da CREED-23). A realm role continua configurada à
   mão.
 - **Tirar `name` do `user`.** Espera `Participant` existir.
-- **`UserCreate` no formato final** (`initial_password` no lugar de `keycloak_id`).
+- **`UserCreate` no formato final** (`initial_password` no lugar de `keycloak_id`). *Histórico: o formato final saiu na CREED-23.8 (2026-10-29) como `{name, email, link_id}`, sem `initial_password`.*
 - **Front.** Nada muda no `creed-frontend`.
 
 ## Divergências com o que estava publicado no board
