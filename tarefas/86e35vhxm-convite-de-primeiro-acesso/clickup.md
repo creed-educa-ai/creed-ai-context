@@ -3,8 +3,16 @@
 ```
 Épico: 86e35vhxm — CREED-23.8 - Convite de primeiro acesso por e-mail (link para o realm do Keycloak)
 Spec: spec.md · Tasks: tasks.md
-Gerado em: 2026-10-24 · Refeito em: 2026-10-27 (Gmail no lugar do SES, ADR-0006) · Publicado em: ainda não
+Gerado em: 2026-10-24 · Refeito em: 2026-10-27 (Gmail no lugar do SES, ADR-0006) · Publicado em: 2026-10-27
+Corrigido em: 2026-10-29 (task 8) · ainda não republicado
 ```
+
+⚠️ **Corrigido em 2026-10-29, sem republicar.** O texto abaixo acerta o que a implementação
+mostrou: os e-mails de teste (`@creed.example.com`, porque o back recusa `@creed.local`),
+as rotas do front (`/first-access` e `/reset-password`), o que vai na imagem do back
+(só o script do primeiro admin) e o script de ajuste do realm (`jq` no lugar do
+`envsubst`, admin como argumento, `smtpServer(*)`). As subtarefas 2 a 7 no board ainda têm
+o texto de 27/10: a próxima rodada de `workflows/tasks-to-clickup.md` leva estas correções.
 
 A 23.8 é subtarefa da CREED-23 no board. Aqui ela faz o papel de épico: a descrição dela
 é trocada pela Parte 2, e as oito entregas viram subtarefas **dela** (`parent: 86e35vhxm`),
@@ -14,23 +22,30 @@ com o prefixo `CREED-23.8.N`.
 
 | # | Título da subtarefa | Repo | Ação | ID no ClickUp |
 |---|---|---|---|---|
-| — | CREED-23.8 - Convite de primeiro acesso por e-mail (link para o realm do Keycloak) | — | **atualizar** a descrição (a de 08/09 está desatualizada); título, status e responsável ficam | `86e35vhxm` |
-| 1 | CREED-23.8.1 - Keycloak local envia e-mail de convite em português | `creed-backend` | criar | — |
-| 2 | CREED-23.8.2 - Criar acesso cria o usuário nos dois lados e manda o convite | `creed-backend` | criar | — |
-| 3 | CREED-23.8.3 - Adicionar membro à organização numa chamada só | `creed-backend` | criar | — |
-| 4 | CREED-23.8.4 - Reenviar convite e redefinir senha por e-mail | `creed-backend` | criar | — |
-| 5 | CREED-23.8.5 - Primeiro admin de cada ambiente nasce por convite | `creed-backend` | criar | — |
-| 6 | CREED-23.8.6 - Site sem tela de senha, com recuperação por e-mail e convite de membro | `creed-frontend` | criar | — |
-| 7 | CREED-23.8.7 - Produção envia e-mail pelo Gmail do projeto | `creed-infrastructure` | criar | — |
-| 8 | CREED-23.8.8 - Documentação do projeto descreve o convite | `creed-ai-context` | criar | — |
+| — | CREED-23.8 - Convite de primeiro acesso por e-mail (link para o realm do Keycloak) | — | descrição **atualizada** em 27/10 (a de 08/09 estava desatualizada); título, status e responsável ficaram | `86e35vhxm` |
+| 1 | CREED-23.8.1 - Keycloak local envia e-mail de convite em português | `creed-backend` | criada em 27/10 | `1dfej6fucz4` |
+| 2 | CREED-23.8.2 - Criar acesso cria o usuário nos dois lados e manda o convite | `creed-backend` | criada em 27/10 | `1dfej6fucze` |
+| 3 | CREED-23.8.3 - Adicionar membro à organização numa chamada só | `creed-backend` | criada em 27/10 | `1dfej6fuczf` |
+| 4 | CREED-23.8.4 - Reenviar convite e redefinir senha por e-mail | `creed-backend` | criada em 27/10 | `1dfej6fuczg` |
+| 5 | CREED-23.8.5 - Primeiro admin de cada ambiente nasce por convite | `creed-backend` | criada em 27/10 | `1dfej6fuczh` |
+| 6 | CREED-23.8.6 - Site sem tela de senha, com recuperação por e-mail e convite de membro | `creed-frontend` | criada em 27/10 | `1dfej6fuczj` |
+| 7 | CREED-23.8.7 - Produção envia e-mail pelo Gmail do projeto | `creed-infrastructure` | criada em 27/10 | `1dfej6fuczk` |
+| 8 | CREED-23.8.8 - Documentação do projeto descreve o convite | `creed-ai-context` | criada em 27/10 | `1dfej6fuczm` |
 
-Lido em 2026-10-24: a 23.8 não tem subtarefas e não muda desde 2026-09-10. O comentário de
-10/09 (ADR-0006) não é tocado. Ninguém é designado nas subtarefas: o status é o padrão da
-lista.
+Relido em 2026-10-27, antes de publicar: a 23.8 não tinha subtarefas nem anexos, e não mudava
+desde 2026-09-10. O comentário de 10/09 (ADR-0006) não foi tocado. Ninguém foi designado nas
+subtarefas, que entraram no status padrão da lista (`backlog`).
 
-⚠️ **Subtarefa de subtarefa.** Se o board recusar `parent: 86e35vhxm` porque a 23.8 já é
-subtarefa, a publicação para na primeira criação e volta com a alternativa: criar as oito
-como subtarefas da CREED-23, com o mesmo prefixo.
+O board aceitou `parent: 86e35vhxm`. As oito são subtarefas da 23.8, que continua subtarefa
+da CREED-23.
+
+**Como o texto foi para o board.** O ClickUp transforma em parágrafo solto a continuação de
+um item de lista quebrado à mão. Por isso o texto foi publicado com as linhas desdobradas, e
+a subtarefa 1, que entrou primeiro com as quebras, foi reescrita. O conteúdo é o deste
+arquivo, palavra por palavra. A próxima rodada compara por conteúdo, não por espaço.
+
+⚠️ **Link falso.** O ClickUp transformou "CREED.ai Educa" num link para `http://CREED.ai`
+no épico e na subtarefa 7. Nas outras subtarefas o nome está em código e não virou link.
 
 ## Materiais — visão do épico
 
@@ -574,7 +589,7 @@ Os campos:
 **Corpo da saída**
 
 ```json
-{ "id": "uuid", "name": "Pessoa Teste", "email": "pessoa@creed.local", "status": "active",
+{ "id": "uuid", "name": "Pessoa Teste", "email": "pessoa@creed.example.com", "status": "active",
   "role": "gestor", "link_id": "uuid", "organization_id": "uuid", "created_at": "2026-10-24T14:30:00Z" }
 ```
 
@@ -616,7 +631,7 @@ pre-commit run mypy --all-files
 curl -s -w '\n%{http_code}\n' -X POST \
   http://localhost:8000/api/v1/organizations/00000000-0000-0000-0000-000000000001/members \
   -H "Authorization: Bearer <access_token>" -H 'Content-Type: application/json' \
-  -d '{"name":"Pessoa Teste","email":"pessoa@creed.local","role":"gestor"}'
+  -d '{"name":"Pessoa Teste","email":"pessoa@creed.example.com","role":"gestor"}'
 ```
 
 - **Caso feliz:** 201, e o e-mail chega.
@@ -744,11 +759,11 @@ pre-commit run mypy --all-files
 
 # caso feliz: 204 e um e-mail no Mailpit
 curl -s -o /dev/null -w '%{http_code}\n' -X POST http://localhost:8000/api/v1/authentication/password-reset \
-  -H 'Content-Type: application/json' -d '{"email":"pessoa@creed.local"}'
+  -H 'Content-Type: application/json' -d '{"email":"pessoa@creed.example.com"}'
 
 # caso de borda: 204, sem e-mail
 curl -s -o /dev/null -w '%{http_code}\n' -X POST http://localhost:8000/api/v1/authentication/password-reset \
-  -H 'Content-Type: application/json' -d '{"email":"ninguem@creed.local"}'
+  -H 'Content-Type: application/json' -d '{"email":"ninguem@creed.example.com"}'
 ```
 
 ### Decisões já tomadas que valem aqui
@@ -811,15 +826,16 @@ Detalhes:
 
 - o commit é do próprio script, no fim;
 - os argumentos são `--email` e `--nome`, e nenhum dado de pessoa vai para o código;
-- a imagem do servidor hoje não leva a pasta `scripts/`, então entra `COPY scripts ./scripts`
-  no `Dockerfile`.
+- a imagem do servidor hoje não leva a pasta `scripts/`, então o `Dockerfile` passa a copiar
+  o script pelo nome. O `seed_local.py` fica fora da imagem: ele cria um admin com senha
+  conhecida, e a barreira dele (`ENVIRONMENT`) não segura em produção.
 
 ### Onde isso encosta no código (`creed-backend`)
 
 | Arquivo | O que nasce ou muda ali |
 |---|---|
 | `scripts/convidar_primeiro_admin.py` (novo) | o comando |
-| `Dockerfile` | `COPY scripts ./scripts` |
+| `Dockerfile` | `COPY scripts/__init__.py scripts/convidar_primeiro_admin.py ./scripts/` |
 | `README.md` | seção "Primeiro admin de um ambiente novo" |
 | `tests/test_convidar_primeiro_admin.py` (novo) | primeira execução, segunda execução e outro e-mail |
 
@@ -839,14 +855,14 @@ Detalhes:
 - [ ] A segunda execução com o mesmo e-mail não cria nada e reenvia o convite.
 - [ ] Outro e-mail cria outro administrador na mesma organização, sem duplicá-la.
 - [ ] Se o envio falha, nada fica no banco nem no Keycloak.
-- [ ] A imagem tem `/app/scripts/convidar_primeiro_admin.py`.
+- [ ] A imagem tem `/app/scripts/convidar_primeiro_admin.py`, e não tem o `seed_local.py`.
 
 ### Como verificar
 
 ```bash
 cd creed-backend
-python -m scripts.convidar_primeiro_admin --email admin2@creed.local --nome "Admin Dois"   # convite no Mailpit
-python -m scripts.convidar_primeiro_admin --email admin2@creed.local --nome "Admin Dois"   # reenvio
+python -m scripts.convidar_primeiro_admin --email admin2@creed.example.com --nome "Admin Dois"   # convite no Mailpit
+python -m scripts.convidar_primeiro_admin --email admin2@creed.example.com --nome "Admin Dois"   # reenvio
 pytest tests/test_convidar_primeiro_admin.py tests/test_seed_local.py -q
 docker build -t creed-backend:teste . && docker run --rm creed-backend:teste ls scripts
 ```
@@ -898,7 +914,7 @@ e-mail, e o formulário de adicionar membro passa a pedir o nome e ganha a chama
 
 ### O que muda para quem usa
 
-Hoje existem duas telas de "nova senha", em `/primeiro-acesso` e `/recuperar-senha`, que
+Hoje existem duas telas de "nova senha", em `/first-access` e `/reset-password`, que
 não fazem nada: não falam com o servidor. Elas saem. Quem define a senha passa a ser sempre
 a página segura do Keycloak, aberta pelo link do e-mail.
 
@@ -926,7 +942,7 @@ de outra tarefa (CREED-50).
 
 | Arquivo | O que nasce ou muda ali |
 |---|---|
-| `src/app/routes.tsx` | sai `/primeiro-acesso`, e `/recuperar-senha` passa a abrir a `RecuperarSenhaView` |
+| `src/app/routes.tsx` | sai `/first-access`, e `/reset-password` passa a abrir a `RecuperarSenhaView` |
 | `src/features/authentication/AlterarSenhaView.tsx` e `.test.tsx` | removidos |
 | `src/features/authentication/RecuperarSenhaView.tsx` e `.test.tsx` (novos) | a tela que pede o e-mail |
 | `src/features/authentication/authenticationApi.ts` | `requestPasswordReset(email)` |
@@ -964,9 +980,9 @@ de outra tarefa (CREED-50).
 
 ### Pronto quando
 
-- [ ] `/primeiro-acesso` não abre tela de senha nenhuma, e não sobra import, teste nem
+- [ ] `/first-access` não abre tela de senha nenhuma, e não sobra import, teste nem
       texto da tela antiga.
-- [ ] "Esqueci minha senha", no login, leva a `/recuperar-senha`:
+- [ ] "Esqueci minha senha", no login, leva a `/reset-password`:
   - [ ] a tela pede só o e-mail, e e-mail inválido mostra erro no campo;
   - [ ] o envio chama `POST /api/v1/authentication/password-reset`;
   - [ ] qualquer 204 mostra a mesma mensagem, e 503 mostra "tente de novo".
@@ -982,7 +998,7 @@ de outra tarefa (CREED-50).
 ```bash
 cd creed-frontend
 npm run check
-npm run dev    # http://localhost:5173/recuperar-senha e http://localhost:5173/primeiro-acesso
+npm run dev    # http://localhost:5173/reset-password e http://localhost:5173/first-access
 ```
 
 Sem o servidor da CREED-23.8.4, a tela de redefinição mostra "tente de novo". Quem prova a
@@ -1064,14 +1080,15 @@ subida (`--import-realm`), então o que a CREED-23.8.1 mudou não chega lá sozi
 novo, `ec2/realm/aplicar-ajustes.sh`:
 
 1. lê os blocos do próprio `realm-creed.json`, no clone que a EC2 já tem;
-2. troca as variáveis pelos valores do `.env`, com `envsubst`;
+2. troca as variáveis pelos valores do `.env`, com `jq`, só nos atributos e no redirect;
 3. aplica com `kcadm.sh`, dentro do container.
 
 Detalhes do script:
 
-- quem roda entra com o próprio administrador do Keycloak, e a senha é pedida no terminal;
+- quem roda passa o próprio administrador do Keycloak como argumento, e a senha é pedida
+  no terminal;
 - a senha do SMTP vai pela entrada padrão, nunca na linha de comando;
-- o script precisa de `jq` e `envsubst` na EC2;
+- o script precisa do `jq` 1.6 ou mais novo na EC2;
 - **não use `kc.sh import --override`**: ele apaga e recria a configuração, **com os
   usuários**.
 
@@ -1117,8 +1134,8 @@ docker compose --env-file .env.example config > /dev/null && echo ok
 bash -n realm/aplicar-ajustes.sh && shellcheck realm/aplicar-ajustes.sh
 
 # na EC2, como ec2-user, com o .env preenchido
-./realm/aplicar-ajustes.sh
-docker compose exec keycloak /opt/keycloak/bin/kcadm.sh get realms/creed --fields smtpServer,defaultLocale,passwordPolicy
+./realm/aplicar-ajustes.sh <seu admin do realm master>
+docker compose exec keycloak /opt/keycloak/bin/kcadm.sh get realms/creed --fields 'smtpServer(*),defaultLocale,passwordPolicy'
 ```
 
 Depois do script, *Test connection* na aba Email do realm `creed`, pelo túnel do console.

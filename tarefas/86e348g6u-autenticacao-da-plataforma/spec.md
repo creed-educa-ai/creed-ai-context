@@ -70,7 +70,10 @@ login (P-008).
 
 - **Telas** de gestão de usuário (listar, criar, editar usuário pela interface). O épico
   entrega o backend de `users`; a tela é tarefa própria, depois.
-- Recuperação de senha por e-mail — não existe serviço de e-mail na arquitetura (P-009).
+- Recuperação de senha por e-mail. *Quando a spec foi escrita não havia envio de e-mail
+  (P-009). A recuperação e o convite por e-mail entraram depois, na
+  [CREED-23.8](../86e35vhxm-convite-de-primeiro-acesso/spec.md), e a P-009 foi refutada
+  em 2026-10-29.*
 - Autocadastro de pessoa / tela de "criar conta" individual (P-008). A solicitação de
   cadastro de empresa, aprovada pela cliente, não é autocadastro e não é escopo deste épico.
 - MFA, login social, SSO institucional da PUCRS.
@@ -103,9 +106,12 @@ e traduzir isso obrigaria a destraduzir a cada linha da documentação do Keyclo
 | POST | `/authentication/renew` | `RenewRequest{refresh_token}` | `SessionResponse` |
 | POST | `/authentication/logout` | `RenewRequest{refresh_token}` | 204 |
 | GET | `/authentication/session` | — (Bearer) | `UserSessionResponse` |
-| POST | `/users` | `UserCreate{vinculo_id, email, initial_password}` | `UserResponse` (201) |
+| POST | `/users` | `UserCreate{name, email, link_id}` (desde a CREED-23.8; esta spec pedia `{vinculo_id, email, initial_password}`, que nunca existiu em código) | `UserResponse` (201) |
 | GET | `/users` | query `organization_id`, `role`, paginação | `PaginaDe[UserResponse]` ⚠️ |
 | PATCH | `/users/{id}` | `UserUpdate{status?}` | `UserResponse` |
+
+O contrato vigente, com as rotas que a CREED-23.8 acrescentou (convite de membro, reenvio,
+"esqueci minha senha"), está no [`contrato-api.md`](contrato-api.md).
 
 ```
 SessionResponse      { access_token, refresh_token, expires_in, user: UserSessionResponse }
