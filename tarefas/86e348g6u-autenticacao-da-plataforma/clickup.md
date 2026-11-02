@@ -7,6 +7,13 @@ Gerado em: 2026-09-17 · Publicado em: 2026-09-17 (épico + 7 subtarefas)
 Anexos: 2026-09-17 — 8 arquivos subidos; 5 descrições corrigidas de ⬜ para ✅
 ```
 
+> **Texto histórico, de 2026-09-17.** É o que foi publicado no board naquela data. Desde
+> a [CREED-23.8](../86e35vhxm-convite-de-primeiro-acesso/spec.md) a plataforma envia e-mail:
+> o "esqueci minha senha" existe (a P-009 foi refutada em 2026-10-29), e o `UserCreate` é
+> `{name, email, link_id}`, sem `initial_password`. O contrato vigente está em
+> [`contrato-api.md`](contrato-api.md). A descrição do épico no ClickUp não foi
+> republicada.
+
 ## Mapa de publicação
 
 | # | Subtarefa no board | Repo | Ação | ID |

@@ -9,13 +9,17 @@ em "Como testar".
 
 A plataforma deixa de ter tela de definir senha:
 
-- `/primeiro-acesso` some;
+- `/first-access` some;
 - "Esqueci minha senha" pede só o e-mail e manda o pedido ao back;
 - o formulário de adicionar membro passa a pedir o nome e ganha a chamada pronta para a
   página do painel usar.
 
 ## Contexto que você não tem como adivinhar
 
+- **As rotas mudaram de nome depois desta task.** A navegação (`36a0d46`, creed-frontend#51)
+  renomeou `/primeiro-acesso` para `/first-access` e `/recuperar-senha` para
+  `/reset-password`. O texto abaixo foi corrigido em 2026-10-29, depois do
+  creed-frontend#52.
 - **Quem define senha é a página do Keycloak**, aberta pelo link do e-mail (P-012). A
   `AlterarSenhaView` (PR #11, de 08/09) nunca chamou API, e perdeu a função no mesmo dia
   em que entrou. Ela sai, junto com o teste e o `alterarSenhaSchema` de
@@ -46,7 +50,7 @@ A plataforma deixa de ter tela de definir senha:
 
 ## Arquivos que provavelmente mudam
 
-- `src/app/routes.tsx`: sai `/primeiro-acesso`, e `/recuperar-senha` passa a abrir a
+- `src/app/routes.tsx`: sai `/first-access`, e `/reset-password` passa a abrir a
   `RecuperarSenhaView`.
 - `src/features/authentication/AlterarSenhaView.tsx` e `.test.tsx`: removidos.
 - `src/features/authentication/RecuperarSenhaView.tsx` e `.test.tsx` (novos).
@@ -72,9 +76,9 @@ A plataforma deixa de ter tela de definir senha:
 
 ## Critérios de aceite
 
-- [ ] `/primeiro-acesso` não abre tela de senha nenhuma, e não sobra import, teste nem
+- [ ] `/first-access` não abre tela de senha nenhuma, e não sobra import, teste nem
       chave de i18n da `AlterarSenhaView`.
-- [ ] "Esqueci minha senha", no login, leva a `/recuperar-senha`:
+- [ ] "Esqueci minha senha", no login, leva a `/reset-password`:
   - [ ] a tela pede só o e-mail, e e-mail inválido mostra erro no campo;
   - [ ] o envio chama `POST /authentication/password-reset`;
   - [ ] qualquer 204 mostra a mesma mensagem, e 503 mostra "tente de novo".
@@ -91,7 +95,7 @@ A plataforma deixa de ter tela de definir senha:
 ```bash
 cd creed-frontend
 npm run check
-npm run dev    # http://localhost:5173/recuperar-senha e http://localhost:5173/primeiro-acesso
+npm run dev    # http://localhost:5173/reset-password e http://localhost:5173/first-access
 ```
 
 Sem o back das tasks 3 e 4, a tela de reset dá erro de rede e mostra "tente de novo". Quem

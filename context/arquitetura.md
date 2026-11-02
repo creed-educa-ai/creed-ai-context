@@ -65,30 +65,64 @@ vazou — o número devia ter vindo agregado.
 **Quem manda e-mail é o Keycloak** — nem o backend, nem o N8N. Nenhum código nosso abre
 conexão SMTP: o backend chama a Admin API e o Keycloak faz o resto, com template dele.
 
-O convite de primeiro acesso, ponta a ponta:
+**Ninguém nasce com senha.** Uma pessoa ganha acesso quando alguém a **convida**: o
+`admin`, em qualquer organização e com qualquer papel, ou o `gestor`, só na organização
+dele e só como `gestor` ou `respondente` (P-045). O convite é um e-mail com um link; a
+pessoa abre o link, define a senha numa página do Keycloak e entra pelo login normal da
+plataforma ([CREED-23.8](../tarefas/86e35vhxm-convite-de-primeiro-acesso/spec.md)).
+
+O convite de membro, ponta a ponta:
 
 ```
-admin cadastra ──▶ Back: POST /users
-                     │
-                     └─▶ Keycloak: cria usuário SEM credencial
-                              │
-                              └─▶ PUT .../execute-actions-email ["UPDATE_PASSWORD"]
-                                       │
-                                       └─▶ SMTP ──▶ caixa da pessoa
-                                                        │
-                                        clica no link ──┘
-                                             │
-                                             ▼
-                                    página do realm: define a senha
-                                             │
-                                             ▼
-                                    login normal na plataforma
+admin ou gestor ──▶ Back: POST /organizations/{organization_id}/members
+                      │   {name, email, role, type?}
+                      │
+                      ├─▶ banco: participante e vínculo        ┐
+                      │                                         │ uma transação
+                      ├─▶ Keycloak (Admin API): cria o usuário  │
+                      │   SEM senha e dá o papel do vínculo     │
+                      │                                         │
+                      ├─▶ banco: usuário, com o id do Keycloak  ┘
+                      │
+                      └─▶ Keycloak: PUT .../execute-actions-email ["UPDATE_PASSWORD"]
+                                │       link válido por 72 h (P-049)
+                                └─▶ SMTP ──▶ caixa da pessoa
+                                                 │
+                                 clica no link ──┘
+                                      │
+                                      ▼
+                             página do realm: define a senha
+                                      │  "voltar para o aplicativo" (P-051)
+                                      ▼
+                             login normal na plataforma
 ```
+
+**Tudo ou nada.** Se qualquer passo falha (SMTP ou Keycloak fora do ar), o back apaga o
+usuário que criou no Keycloak, o banco volta, e a resposta é **503**: acesso criado é
+sempre convite enviado. Há duas exceções raras: o commit que falha depois do envio e o
+Keycloak que cai antes de a limpeza terminar. Nas duas, o usuário sobra no Keycloak, e a
+nova tentativa responde 409 até alguém apagá-lo pelo console.
+
+Os outros caminhos usam o mesmo e-mail do Keycloak:
+
+| Caso | Rota | Quem |
+|---|---|---|
+| Acesso para um vínculo que já existe | `POST /users` `{name, email, link_id}` | `admin` |
+| Reenviar o convite (link vencido ou perdido) | `POST /users/{user_id}/invitation` | `admin`; `gestor` só na própria organização |
+| "Esqueci minha senha" | `POST /authentication/password-reset` `{email}` | público: a resposta é 204 para qualquer e-mail, e só quem tem acesso ativo recebe |
+| Primeiro admin de um ambiente novo | `python -m scripts.convidar_primeiro_admin --email … --nome …`, rodado na EC2 | quem tem acesso à EC2 (P-052) |
+| Tirar o acesso | `DELETE /users/{user_id}`: apaga no banco e no Keycloak, e o e-mail pode ser convidado de novo | `admin` |
+
+O e-mail é sempre gravado e comparado em **minúsculas**, como o Keycloak guarda. O
+contrato completo, com os códigos de erro, está no
+[`contrato-api.md`](../tarefas/86e348g6u-autenticacao-da-plataforma/contrato-api.md) da
+CREED-23.
 
 Duas consequências de desenho que valem lembrar:
 
-- **A plataforma não tem tela de troca de senha** — nem hoje, nem depois. Quem define
-  senha é sempre a página do realm. O front tem tela de login e mais nada.
+- **A plataforma não tem tela de definir senha.** Quem define senha é sempre a página do
+  realm. O front tem a tela de login e a de "esqueci minha senha" (`/reset-password`),
+  que só pede o e-mail.
 - **O link do convite sai do nosso SPA.** Ele abre o Keycloak direto, com o hostname que
   o Keycloak conhece. Hostname errado = link que só funciona na máquina de quem rodou.
   Com o front no Amplify e o Keycloak na EC2, os dois hostnames são **diferentes** —
@@ -96,8 +130,13 @@ Duas consequências de desenho que valem lembrar:
 
 Em produção, o Keycloak envia pelo **SMTP do Gmail do projeto** (`smtp.gmail.com:587`);
 o SES fica para quando houver domínio próprio — ver o adendo do
-[`ADR-0006`](../decisoes/adrs/0006-e-mail-transacional.md). Local é Mailpit, e é
-suficiente para desenvolver e demonstrar o fluxo inteiro.
+[`ADR-0006`](../decisoes/adrs/0006-e-mail-transacional.md). Sem domínio, o link do
+convite sai com o IP do servidor (`https://<IP>/auth/...`). Local é Mailpit
+(`http://localhost:8025`), e é suficiente para desenvolver e demonstrar o fluxo inteiro.
+
+O realm de produção não relê o `realm-creed.json` depois da primeira subida: mudança de
+SMTP, idioma, política de senha ou perfil chega pelo `ec2/realm/aplicar-ajustes.sh` do
+`creed-infrastructure`.
 
 ## Esteira de IA (N8N)
 
