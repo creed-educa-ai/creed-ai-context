@@ -9,7 +9,7 @@ Você vai construir um formulário. A régua é
 (`field.tsx`, `input.tsx`, `label.tsx`).
 
 <critical>TODO formulário nasce com schema zod mais `zodResolver` do `@hookform/resolvers`. Nada de `useState` por campo nem validação à mão no submit. A pilha já está instalada — react-hook-form, zod, @hookform/resolvers — e não se traz biblioteca nova.</critical>
-<critical>O schema mora em `src/lib/validadores.ts`, um export por schema. Schema de uma tela só pode nascer na feature e sobe no segundo uso.</critical>
+<critical>O schema mora em `src/lib/validators.ts`, um export por schema. Schema de uma tela só pode nascer na feature e sobe no segundo uso.</critical>
 <critical>O tipo do formulário vem do schema, por `z.infer` — nunca escreva a interface duas vezes.</critical>
 <critical>O schema ESPELHA o contrato do backend: obrigatório no Pydantic é obrigatório no zod, `max_length=200` vira `.max(200)`. Confira em `creed-backend/app/domains/<dominio>/schemas.py`; se o domínio for stub, vale a premissa registrada (skill `contrato-front`).</critical>
 <critical>Mensagem de erro é i18n: o schema guarda a CHAVE e a tela traduz. Nada de português cravado dentro do schema.</critical>

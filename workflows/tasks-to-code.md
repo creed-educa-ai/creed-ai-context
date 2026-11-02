@@ -10,7 +10,7 @@ Código no working tree, testes verdes, entrega didática, task marcada em `task
 ## Princípios
 
 - **Uma task por vez.** Não implemente duas em paralelo — o diff fica irrevisável.
-- **Ler antes de escrever:** task → spec → molde (`respondentes`) → `context/` do repo.
+- **Ler antes de escrever:** task → spec → molde (`users` no back, `authentication` no front) → `context/` do repo.
 - **Copiar a forma do molde**, não inventar estrutura.
 - **Teste junto**, não depois.
 - **Escopo fechado**: nada fora da task entra no diff.
@@ -53,7 +53,7 @@ Antes de escrever, classifique a dúvida. **Só a última linha vira pergunta**:
 
 | Situação | Ação | Pergunta? |
 |---|---|---|
-| O molde (`respondentes`) já resolve | siga o molde | não |
+| O molde (`users` / `authentication`) já resolve | siga o molde | não |
 | Convenção, playbook ou ADR já resolve | siga | não |
 | Lacuna de **produto** (o que o sistema deve fazer) | premissa (`../conventions/premissas-e-duvidas.md`) | não |
 | Diferença só de estilo, sem efeito no diff | escolha e siga | não |

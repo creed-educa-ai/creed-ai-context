@@ -17,6 +17,12 @@ features/authentication/
 Feature nova espelha o **nome do domínio do backend**. Se o backend tem `prismas`,
 o front tem `prismas` — não `prisma`, não `analises`.
 
+As duas exceções vêm do back, que está fora da própria convenção: a feature
+`organizations` espelha `organizacoes`, e `departments` espelha `department`. O mapa
+completo feature ↔ domínio está no [`catalogo.md`](../catalogo.md). Páginas que só
+juntam seções de várias features (`controlPanel`) e páginas públicas (`welcome`,
+`about`) não espelham domínio.
+
 ## Regras
 
 - **Nada de agregação no front.** Somar, agrupar e derivar indicador é do backend

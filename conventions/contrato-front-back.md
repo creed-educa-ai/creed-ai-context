@@ -28,35 +28,57 @@ Antes de escrever uma linha de integração, abra `app/domains/<dominio>/router.
 | Docstring **"STUB"** e um `APIRouter` sem rota | **PARE.** O domínio não existe |
 | O diretório não existe | **PARE.** O domínio não existe |
 
-Hoje, na `dev` do back (depois do creed-backend#31, CREED-47, em 2026-09-30), têm
-contrato de verdade **sete** domínios. Todas as rotas exigem token, menos o login e a
-renovação.
+Hoje, na `dev` do back (2026-11-02, `cc8dc61`), têm contrato de verdade **dez**
+domínios. Todas as rotas exigem token, menos o login e a renovação. A lista completa de
+rotas, e a feature do front que espelha cada domínio, está no
+[`catalogo.md`](../catalogo.md); o espelho dos schemas é o `src/types/api.ts`, uma
+seção por domínio.
 
-| Domínio | Rotas | Quem pode | Tarefa |
+| Domínio | Quem pode | Feature do front |
+|---|---|---|
+| `authentication` | todos | `authentication` |
+| `users` | admin | `users` |
+| `links` | admin | `links` |
+| `participants` | admin | `participants` |
+| `organizacoes` | admin; o gestor lê a própria | `organizations` |
+| `department` | admin cria; leitura autenticada | `departments` |
+| `forms` | admin e gestor criam; qualquer papel lê na própria organização | `forms` |
+| `questions` | idem | `questions` |
+| `responses` | quem abriu a resposta | `responses` |
+
+Em **branches abertas** do back, já transcritas no front porque as telas dependem
+delas: `POST /organizations/{id}/members` (convite de membro),
+`POST /users/{id}/invitation` (reenvio) e `POST /authentication/password-reset`
+(`feat/86e35vhxm-*`).
+
+Com tabela e schema, **sem rota**: `demographics`, `insights`, `dashboards` (router
+stub) e `documents` (só tabela). `prismas`, `prognosticos` e `relatorios` são stubs
+registrados no `main.py` — a rota responde, e responde 404. Descobrir isso por
+tentativa custa uma tarde.
+
+**Contrato ainda provisório, escrito no front antes do back:** o campo `options` em
+`QuestionResponse`. O back já cria alternativas (`POST /questions/{id}/options`) e já
+aceita `option_id` na resposta, mas o `GET /forms/{id}/questions` não as devolve
+(P-039). A escala segue como objetiva de 1 a 5 (P-040).
+
+### Onde a tela diverge do back
+
+Decidido em 2026-11-02 (refatoração do front para espelhar o back): onde a tela pede
+uma forma que o back não tem, **a tela mantém a forma dela** e a divergência fica
+listada aqui, para ser resolvida na integração — dos dois lados, não por adivinhação.
+Os tipos dessas formas estão no fim do `src/types/api.ts`, em "PROVISÓRIOS DA TELA",
+e o dado fictício mora no `<feature>Api.ts` (mock).
+
+| Tela | Forma da tela | O que o back tem | O que falta decidir |
 |---|---|---|---|
-| `authentication` | `POST /authentication/login`, `POST /authentication/renew`, `GET /authentication/session` | todos | CREED-23 |
-| `users` | `POST /users`, `DELETE /users/{id}` | admin | CREED-23 · CREED-32 |
-| `links` | `POST /organizations/{organization_id}/links` | admin | CREED-32 |
-| `participants` | `POST /participants`, `GET /participants/{id}` | admin | CREED-36 |
-| `forms` | `POST /forms` (admin e gestor), `GET /forms/{id}` (qualquer papel, na própria organização) | ver coluna | CREED-33 · CREED-47 |
-| `questions` | `POST /questions` (admin e gestor), `GET /forms/{form_id}/questions` (qualquer papel) | ver coluna | CREED-35 · CREED-47 |
-| `responses` | `POST /form-responses` (abre, com o vínculo do login), `POST` e `GET /form-responses/{id}/answers` (grava e lê; **só descritiva**), `PATCH /form-responses/{id}` (envia) | quem abriu a resposta | CREED-31 · CREED-34 · CREED-47 |
-
-Quem consome hoje: o front usa `authentication` e, desde a CREED-48, `forms`,
-`questions` e `responses` (o questionário). As rotas só de admin e gestor ainda não têm
-tela.
-
-**Contrato provisório, escrito no front antes do back:** as alternativas de pergunta
-objetiva (`QuestionOptionResponse`, campo `options` em `QuestionResponse`), a partir da
-tabela `QuestionOption` do modelo, e a escala como objetiva de 1 a 5. Premissas P-039 e
-P-040; o back ainda não devolve `options`, e quem define o formato final é a CREED-37.
-
-`organizacoes`, `prismas`, `prognosticos`, `relatorios` e `dashboards` são stubs
-registrados no `main.py` — a rota responde, e responde 404. Descobrir isso por tentativa
-custa uma tarde. No banco, as tabelas que existem são `user`, `links`, `participants`,
-`documents` (sem rota), `form`, `questions`, `form_responses` e `answer`. Organização e
-setor ainda não têm tabela (CREED-38 e CREED-39); o resto do modelo existe apenas no
-`.dbml`.
+| Radar de prismas (dashboards) | `plasticidade_humana`, `empreendedorismo`, `multiculturalismo`, `neuroinovacao`, `tomada_decisao` | enum `Prisma`: `seguranca_psicologica`, `lideranca_adaptativa`, `cultura_empreendedora`, `adaptabilidade_cognitiva`, `neuroinovacao_prisma` | **qual lista é a do método da cliente** — produto, não código |
+| Empresas (super adm) e cadastro público | `Company`: nome, e-mail, documento (número), responsável, telefone; status `ativo`/`pendente` | `OrganizationResponse`: `name`, `address`, `document_id`; status `active`/`inactive`; sem rota pública de cadastro | rota pública, onde moram e-mail/responsável/telefone e o estado "pendente" (CREED-591/595) |
+| Membros (painel da empresa) | `Member`: status `ativo`/`pendente`, `tag` `marketing`/`vendas`/`rh` | `UserResponse` (`RecordStatus`); setor é `DepartmentType` com outros valores | rota que liste e remova membros; "pendente" = convite não aceito?; tag = setor? |
+| Mentorandos (super adm) | `Mentee`: `hasAnsweredCurrent` | participante com vínculo `mentoria`; nada sobre "respondeu o atual" | rota que liste; de onde vem "respondeu" |
+| Adicionar mentorando | só e-mail | convite exige `name`, `email`, `role` e a organização | o nome entra na tela? qual organização? |
+| Período do questionário (painel da empresa) | início e término (data e hora) | `FormRead` tem só `status` | onde o período mora |
+| Dashboards | payload montado para a tela (períodos, resumo, grupos, membros) | `DashboardResponse`: `user_id`, `form_id`, `is_private` | contrato de leitura dos dashboards (com `prismas` e `insights`) |
+| Demográficos | `name` e `perspective` junto do rascunho | `DemographicCreate` não tem nenhum dos dois; `name` é do `Participant` | rota de gravação e onde mora a `perspective` |
 
 ### O molde é forma, não campo
 
@@ -68,11 +90,10 @@ router, service, repository, schemas, slice e view. Então:
 - **não** copie os **campos** para um domínio novo — os de `users` valem para usuário,
   não para o que você está construindo.
 
-**`respondentes` é resíduo do scaffold, não contrato.** O domínio do backend foi removido
-em 2026-09-21; no front sobram a feature `respondentes` (as telas de demográficos), o
-`respondentesApi.ts` e o `Respondente` em `types/api.ts`. A API que eles chamam responde
-404, e ninguém decidiu que respondente tem `regiao` e `pais`. Não use como contrato nem
-como molde.
+**`respondentes` saiu do front em 2026-11-02.** O domínio do back foi removido em
+2026-09-21; no front, a tela, o slice, o `respondentesApi.ts` e o tipo `Respondente`
+saíram na refatoração que espelhou o back. As telas de demográficos viraram a feature
+`demographics`. O namespace de i18n `respondentes` continua com esse nome.
 
 Na dúvida entre "isto é padrão do projeto" e "isto é resíduo do scaffold": padrão é o que
 está escrito neste harness; o resto é exemplo.
@@ -99,8 +120,8 @@ está escrito neste harness; o resto é exemplo.
   resposta está em andamento); campo com `default` que pode ser omitido no POST vira
   `campo?:`.
 - **Campo gerado pelo servidor** existe na leitura e **não** existe no create: o
-  `FormResponseResponse` tem `id`, `status` e `started_at`, e o `FormResponseCreate` só
-  tem `form_id` e `vinculo_id`.
+  `FormResponseResponse` tem `id`, `vinculo_id`, `status` e `started_at`, e o
+  `FormResponseCreate` só tem `form_id` (o vínculo vem do login).
 - **Paginação** já tem forma: `ListaPaginada<T>` com `itens`, `total`, `pagina`,
   `tamanho_pagina`. Não crie uma segunda.
 
@@ -111,16 +132,30 @@ cabeçalho, 204 sem corpo e erro. Nunca `fetch` direto, nunca URL absoluta — o
 proxy.
 
 ```ts
-export const <feature>Api = {
-  listar: (params) => apiClient.get<ListaPaginada<X>>(`/<recurso>?${query}`),
-  obter: (id: string) => apiClient.get<X>(`/<recurso>/${id}`),
-  criar: (dados: XCreate) => apiClient.post<X>('/<recurso>', dados),
-  remover: (id: string) => apiClient.delete(`/<recurso>/${id}`),
+export const organizationsApi = {
+  listOrganizations: ({ pagina = 1, tamanho_pagina = 50 } = {}) =>
+    apiClient.get<ListaPaginada<OrganizationResponse>>(`/organizacoes?${query}`),
+  getOrganization: (id: string) =>
+    apiClient.get<OrganizationResponse>(`/organizacoes/${id}`),
+  createOrganization: (data: OrganizationCreate) =>
+    apiClient.post<OrganizationResponse>('/organizacoes', data),
 };
 ```
 
 Funções puras: recebem parâmetro, devolvem promessa. Sem Redux, sem React, sem
-`try/catch` — quem trata erro é o slice.
+`try/catch` — quem trata erro é o slice. Nome da função em inglês, verbo + recurso
+(`getForm`, `listQuestions`, `createLink`); o caminho é o do router do back, como ele
+está — inclusive `/organizacoes` e `/department`.
+
+**Um `Api.ts` por domínio do back.** Uma tela que usa três domínios (o questionário lê
+`forms` e `questions` e grava em `responses`) importa três `Api.ts` no slice; não junta
+as rotas de outros domínios no `Api.ts` da própria feature.
+
+**Mock mora no `Api.ts`, nunca na View.** Tela que precisa de dado que o back ainda não
+serve chama uma função do `<feature>Api.ts` que devolve `Promise.resolve(<mock>)`, com
+o mesmo tipo que a rota de verdade vai devolver. Assim a View já cobre os quatro estados
+da máquina e o slice já existe; integrar é trocar o corpo da função. Se o mock guarda
+estado (remover, aprovar), o arquivo exporta um `reset…Mock()` para os testes.
 
 ## Erro
 

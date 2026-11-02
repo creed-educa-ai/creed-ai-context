@@ -21,7 +21,7 @@ Nada além disso. Formulário não é motivo para trazer biblioteca nova
 
 1. **Todo formulário nasce com schema zod.** Nenhum `useState` por campo, nenhum
    `if (!valor)` espalhado no submit. Sem schema, não é formulário — é rascunho.
-2. **O schema mora em `src/lib/validadores.ts`**, um export por schema
+2. **O schema mora em `src/lib/validators.ts`**, um export por schema
    (`organizacaoSchema`, `respondenteSchema`). Schema usado por uma tela só pode nascer
    na feature e sobe no segundo uso (`camadas-do-front.md`).
 3. **O tipo vem do schema**, não é escrito duas vezes:

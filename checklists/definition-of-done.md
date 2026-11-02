@@ -4,7 +4,7 @@ Uma task só está pronta quando **todas** valem:
 
 ## Código
 - [ ] Critérios de aceite atendidos — todos, não a maioria.
-- [ ] Segue a estrutura do molde (`respondentes` no back, `respondentes` no front).
+- [ ] Segue a estrutura do molde (`users` no back, `authentication` no front).
 - [ ] Sem regra de negócio no `router.py`, sem query no `service.py`, sem agregação
       no front.
 - [ ] Sem credencial, `.env` ou dado pessoal real no diff.
