@@ -16,24 +16,20 @@ FastAPI. Organização **por domínio** (ADR-002 §2.1). Cada `app/domains/<nome
 | `models.py` | tabelas SQLAlchemy | — |
 | `dependencies.py` | injeção (sessão, service) | — |
 
-| Domínio | Situação |
-|---|---|
-| `users` | **molde** — domínio-exemplo completo (tabela `user`, CREED-23). Com a CREED-23.8, cria o acesso nos dois lados (banco e Keycloak) e manda o convite; convite de membro num segundo router (`router_members.py`, `POST /organizations/{organization_id}/members`), reenvio e remoção |
-| `authentication` | login, renovação, sessão e "esqueci minha senha" via Keycloak; sem tabela própria |
-| `organizacoes` | tabela `organizations`; criar, listar, ler e editar organização (`/organizacoes`). O nome do domínio segue em português (ADR-0005, item 4) |
-| `participants` | tabela `participants`; criar e ler participante |
-| `links` | tabela `links` (o vínculo); criar vínculo em `/organizations/{organization_id}/links` |
-| `department` | tabela `departments` (o setor); criar e ler |
-| `forms` | tabela `form`; criar e ler formulário |
-| `questions` | tabelas `questions` e `question_options`; criar pergunta, listar por formulário, criar alternativa (`router_options.py`) |
-| `responses` | tabelas `form_responses` e `answer`; rotas de abrir e finalizar resposta |
-| `documents`, `demographics`, `insights` | só tabela, sem rota |
-| `prismas`, `prognosticos`, `relatorios` | scaffold: router sem rota, sem tabela |
-| `dashboards` | tabela `dashboards`, router sem rota |
-
-Situação conferida em 2026-10-29 contra o OpenAPI do back, com os PRs da CREED-23.8 (#49 a
-#53) ainda fora da `dev`. Parte das tabelas existe só em `models.py`, sem migration, até a
-consolidação (CREED-57, ADR-0009).
+| Domínio | Rotas (`/api/v1`) | Situação |
+|---|---|---|
+| `users` | `POST /users`, `DELETE /users/{id}` | **molde** — domínio-exemplo completo (tabela `user`, CREED-23). Convite de membro e reenvio estão em branches abertas |
+| `authentication` | `POST /authentication/login`, `POST /authentication/renew`, `GET /authentication/session` | via Keycloak; sem tabela própria. `password-reset` está em branch aberta |
+| `links` | `POST /organizations/{id}/links` | tabela `links` |
+| `participants` | `POST /participants`, `GET /participants/{id}` | tabela `participants` |
+| `organizacoes` | `POST`, `GET` (paginado), `GET /{id}`, `PATCH /{id}` em `/organizacoes` | tabela `organizations`. Pasta e rota em português |
+| `department` | `POST /department`, `GET /department/{id}` | tabela `departments`. Pasta e rota no singular |
+| `forms` | `POST /forms`, `GET /forms/{id}` | tabela `form` |
+| `questions` | `POST /questions`, `GET /forms/{id}/questions`, `POST /questions/{id}/options` | tabelas `questions` e `question_options` |
+| `responses` | `POST /form-responses`, `PATCH /form-responses/{id}`, `POST` e `GET /form-responses/{id}/answers` | tabelas `form_responses` e `answer` |
+| `demographics`, `documents`, `insights` | — | tabela e schema (documents: só tabela), **sem rota** |
+| `dashboards` | — | tabela e schema; router stub |
+| `prismas`, `prognosticos`, `relatorios` | — | stub: router sem rota |
 
 `respondentes` foi removido em 2026-09-21: era scaffold do commit inicial e nunca teve
 tabela.
@@ -53,16 +49,29 @@ src/features/<feature>/
 └── <feature>Slice.test.ts
 ```
 
-| Feature | Situação |
-|---|---|
-| `authentication` | **molde** — login e sessão, ligada ao backend; "esqueci minha senha" (`/reset-password`) só pede o e-mail. Não há tela de definir senha: quem define é a página do Keycloak (CREED-23.8) |
-| `organizations` | painel da empresa: lista de membros ainda em memória; o `AddMemberForm` pede nome, e-mail e papel, e o `organizationsApi.inviteMember` chama o convite de membro do backend (creed-frontend#52, ainda fora da `dev`). A página que liga o formulário é da CREED-50 |
-| `mentees`, `organizations-admin`, `painel-de-controle`, `superadm` | telas do painel de controle (mentorandos, empresas, questionário, super adm), sem chamada ao backend |
-| `responses` | questionário: onboarding, perguntas, revisão e tela de enviado. Espelha o domínio `responses`; ainda com perguntas de exemplo, sem chamada ao backend |
-| `respondentes` | dados demográficos (3 etapas). Só no front: o domínio do backend foi removido. A tela `RespondentesView` saiu das rotas, mas o `respondentesApi.ts` ainda chama `/api/v1/respondentes`, que responde 404 |
-| `cadastro`, `aguarde-confirmacao` | solicitação de cadastro **da empresa**, que a cliente aprova (não é autocadastro de pessoa, ver P-008). O backend ainda não tem esse fluxo, por isso não há chamada |
-| `boas-vindas`, `sobre` | páginas públicas; não espelham domínio e não chamam o backend |
-| `dashboards`, `prognosticos`, `relatorios` | só `README.md`, sem código |
+Cada domínio do back com rota tem uma feature de mesmo nome com o `<feature>Api.ts`
+transcrito do router. Duas exceções de nome, porque o back está fora da própria
+convenção: `organizations` (back: `organizacoes`) e `departments` (back: `department`).
+A rota é transcrita como o back a expõe.
+
+| Feature | Domínio do back | Situação |
+|---|---|---|
+| `authentication` | `authentication` | **molde** — login, sessão e "esqueci a senha", ligada ao backend |
+| `responses` | `responses` (+ `forms`, `questions`) | questionário: onboarding, perguntas, revisão e enviado. Ligado ao backend; as objetivas ainda são de demonstração (P-039) |
+| `forms`, `questions` | `forms`, `questions` | só `Api.ts` (consumido pelo questionário) e, em `forms`, o período do questionário do painel da empresa |
+| `users` | `users` | membros (painel da empresa) e mentorandos (painel do super adm). Listas em **mock no `usersApi.ts`**; convite já transcrito |
+| `organizations` | `organizacoes` | empresas do super adm, cadastro público e "aguarde confirmação". Empresas em **mock no `organizationsApi.ts`**; rotas reais transcritas |
+| `participants`, `links`, `departments` | idem | só `Api.ts`, ainda sem tela |
+| `demographics` | `demographics` | as 3 etapas de dados demográficos; campos com os nomes do `DemographicCreate`. Sem `Api.ts`: o back não tem rota |
+| `dashboards` | `dashboards` | dashboards individual e da empresa. Dados em **mock no `dashboardsApi.ts`** |
+| `controlPanel` | — | páginas de composição (painel da empresa e do super adm): juntam seções de outras features |
+| `welcome`, `about` | — | páginas públicas; não espelham domínio e não chamam o backend |
+| `prognosticos`, `relatorios` | idem | só `README.md`: o back é stub |
+
+**Mock no `<feature>Api.ts`**: onde o back ainda não tem a rota, o dado fictício mora na
+camada de integração, com a forma que a tela usa. Integrar é trocar o corpo da função
+por `apiClient`; slice e View não mudam. Onde a forma da tela diverge do back, a lista
+está em [`conventions/contrato-front-back.md`](conventions/contrato-front-back.md).
 
 Transversal: `src/app/` (store, routes, hooks) · `src/components/ui/` ·
 `src/hooks/` · `src/lib/` · `src/i18n/` · `src/types/` · `src/test/`.

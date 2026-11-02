@@ -26,11 +26,23 @@ inglês, sempre. Sem acento e sem cedilha em identificador, no que sobrar em por
 i18n é inglês (`auth.login.submit`), o valor em `pt-BR` é o que a cliente lê. Confundir
 as duas coisas entrega uma tela que o público-alvo não entende.
 
-### O código existente não foi renomeado
+### O que ainda está em português
 
-`src/features/respondentes/` continua em português, e o `PaginaDe[T]` de
-`app/shared/paginacao.py` também. É desvio conhecido e aceito, registrado nas
-Consequências do ADR-0005 — não é permissão para nomear coisa nova em português.
+**No front**, as pastas, os arquivos e os nomes exportados (componentes, tipos, funções,
+actions) passaram para o inglês em 2026-11-02, na refatoração que espelhou o back
+(`respondentes` → `demographics`, `painel-de-controle` → `controlPanel`, `cadastro` →
+`organizations/SignUpView` etc.). Ficaram em português, e são desvio conhecido:
+
+- **namespaces e chaves de i18n** (`respondentes:`, `painelControle:`, `campos.genero`) —
+  renomear mexe nos três locales e em todo `t()`; é um PR próprio;
+- **variáveis locais e props** de componentes antigos (`titulo`, `aoEnviar`,
+  `nomeEmpresa`, `onAceitar`);
+- os campos dos tipos provisórios da tela (`Company`: `nomeEmpresa`, `documento`…), que
+  só existem até o back ter o contrato.
+
+**No back**, o `PaginaDe[T]` de `app/shared/paginacao.py` (e por isso o `ListaPaginada<T>`
+do front, que o transcreve), e a pasta e a rota `organizacoes`. Nenhum é permissão para
+nomear coisa nova em português.
 
 O lado do backend deixou de existir: `app/domains/respondentes/` era estrutura de
 scaffold do commit inicial, nunca teve tabela e foi removido. O molde do back passou a

@@ -12,7 +12,7 @@ Quais desses termos são esses ainda é decisão aberta do time (pendência do A
 
 | Termo | Definição | Onde aparece | Status |
 |---|---|---|---|
-| **Respondente** | Pessoa que responde aos instrumentos da plataforma | `UserRole.RESPONDENTE` no back, `features/respondentes` no front | 🟡 |
+| **Respondente** | Pessoa que responde aos instrumentos da plataforma | `Roles.RESPONDENTE` (papel do vínculo) no back; no front, o papel `respondente` em `types/api.ts` | 🟡 |
 | **Formulário** | O instrumento que a plataforma aplica: um conjunto de perguntas que uma pessoa responde. Dono é a organização, não uma pessoa. | `domains/forms` | 🟡 |
 | **Pergunta (Question)** | Um item de um formulário: enunciado, ordem, se é obrigatória, e o tipo (objetiva/múltipla escolha ou descritiva). | `domains/questions` | 🟡 |
 | **Seção (do formulário)** | A parte do formulário em que uma pergunta é desenhada na tela. É um valor fixo de uma lista (`QuestionSection`), não algo que o gestor cria. É independente do prisma: a seção organiza a tela, e o prisma organiza a análise. Os valores atuais são provisórios (P-020). | `questions.section`, telas do formulário | 🟡 |

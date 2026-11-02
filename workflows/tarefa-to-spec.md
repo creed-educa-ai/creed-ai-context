@@ -42,7 +42,7 @@ novo, mudança que o front e o back precisam combinar, regra de quem-pode-o-quê
 |---|---|---|---|
 | 0 | Conferir o MCP e obter o texto da tarefa | ver abaixo | você cola a descrição |
 | 1 | Ler `../CONTEXT.md`, `../catalogo.md`, `../glossario.md` | lê os arquivos | cole `../adaptadores/prompts/00-contexto.md` |
-| 2 | Ler o molde do repo afetado (`respondentes`) | abre os arquivos | cole os arquivos-chave |
+| 2 | Ler o molde do repo afetado (`users` no back, `authentication` no front) | abre os arquivos | cole os arquivos-chave |
 | 3 | **Calibrar** P × T pela `../conventions/profundidade-da-spec.md` | `/calibrar <ID>` | cole `../adaptadores/prompts/08-calibrar.md` |
 | 4 | P1 · T1? Pare aqui e vá para `spec-to-tasks` | — | — |
 | 5 | Listar lacunas de produto | — | — |

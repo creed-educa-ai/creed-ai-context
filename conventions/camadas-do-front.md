@@ -56,16 +56,15 @@ produto (mensagem de vazio), não ausência de estado. Feature que só desenha o
 volta na review.
 
 > **Decidido em 2026-09-29**, no lugar da versão em português (`idle` · `carregando` ·
-> `pronto` · `erro`). Dois slices ainda não seguem: o `authenticationSlice` (o molde)
-> usa `authenticated` no lugar de `ready`, e o `respondentesSlice`, resíduo do
-> scaffold, está na versão antiga. Feature nova segue a máquina acima, não os dois.
+> `pronto` · `erro`). Um slice ainda não segue: o `authenticationSlice` (o molde)
+> usa `authenticated` no lugar de `ready`. Feature nova segue a máquina acima.
 
 ## Onde mora o compartilhado
 
 | O quê | Onde | Quando criar |
 |---|---|---|
 | Cliente HTTP | `src/lib/apiClient.ts` | já existe — use, não reimplemente |
-| Schemas de validação (zod) | `src/lib/validadores.ts` | no primeiro formulário; um export por schema |
+| Schemas de validação (zod) | `src/lib/validators.ts` | no primeiro formulário; um export por schema |
 | Formatação (data, número, nome) | `src/lib/formatadores.ts` | no segundo uso; o primeiro pode ficar na feature |
 | Helper de classe (`cn`) | `src/lib/utils.ts` | já existe |
 | Hook reutilizável | `src/hooks/` | quando duas features usarem o mesmo hook |
@@ -89,8 +88,10 @@ hoje no repo:
   estado da navegação num componente só (`FormView.tsx`), componentes da feature no
   `Question.tsx`, passagem de dados entre telas pelo `state` da rota. É o exemplo mais
   completo de fluxo com várias telas;
-- `src/features/respondentes/` — as telas de demográficos, com o rascunho num slice.
+- `src/features/demographics/` — as telas de demográficos, com o rascunho num slice;
+- `src/features/controlPanel/` — página que só compõe seções de outras features
+  (`users`, `organizations`, `forms`), cada seção carregando pelo slice da sua feature.
 
-Os dois são trabalho de tarefa, não scaffold, mas **não falam com o backend** (as
-perguntas do `responses` são dados de exemplo): copie deles a navegação, nunca a
-camada de integração.
+O `responses` fala com o backend (formulário, perguntas e envio). Para seção que carrega
+lista e cobre os quatro estados, o exemplo é `src/features/users/MembersSection.tsx` —
+ainda sobre mock no `usersApi.ts`, o que não muda a forma.

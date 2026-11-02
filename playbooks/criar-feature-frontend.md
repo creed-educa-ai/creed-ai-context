@@ -25,11 +25,12 @@ Para a peça de interface isolada (um componente, um ajuste visual), o playbook 
 | endpoints escritos para uma tarefa | transcreva o contrato real (passo 2) e siga |
 | docstring "STUB", ou diretório inexistente | o contrato vira decisão de produto: spec + premissa + tarefa de backend no ClickUp, e o front codifica contra o tipo escrito a partir da spec |
 
-Hoje têm contrato de verdade `users`, `authentication` e `responses`; os outros cinco
-domínios são stubs que respondem 404 — a lista atualizada está em
-[`contrato-front-back.md`](../conventions/contrato-front-back.md). `respondentes` não é
-molde nem contrato: o domínio do backend foi removido. Pular este passo é o que produz
-front pronto contra campo que nunca existiu.
+Hoje têm contrato de verdade dez domínios, e já existe um `<feature>Api.ts` transcrito
+para cada um — antes de criar outro, procure o do domínio em `src/features/`. A lista
+atualizada, e o que ainda é stub, está em
+[`contrato-front-back.md`](../conventions/contrato-front-back.md). Se a tela precisa de
+dado que o back ainda não serve, o mock mora no `<feature>Api.ts` (mesma convenção).
+Pular este passo é o que produz front pronto contra campo que nunca existiu.
 
 ## Ordem
 

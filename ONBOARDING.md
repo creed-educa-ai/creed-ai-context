@@ -248,7 +248,7 @@ primeiro.
 | Editar `CLAUDE.md`, `AGENTS.md` ou `.claude/commands/` no workspace | são **gerados**. O próximo `instalar-adaptadores` sobrescreve. Edite a fonte em `adaptadores/` |
 | Esquecer de regenerar depois do `git pull` | você fica com um retrato antigo do harness e não percebe |
 | Escrever regra nova dentro de uma skill ou comando | a regra passa a morar em quatro arquivos de ferramenta diferentes — é o problema que este repo existe para resolver |
-| Tratar `respondentes` como contrato | ele veio do **scaffold**. É molde de **forma** (camadas, paginação, máquina de status), nunca fonte de campos acordados — inclusive os testes dele, que são exemplo e não cobertura conquistada |
+| Tratar mock como contrato | o dado fictício dos `<feature>Api.ts` (membros, empresas, dashboards) tem a forma que a **tela** pede, não a que o back acordou. A lista do que diverge está em `conventions/contrato-front-back.md` |
 | Criar automação com modelo pesado "por garantia" | [`conventions/skills-e-comandos.md`](conventions/skills-e-comandos.md) §1: modelo leve por padrão, e a exceção se justifica por escrito |
 | Commitar por conta própria | a IA deixa no working tree. `git add`/`commit`/`push`/PR é pedido humano explícito |
 
