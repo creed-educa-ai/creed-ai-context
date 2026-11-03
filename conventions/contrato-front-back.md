@@ -71,14 +71,19 @@ e o dado fictício mora no `<feature>Api.ts` (mock).
 
 | Tela | Forma da tela | O que o back tem | O que falta decidir |
 |---|---|---|---|
-| Radar de prismas (dashboards) | `plasticidade_humana`, `empreendedorismo`, `multiculturalismo`, `neuroinovacao`, `tomada_decisao` | enum `Prisma`: `seguranca_psicologica`, `lideranca_adaptativa`, `cultura_empreendedora`, `adaptabilidade_cognitiva`, `neuroinovacao_prisma` | **qual lista é a do método da cliente** — produto, não código |
 | Empresas (super adm) e cadastro público | `Company`: nome, e-mail, documento (número), responsável, telefone; status `ativo`/`pendente` | `OrganizationResponse`: `name`, `address`, `document_id`; status `active`/`inactive`; sem rota pública de cadastro | rota pública, onde moram e-mail/responsável/telefone e o estado "pendente" (CREED-591/595) |
 | Membros (painel da empresa) | `Member`: status `ativo`/`pendente`, `tag` `marketing`/`vendas`/`rh` | `UserResponse` (`RecordStatus`); setor é `DepartmentType` com outros valores | rota que liste e remova membros; "pendente" = convite não aceito?; tag = setor? |
 | Mentorandos (super adm) | `Mentee`: `hasAnsweredCurrent` | participante com vínculo `mentoria`; nada sobre "respondeu o atual" | rota que liste; de onde vem "respondeu" |
 | Adicionar mentorando | só e-mail | convite exige `name`, `email`, `role` e a organização | o nome entra na tela? qual organização? |
 | Período do questionário (painel da empresa) | início e término (data e hora) | `FormRead` tem só `status` | onde o período mora |
-| Dashboards | payload montado para a tela (períodos, resumo, grupos, membros) | `DashboardResponse`: `user_id`, `form_id`, `is_private` | contrato de leitura dos dashboards (com `prismas` e `insights`) |
+| Dashboards | pedido por recorte (`period`, `department` ou `member_id`; sem nada, o período mais recente da organização inteira) e devolvido com o recorte resolvido; payload montado para a tela: períodos, notas dos prismas e das sete dimensões (`Dimension`), resumo, setores (`DepartmentType`) e membros para o recorte, e as comparações, uma por combinação de período e setor (o nulo é "o mesmo que está sendo exibido"; o setor exibido não entra), com as notas de prismas e dimensões da referência, a variação já calculada e o período padrão de comparação (`default_period`, o anterior ao exibido); no resumo do Creed.ai, a análise, a recomendação, um texto curto por prisma e quais prismas são destaque e oportunidade; só na empresa, o alinhamento (pessoas por faixa de nota, P-057/P-058) e o mapa setores × prismas, sempre da organização inteira no período pedido (o recorte não o muda), com a diferença de cada setor já calculada | `DashboardResponse`: `user_id`, `form_id`, `is_private` | contrato de leitura dos dashboards (com `prismas` e `insights`); se o back manda todas as combinações ou responde a uma por vez; texto por prisma contraria a P-042 (um insight por resposta), e insight de setor ou organização ainda não existe |
 | Demográficos | `name` e `perspective` junto do rascunho | `DemographicCreate` não tem nenhum dos dois; `name` é do `Participant` | rota de gravação e onde mora a `perspective` |
+
+**Resolvido em 2026-11-02:** o radar de prismas dos dashboards usava os cinco eixos
+do `.dbml` (`plasticidade_humana`, `empreendedorismo`…). Passou a usar o enum `Prisma`
+do back (`seguranca_psicologica`, `lideranca_adaptativa`, `cultura_empreendedora`,
+`adaptabilidade_cognitiva`, `neuroinovacao_prisma`), que vem do material do produto
+sobre a composição dos prismas (SP, LA, CE, AC, NP).
 
 ### O molde é forma, não campo
 
