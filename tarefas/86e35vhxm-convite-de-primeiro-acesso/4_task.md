@@ -79,11 +79,11 @@ pre-commit run mypy --all-files
 
 # caso feliz: 204 e um e-mail no Mailpit
 curl -s -o /dev/null -w '%{http_code}\n' -X POST http://localhost:8000/api/v1/authentication/password-reset \
-  -H 'Content-Type: application/json' -d '{"email":"pessoa@creed.local"}'
+  -H 'Content-Type: application/json' -d '{"email":"pessoa@creed.example.com"}'
 
 # caso de borda: 204, sem e-mail
 curl -s -o /dev/null -w '%{http_code}\n' -X POST http://localhost:8000/api/v1/authentication/password-reset \
-  -H 'Content-Type: application/json' -d '{"email":"ninguem@creed.local"}'
+  -H 'Content-Type: application/json' -d '{"email":"ninguem@creed.example.com"}'
 ```
 
 ## Premissas aplicáveis

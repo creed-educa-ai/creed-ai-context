@@ -138,4 +138,9 @@ arquivos — em dois repositórios, portanto em dois PRs.
 - [ ] **Backup do volume do N8N** — o único dado que não está no RDS.
 - [ ] **Domínio e TLS** nas duas pontas: Amplify e EC2. É o que fecha o CORS e o
       hostname do realm do Keycloak (ver [`ADR-0006`](0006-e-mail-transacional.md)).
-- [ ] **Tamanho da instância.** Três containers mais o overhead do Keycloak (JVM).
+- [x] **Tamanho da instância.** Três containers mais o overhead do Keycloak (JVM).
+      **Fechada em 2026-10-28:** `t4g.small` → `t4g.medium` (4 GB) depois de o N8N
+      travar sem heap, e o `mem_limit` do N8N foi de `768m` para `1536m`, com heap
+      fixo de 1 GB. Passa do teto do orçamento, com autorização do orientador. Números
+      e alternativas descartadas no `creed-infrastructure/diario-de-campo-ec2.md`,
+      2026-10-28.

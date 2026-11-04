@@ -31,9 +31,11 @@ CREED, onde ficam esse admin e, depois, os mentorandos.
   `app/`.
 - **Argumentos**: `--email` e `--nome`. Nenhum dado de pessoa entra no código.
 - **A imagem não tem `scripts/`.** O `Dockerfile` copia só `app`, `alembic` e
-  `alembic.ini`, então sem `COPY scripts ./scripts` o comando de produção não acha o
-  módulo. O `seed_local.py` também vai na imagem, e continua barrado fora do local pelo
-  próprio `ENVIRONMENT`.
+  `alembic.ini`, então sem copiar o script o comando de produção não acha o módulo.
+  **A imagem leva de `scripts/` só o `__init__.py` e o `convidar_primeiro_admin.py`**, pelo
+  nome. *Corrigido em 2026-10-29: a task dizia que o `seed_local.py` iria junto, barrado
+  pelo `ENVIRONMENT`. A revisão do creed-backend#53 mostrou que a barreira não segura: o
+  padrão de `ENVIRONMENT` é `local`, e o `/opt/creed/.env` não o define.*
   ⚠️ O [creed-backend#45](https://github.com/creed-educa-ai/creed-backend/pull/45) (imagem
   arm64) também mexe no `Dockerfile`: o conflito é de uma linha.
 - **Em produção**, depois do release, por quem tem acesso à EC2:
@@ -44,7 +46,7 @@ CREED, onde ficam esse admin e, depois, os mentorandos.
 ## Arquivos que provavelmente mudam
 
 - `scripts/convidar_primeiro_admin.py` (novo).
-- `Dockerfile`: `COPY scripts ./scripts`.
+- `Dockerfile`: `COPY scripts/__init__.py scripts/convidar_primeiro_admin.py ./scripts/`.
 - `README.md`: seção "Primeiro admin de um ambiente novo".
 - `tests/test_convidar_primeiro_admin.py` (novo).
 
@@ -65,14 +67,15 @@ CREED, onde ficam esse admin e, depois, os mentorandos.
       organização.
 - [ ] Se o envio falha, nada fica no banco nem no Keycloak, porque é o mesmo
       `create_user_service`.
-- [ ] A imagem construída tem `/app/scripts/convidar_primeiro_admin.py`.
+- [ ] A imagem construída tem `/app/scripts/convidar_primeiro_admin.py`, e não tem o
+      `seed_local.py`.
 
 ## Como testar
 
 ```bash
 cd creed-backend
-python -m scripts.convidar_primeiro_admin --email admin2@creed.local --nome "Admin Dois"   # convite no Mailpit
-python -m scripts.convidar_primeiro_admin --email admin2@creed.local --nome "Admin Dois"   # reenvio
+python -m scripts.convidar_primeiro_admin --email admin2@creed.example.com --nome "Admin Dois"   # convite no Mailpit
+python -m scripts.convidar_primeiro_admin --email admin2@creed.example.com --nome "Admin Dois"   # reenvio
 pytest tests/test_convidar_primeiro_admin.py tests/test_seed_local.py -q
 docker build -t creed-backend:teste . && docker run --rm creed-backend:teste ls scripts
 ```

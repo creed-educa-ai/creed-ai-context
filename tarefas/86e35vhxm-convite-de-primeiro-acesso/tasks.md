@@ -9,14 +9,14 @@ Spec: [`spec.md`](spec.md) · Revisão de entrada:
 mesmo PR, e as tasks do back andam em sequência, porque mexem nos mesmos arquivos de
 `users`.
 
-- [ ] 1 — [O Keycloak local manda e-mail](1_task.md) · `creed-backend`
-- [ ] 2 — [Criar acesso cria nos dois lados e convida](2_task.md) · `creed-backend`
-- [ ] 3 — [Adicionar membro numa chamada](3_task.md) · `creed-backend`
-- [ ] 4 — [Reenviar convite e esqueci minha senha](4_task.md) · `creed-backend`
-- [ ] 5 — [Primeiro admin por convite](5_task.md) · `creed-backend`
-- [ ] 6 — [Front sem tela de senha, com reset por e-mail e convite de membro](6_task.md) · `creed-frontend`
-- [ ] 7 — [Produção recebe o SMTP e os ajustes do realm](7_task.md) · `creed-infrastructure`
-- [ ] 8 — [Documentos refletem o convite](8_task.md) · `creed-ai-context`
+- [x] 1 — [O Keycloak local manda e-mail](1_task.md) · `creed-backend`
+- [x] 2 — [Criar acesso cria nos dois lados e convida](2_task.md) · `creed-backend`
+- [x] 3 — [Adicionar membro numa chamada](3_task.md) · `creed-backend`
+- [x] 4 — [Reenviar convite e esqueci minha senha](4_task.md) · `creed-backend`
+- [x] 5 — [Primeiro admin por convite](5_task.md) · `creed-backend`
+- [x] 6 — [Front sem tela de senha, com reset por e-mail e convite de membro](6_task.md) · `creed-frontend`
+- [x] 7 — [Produção recebe o SMTP e os ajustes do realm](7_task.md) · `creed-infrastructure` (parte versionada; rodar na EC2 espera o release)
+- [x] 8 — [Documentos refletem o convite](8_task.md) · `creed-ai-context`
 
 Marque aqui ao concluir cada task ([`workflows/tasks-to-code.md`](../../workflows/tasks-to-code.md)).
 

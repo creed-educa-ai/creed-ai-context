@@ -5,13 +5,15 @@
 > programa contra **antes de o backend existir**, e o que o backend implementa nas
 > entregas 3 e 4.
 >
-> **Status: parcialmente implementado (2026-09-14).** Este documento continua descrevendo
-> o **alvo**. O que já existe em código diverge dele em pontos concretos, e pela regra de
+> **Status: parcialmente implementado (revisto em 2026-10-29, com a CREED-23.8).** Este
+> documento continua descrevendo o **alvo**. O que já existe em código diverge dele em pontos concretos, e pela regra de
 > [`conventions/contrato-front-back.md`](../../conventions/contrato-front-back.md)
 > **o backend ganha** — o quadro "Estado real" abaixo é a fonte para quem está programando
 > hoje. O resto da tabela permanece como o destino acordado, não como dívida.
 >
 > Payloads literais, com exemplos nomeados: [`mock/openapi.yaml`](mock/openapi.yaml).
+> ⚠️ O mock é de 2026-09 e não acompanhou: ainda tem `vinculo_id` e `initial_password`, e
+> não tem as rotas da CREED-23.8. Para o contrato de hoje, vale o OpenAPI do back (`/docs`).
 > Como disparar requisição de verdade contra eles: [`mock/README.md`](mock/README.md).
 
 ## Mapa
@@ -25,49 +27,59 @@ Prefixo `/api/v1`. Identificadores em inglês por
 | POST | `/authentication/renew` | — | — | `RenewRequest` | `Session` · 200 |
 | POST | `/authentication/logout` | — | — | `RenewRequest` | 204 |
 | GET | `/authentication/session` | Bearer | qualquer | — | `UserSession` · 200 |
+| POST | `/authentication/password-reset` | — | — | `PasswordResetRequest` | 204 |
 | POST | `/users` | Bearer | `admin` | `UserCreate` | `User` · 201 |
 | GET | `/users` | Bearer | `admin` | query | `Page<User>` · 200 |
 | PATCH | `/users/{user_id}` | Bearer | `admin` | `UserUpdate` | `User` · 200 |
+| DELETE | `/users/{user_id}` | Bearer | `admin` | — | 204 |
+| POST | `/users/{user_id}/invitation` | Bearer | `admin`; `gestor` só na própria organização | — | 204 |
+| POST | `/organizations/{organization_id}/members` | Bearer | `admin`; `gestor` só na própria organização (P-045) | `MemberInvite` | `User` · 201 |
 
 `GET /users` aceita `organization_id`, `role`, `page` e `page_size` na query.
 
-## Estado real — 2026-09-14
+As quatro últimas linhas e o `password-reset` são da
+[CREED-23.8](../86e35vhxm-convite-de-primeiro-acesso/spec.md) (convite por e-mail). A
+rota de membros mora no domínio `users`, num segundo router, mas o caminho começa por
+`/organizations`.
 
-Os domínios `users` e `authentication` estão na `dev` do backend
-([creed-backend#12](https://github.com/creed-educa-ai/creed-backend/pull/12) mergeado).
-O fluxo de login foi verificado de ponta a ponta contra Keycloak e Postgres locais.
+## Estado real — 2026-10-29
 
-⚠️ **As três rotas de autenticação estão em renomeação, ainda não mergeada.** Na `dev`
-de hoje elas continuam `/auth/login`, `/auth/renew` e `GET /auth/me`. O PR
-[creed-backend#14](https://github.com/creed-educa-ai/creed-backend/pull/14) as move para
-`/authentication/{login,renew,session}` — o alvo deste documento — em vez de o front se
-ajustar ao desvio, porque o [ADR-0005](../../decisoes/adrs/0005-idioma-do-codigo.md)
-escreve `/api/v1/authentication/renew` como o nome correto. O lado do front é
-[creed-frontend#24](https://github.com/creed-educa-ai/creed-frontend/pull/24), que **só
-pode entrar depois** do #14: invertida a ordem, o login cai em 404 na janela entre os dois.
+Conferido contra o OpenAPI do back com as tasks 1 a 5 da CREED-23.8
+([creed-backend#49](https://github.com/creed-educa-ai/creed-backend/pull/49) a
+[#53](https://github.com/creed-educa-ai/creed-backend/pull/53), empilhados e ainda não
+mergeados na `dev`). O que está marcado "23.8" só vale na `dev` depois do merge deles.
 
 | Alvo acima | O que existe | Nota |
 |---|---|---|
-| `POST /authentication/login` | **`POST /auth/login`** | vira o alvo no #14 |
-| `POST /authentication/renew` | **`POST /auth/renew`** | idem |
-| `GET /authentication/session` | **`GET /auth/me`** | vira o alvo no #14; mesmo payload (`UserSessionResponse`) |
+| `POST /authentication/login` · `renew` | existem | 503 com o Keycloak fora do ar, não mais 401 (23.8). O schema do `renew` se chama `RefreshRequest`, com o mesmo `{refresh_token}` |
+| `GET /authentication/session` | existe | |
 | `POST /authentication/logout` | **não existe** | sem endpoint, "sair" só limpa a sessão no front e o refresh token segue válido até expirar |
-| `POST /users` | existe, **sem guarda de papel** | e o payload é outro — ver abaixo |
-| `GET /users` · `PATCH /users/{id}` | **não existem** | |
-| — | **`DELETE /users/{user_id}`** (204) | existe e não está no contrato |
+| `POST /authentication/password-reset` | existe (23.8) | 204 · 422 · 503 |
+| `POST /users` | existe, com guarda de `admin` | `UserCreate` sem `keycloak_id` (23.8) — ver abaixo |
+| `GET /users` · `PATCH /users/{user_id}` | **não existem** | |
+| `DELETE /users/{user_id}` | existe, com guarda de `admin` | apaga também no Keycloak e ganha 503 (23.8) |
+| `POST /users/{user_id}/invitation` | existe (23.8) | 204 · 401 · 403 · 404 · 422 · 503 |
+| `POST /organizations/{organization_id}/members` | existe (23.8) | 201 · 401 · 403 · 404 · 409 · 422 · 503 |
 
-**`UserCreate` diverge de verdade.** O alvo é `{link_id, email, initial_password}`;
-o implementado é **`{keycloak_id, name, email}`**. A razão é que o vínculo ainda não tem
-tabela na `dev` (chega com a CREED-32, como `links`), então o papel virou coluna do `user` e o vínculo não é pedido. Enquanto isso, quem
-provisiona cria o usuário no Keycloak primeiro e passa o `sub` — não há senha no payload,
-coerente com a P-012.
+**`UserCreate` é `{name, email, link_id}`.** Até a 23.8 era `{name, email, keycloak_id,
+link_id}`: quem cadastrava criava o usuário à mão no console do Keycloak e passava o id.
+Agora o back cria o usuário no Keycloak, **sem senha**, dá a ele o papel do vínculo, grava
+no banco e manda o e-mail de convite. O `initial_password` deste alvo nunca existiu em
+código: com o convite, ninguém nasce com senha conhecida (P-012).
 
-**`role` e `organization_id` do `User`** continuam existindo na leitura, mas hoje saem
-sempre `null` em `UserSessionResponse` (exceto `role`, que vem da coluna).
+**O e-mail é gravado e comparado em minúsculas**, como o Keycloak guarda. `Pessoa@X.com`
+volta como `pessoa@x.com` no 201, e o 409 de e-mail repetido não distingue maiúsculas. O
+reset também procura sem distinguir. Usuário antigo gravado com maiúscula continua sem
+entrar: o login acha o usuário pelo e-mail do token, e a busca pelo `sub` ([C28]) é tarefa
+própria.
 
-⚠️ **O 503 do quadro de status ainda não acontece.** Keycloak fora do ar responde **401**,
-não 503 — o service traduz indisponibilidade para erro de credencial. É o par que a seção
-"Códigos de status" avisa para não confundir, e está confundido no código.
+**O que pode sobrar no Keycloak.** Criar acesso é tudo ou nada **no banco**: se o
+Keycloak ou o SMTP falham, o back apaga o usuário que criou lá, desfaz a transação e
+responde 503. Duas falhas escapam disso: o Keycloak cair antes de a limpeza terminar, e o
+commit falhar depois de o e-mail sair (resposta 500). Nas duas, o usuário sobra no
+Keycloak, sem linha no banco, e a nova tentativa com o mesmo e-mail responde **409** até
+alguém apagá-lo pelo console. No `DELETE`, o banco sai primeiro: um 503 deixa o usuário no
+banco, e repetir a remoção resolve.
 
 
 ## Os payloads
@@ -83,11 +95,18 @@ RenewRequest             { refresh_token }
 Session                  { access_token, refresh_token, expires_in, user: UserSession }
 UserSession              { id, email, role, link_id, organization_id, organization_name }
 
-UserCreate               { link_id, email, initial_password }
+UserCreate               { name, email, link_id }
+MemberInvite             { name, email, role, type = "emprego" }
+PasswordResetRequest     { email }
 UserUpdate               { status? }
-User                     { id, email, status, role, link_id, organization_id, created_at }
+User                     { id, name, email, status, role, link_id, organization_id, created_at }
 Page<T>                  { items, total, page, page_size }
 ```
+
+`name` tem de 2 a 200 caracteres, sem caractere de controle. No `MemberInvite`, `role` é
+`admin`, `gestor` ou `respondente` (P-006), e `type` é `emprego`, `mentoria`, `academico`
+ou `pessoal` (P-047). O `name` vai para o participante e para o usuário; o Keycloak não
+recebe nome (P-046).
 
 Três observações que evitam bug de transcrição:
 
@@ -96,41 +115,44 @@ Três observações que evitam bug de transcrição:
   jeito que `idade` no molde de `respondentes`.
 - **Não há `role` no `UserCreate`.** O papel é do vínculo, e o vínculo já existe quando o
   acesso é criado (P-008). Mandar `role` no POST é sintoma de ter entendido o modelo ao
-  contrário.
+  contrário. O `MemberInvite` tem `role` porque **cria** o vínculo, na mesma chamada.
 - **Não há `token_type`.** O front sempre monta `Authorization: Bearer <token>`; um campo
   que só pode ter um valor é campo que alguém vai ramificar por engano.
 
-## Os dois fluxos que o front precisa desenhar
+## Os fluxos que o front precisa desenhar
 
 ### 1. Login — e não há um segundo caminho
 
 > 🟡 **Premissa P-012** — o primeiro acesso é por e-mail com link para o realm do
-> Keycloak, onde a pessoa define a própria senha. Enquanto o e-mail não existir, o admin
-> define uma senha definitiva e passa por fora da plataforma. Confirmar na próxima reunião.
+> Keycloak, onde a pessoa define a própria senha. Confirmar na próxima reunião. *O interim
+> (senha definitiva passada por fora) acabou com a CREED-23.8.*
 
 ```
 POST /authentication/login  {email, password}
   200 -> guarda a Session, entra
   401 -> "E-mail ou senha inválidos"
+  503 -> "serviço indisponível, tente de novo" — a senha pode estar certa
 ```
 
-O 401 é **o mesmo** para e-mail inexistente, senha errada e acesso desativado. O front não
-tem como distinguir, e é de propósito (critério de aceite da spec).
+O 401 é **o mesmo** para e-mail inexistente, senha errada, acesso desativado e pessoa que
+ainda não abriu o convite. O front não tem como distinguir, e é de propósito (critério de
+aceite da spec).
 
-**Não existe tela de troca de senha nesta plataforma** — nem hoje, nem depois que o envio
-de e-mail entrar. Quem define senha é a página do realm do Keycloak, alcançada por link no
-e-mail. O front tem tela de login e mais nada.
+**Não existe tela de definir senha nesta plataforma.** Quem define senha é a página do
+realm do Keycloak, alcançada pelo link do e-mail de convite ou de "esqueci minha senha". O
+front tem a tela de login e a de pedir o link (`/reset-password`), que só manda o e-mail.
 
-Isso depende de uma linha do provisionamento, e vale saber por quê: o `POST /users` cria a
-credencial com **`temporary: false`**. Se ela fosse temporária, o Keycloak anexaria a ação
-obrigatória `UPDATE_PASSWORD`, e o Direct Access Grant (decisão D1) passaria a **recusar o
-login** com `invalid_grant: "Account is not fully set up"` — o primeiro login de todo
-usuário morreria numa mensagem de credencial inválida que não é verdade.
+Isso depende de o usuário nascer **sem ação obrigatória**, e vale saber por quê. O back
+cria o usuário sem credencial e com `requiredActions: []`; o `UPDATE_PASSWORD` vai só
+dentro do link do e-mail (`execute-actions-email`). Se ele fosse ação obrigatória do
+usuário, o Direct Access Grant (decisão D1) passaria a **recusar o login** com
+`invalid_grant: "Account is not fully set up"` — e o login de quem já definiu a senha
+morreria numa mensagem de credencial inválida que não é verdade.
 
-> ⚠️ **A mesma armadilha vem pelo realm.** `temporary: false` só resolve se o realm não
-> tiver *default required actions* ligadas (`VERIFY_EMAIL`, "Update Password" como ação
-> padrão). Se tiver, o Keycloak anexa a ação a todo usuário novo e o sintoma é idêntico,
-> sem ninguém ter tocado no provisionamento. O realm é arquivo versionado (entrega 2) —
+> ⚠️ **A mesma armadilha vem pelo realm.** Isso só resolve se o realm não tiver *default
+> required actions* ligadas (`VERIFY_EMAIL`, "Update Password" como ação padrão). Se
+> tiver, o Keycloak anexa a ação a todo usuário novo e o sintoma é idêntico, sem ninguém
+> ter tocado no provisionamento. O realm é arquivo versionado (entrega 2) —
 > isto é item de review, não bug a descobrir.
 
 ### 2. Renovação — o que o `apiClient` faz sozinho
@@ -145,16 +167,45 @@ qualquer rota -> 401
 Com **renovação em voo única** (decisão D6): cinco requisições que tomam 401 juntas
 disparam **um** refresh, não cinco.
 
+### 3. Convite e "esqueci minha senha" (CREED-23.8)
+
+```
+POST /organizations/{organization_id}/members  {name, email, role, type?}
+  201 -> acesso criado e convite enviado (os dois, ou nenhum)
+  409 -> e-mail já tem acesso: erro no campo e-mail
+  503 -> nada foi criado no banco: "tente de novo"
+
+POST /authentication/password-reset  {email}
+  204 -> sempre a mesma mensagem: "se este e-mail tiver acesso, enviamos um link"
+  422 -> e-mail inválido, no campo
+  503 -> "tente de novo"
+```
+
+O reset responde **204 para qualquer e-mail válido**, com ou sem acesso, e só quem tem
+acesso ativo recebe o e-mail: a resposta não revela quem tem cadastro. ⚠️ O **tempo** de
+resposta revela (mediana de 278 ms com acesso e 6 ms sem, medida no local). O risco foi
+aceito em 2026-10-29 e está nos Riscos da spec da 23.8.
+
+O reenvio (`POST /users/{user_id}/invitation`) manda um link novo, e para quem já tem
+senha o link serve para trocá-la. O e-mail sai sempre para o endereço guardado no
+Keycloak, nunca para um digitado.
+
 ## Códigos de status
 
 | Código | Quando | O que o front faz |
 |---|---|---|
 | 401 | sem token · token inválido/expirado · credencial errada · `status = inactive` · claim divergente do banco | renova **uma vez**; falhou, limpa a sessão e vai para `/login` |
-| 403 | autenticado, mas o papel não alcança a rota | "acesso negado" — **não desloga** |
-| 404 | `link_id` ou `user_id` que não existe, **ou é de outra organização** | mensagem de não encontrado |
-| 409 | e-mail já tem acesso | erro de formulário no cadastro |
-| 422 | payload não bate com o schema **ou** senha recusada pela política do realm | ver abaixo — em desenvolvimento, quase sempre é bug do front |
-| 503 | Keycloak fora do ar | "tente novamente" — **nunca** "senha inválida", e **não** limpa a sessão |
+| 403 | autenticado, mas o papel não alcança a rota · no convite de membro: `organization_id` de outra organização, ou `gestor` convidando `admin` | "acesso negado" — **não desloga** |
+| 404 | `link_id` ou `user_id` que não existe, **ou é de outra organização** · organização que não existe, no convite de membro | mensagem de não encontrado |
+| 409 | e-mail já tem acesso, aqui ou no Keycloak, sem distinguir maiúsculas · vínculo já tem acesso | erro de formulário no cadastro |
+| 422 | payload não bate com o schema | ver abaixo — em desenvolvimento, quase sempre é bug do front |
+| 503 | Keycloak ou SMTP fora do ar: login, renovação, cadastro, convite, reenvio, reset e remoção | "tente novamente" — **nunca** "senha inválida", e **não** limpa a sessão |
+
+A política de senha do realm (8 caracteres, P-004 de 07/09) não passa por aqui: quem a
+aplica é a página do Keycloak, quando a pessoa define a senha.
+
+Nas rotas protegidas, a guarda ainda responde **401**, não 503, quando não consegue ler as
+chaves do Keycloak (`JwksUnavailableError`). Fica fora da 23.8 ("Não entra" da spec).
 
 A distinção 401 × 403 é o que impede o bug clássico: um 403 tratado como 401 desloga o
 usuário toda vez que ele clica onde não pode.
@@ -218,6 +269,7 @@ export interface LoginRequest {
 
 export interface User {
   id: string;
+  name: string;
   email: string;
   status: RecordStatus;
   role: Role;
@@ -226,12 +278,25 @@ export interface User {
   created_at: string;
 }
 
+// Sem senha: o back cria o usuário no Keycloak e o convite leva a pessoa à
+// página do realm (P-012, CREED-23.8).
 export interface UserCreate {
-  link_id: string;
+  name: string;
   email: string;
-  // Senha definitiva, passada à pessoa fora da plataforma (P-012). Este campo
-  // some quando o envio de e-mail entrar — aí o Keycloak manda o link do realm.
-  initial_password: string;
+  link_id: string;
+}
+
+export type LinkType = 'emprego' | 'mentoria' | 'academico' | 'pessoal';
+
+export interface MemberInvite {
+  name: string;
+  email: string;
+  role: Role;
+  type?: LinkType; // sem type, o back usa 'emprego' (P-047)
+}
+
+export interface PasswordResetRequest {
+  email: string;
 }
 
 export interface UserUpdate {
@@ -262,8 +327,13 @@ export const authenticationApi = {
   logout: (refresh_token: string) =>
     apiClient.post<undefined>('/authentication/logout', { refresh_token }),
   session: () => apiClient.get<UserSession>('/authentication/session'),
+  requestPasswordReset: (dados: PasswordResetRequest) =>
+    apiClient.post<undefined>('/authentication/password-reset', dados),
 };
 ```
+
+O convite de membro mora em `src/features/organizations/organizationsApi.ts`
+(`inviteMember`), porque quem o usa é o painel da organização.
 
 ### `src/features/users/usersApi.ts`
 
@@ -284,7 +354,7 @@ para não ser descoberto no review.
 | # | Decisão | Quem decidiu | Efeito |
 |---|---|---|---|
 | 1 | **`Page[T]` em inglês** — `app/shared/paginacao.py` vira `pagination.py`, campos `items/total/page/page_size`, query `page`/`page_size` | você | 1 arquivo + 2 imports no back, 1 interface + 2 referências no front, **hoje**. Depois da entrega 4, `users` é o molde e todo domínio novo copia o envelope — o mesmo rename passa a custar N domínios × 2 repos. Fecha o ⚠️ da spec |
-| 2 | **Primeiro acesso não passa pela plataforma** — provisionamento com `temporary: false`, sem ação obrigatória, sem 409 e sem tela de senha | você | é o desenho de destino (P-012): o convite por e-mail leva à página do realm do Keycloak. Como lá também não há tela nossa, tirá-la agora não é dívida — é remover uma tela que o destino não tem. **Substituiu** a decisão anterior (409 + `POST /authentication/password`), que caiu junto com P-007 e P-011 |
+| 2 | **Primeiro acesso não passa pela plataforma** — provisionamento com `temporary: false`, sem ação obrigatória, sem 409 e sem tela de senha | você | é o desenho de destino (P-012): o convite por e-mail leva à página do realm do Keycloak. Como lá também não há tela nossa, tirá-la agora não é dívida — é remover uma tela que o destino não tem. **Substituiu** a decisão anterior (409 + `POST /authentication/password`), que caiu junto com P-007 e P-011. *Desde a CREED-23.8 o usuário nasce sem credencial nenhuma, e o `temporary: false` deixou de existir* |
 | 3 | **503 quando o Keycloak está fora** | agente | a spec só mapeava 401/403/409. Sem o 503, indisponibilidade vira "senha inválida" e o usuário troca a senha que estava certa |
 | 4 | **404 para `link_id`/`user_id` de outra organização** — mesma resposta de "não existe" | agente | dizer "existe, mas não é sua" vaza cadastro de outra organização. Segue o mapeamento `NotFoundError → 404` do molde |
 | 5 | **`logout` idempotente** — refresh já inválido também devolve 204 | agente | o usuário está saindo; travá-lo numa tela que ele quer abandonar é o pior desfecho para um erro que não muda nada |
@@ -315,9 +385,16 @@ Coisas que este contrato **não** resolve e que alguém vai esbarrar:
 ## Premissas
 
 Usadas: **P-006** (papéis `admin`/`gestor`/`respondente` — ainda aberta e em conflito com
-P-003), **P-008** (sem autocadastro), **P-009** (sem recuperação por e-mail), **P-010**
-(sessão de 15 min / 8 h), **[P-012](../../decisoes/premissas.md)** (primeiro acesso por
-e-mail com link para o realm; no interim, senha definitiva pelo admin).
+P-003), **P-008** (sem autocadastro, ajustada pela P-045), **P-010** (sessão de 15 min /
+8 h), **[P-012](../../decisoes/premissas.md)** (primeiro acesso por e-mail com link para o
+realm; o interim da senha definitiva acabou com a CREED-23.8).
+
+Da CREED-23.8: **P-045** (quem convida quem), **P-046** (o nome vai para participante e
+usuário), **P-047** (`type` padrão `emprego`), **P-049** (link de 72 h), **P-057**
+(organização inativa recebe convite) e **P-058** (o reenvio não olha papel nem status).
+
+A **P-009** (sem recuperação por e-mail) foi **refutada** em 2026-10-29: o
+`POST /authentication/password-reset` existe.
 
 ### O que caiu, e por quê — leia antes de comparar com a spec
 
@@ -331,7 +408,7 @@ convite é por e-mail com link para o realm do Keycloak, e é lá que a senha é
 |---|---|---|
 | P-007 | ❌ refutada | [`premissas.md`](../../decisoes/premissas.md) → Fechadas |
 | P-011 | ❌ refutada | idem — refutada no mesmo dia em que nasceu |
-| P-012 | 🟡 aberta | substitui as duas |
+| P-012 | 🟡 aberta | substitui as duas; o interim acabou com a CREED-23.8 |
 
 Premissa refutada não é erro do time: é o mecanismo funcionando. O que ele pegou aqui foi
 uma decisão tomada e não escrita — e é exatamente para isso que o ledger existe.
@@ -339,3 +416,6 @@ uma decisão tomada e não escrita — e é exatamente para isso que o ledger ex
 **Consequência fora deste documento:** a
 [PR #11 do `creed-frontend`](https://github.com/creed-educa-ai/creed-frontend/pull/11)
 implementa a tela de troca de senha do primeiro acesso. Neste desenho ela perde a função.
+*Saiu em 2026-10-29, no
+[creed-frontend#52](https://github.com/creed-educa-ai/creed-frontend/pull/52) (CREED-23.8):
+a rota `/first-access` deixou de existir, e `/reset-password` só pede o e-mail.*
