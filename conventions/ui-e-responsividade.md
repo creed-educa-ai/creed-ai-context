@@ -22,6 +22,11 @@ da entrega combinada com a cliente:
 | Texto visível | `react-i18next` (`useTranslation`) | `src/i18n/locales/` |
 | Estado compartilhado | Redux Toolkit | `src/app/store.ts` |
 | Teste | Vitest + Testing Library + `user-event` | `src/test/setup.ts` |
+| Card | `Card` + `CardContent` (com `asChild` para ser `<article>`/`<section>`) | `src/components/ui/card.tsx` |
+| Carregando, erro, vazio | `LoadingState`, `ErrorState`, `EmptyState` | `src/components/states/` |
+| Aviso dentro da tela | `Alert` (`destructive`, `warning`) | `src/components/ui/alert.tsx` |
+| Confirmação de ação (toast) | `toast` de `@/components/ui/sonner` | o `Toaster` já está montado no `main.tsx` |
+| Tamanho de título | `pageTitleClassName`, `sectionTitleClassName`, `cardTitleClassName` | `src/lib/typography.ts` |
 
 Detalhes que mudam o código e passam despercebidos:
 
@@ -34,6 +39,10 @@ Detalhes que mudam o código e passam despercebidos:
 - **Tema por variável CSS.** Cores saem dos tokens (`bg-background`, `text-foreground`,
   `bg-primary`…), nunca hex no componente — a identidade visual ainda será definida
   com a cliente e vai mudar em um lugar só.
+- **Catálogo do design system.** Com `npm run dev`, a rota `/design-system` mostra os
+  tokens, todo botão, primitivo, componente compartilhado, modal e toast, e as telas
+  reais em 375 · 768 · 1280. Só existe em desenvolvimento (não entra no build).
+  Componente compartilhado novo entra lá também, em `src/features/designSystem/`.
 
 ## 2. Precisa de algo que não existe?
 
@@ -98,7 +107,7 @@ animação (§2).
 | Regra | Como |
 |---|---|
 | Hover **só por token do tema**: `hover:bg-accent` no que não está selecionado, `hover:bg-primary-hover` no que está | nada de `primary/10`, `muted/40`: tom com transparência é cor fora do design system |
-| `secondary` e `accent` são **a mesma cor** no tema | hover de algo que já é lavanda não se vê com `secondary` — use `hover:bg-border`, um tom acima |
+| Os tokens `secondary` e `accent` são **a mesma cor** no tema | hover de algo que já é lavanda não se vê com `accent` — use `hover:bg-border`, um tom acima. (O botão `secondary` não existe mais: §5) |
 | Opção de resposta afunda ao ser pressionada | `motion-safe:active:scale-95`; em elemento largo, `active:scale-98` — 5% numa opção larga é encolhimento visível |
 | Selecionado é **roxo cheio com texto branco**, em qualquer tipo de opção | escala, múltipla escolha e aba atual falam a mesma língua |
 
@@ -106,20 +115,109 @@ animação (§2).
 
 | Tipo | Componente | Visual |
 |---|---|---|
-| Comum (informação, contato) | `Dialog` | `bg-background`, fecha clicando fora |
-| **Obrigatório** (a pessoa tem que escolher) | `AlertDialog` | o visual padrão dele (fundo `popover`, faixa de botões no `AlertDialogFooter`), para não se confundir com o comum |
+| Comum (informação, edição) | `Dialog` | fundo branco (o `popover` do primitivo, sem `bg-background`); botões no `DialogFooter`, a faixa lavanda; fecha clicando fora |
+| **Obrigatório** (a pessoa tem que escolher, inclusive confirmar envio ou exclusão) | `AlertDialog` | o visual padrão dele (fundo `popover`, botões no `AlertDialogFooter`); cancelar é `AlertDialogCancel`, nunca `Button` solto |
 
 No obrigatório, **nem clique fora nem Esc fecham**: ignore o `onOpenChange(false)` e
 feche só pelos botões. Clique fora e Esc **destacam a ação principal** (foco + anel), em
 vez de não fazer nada — o `AlertDialogContent` aceita `onOverlayClick` para isso.
 Os botões dizem a ação ("Revisar dados", "Iniciar questionário"), não "Sim" e "Não".
 
-## 5. Antes de dar o componente por pronto
+- **Título** de todo modal vem do primitivo (`DialogTitle`/`AlertDialogTitle`): maior
+  que o corpo, em negrito e na cor de título. Não sobrescreva.
+- **Ação destrutiva** (excluir, rejeitar) passa pelo `ConfirmDeleteDialog`: botão
+  `destructive-solid`, e Esc/clique fora destacam o **Cancelar**, a ação segura. Para
+  outra ação que não excluir, troque os rótulos (`confirmLabel`, `pendingLabel`).
+
+### Toasts
+
+Toast **confirma que uma ação deu certo** quando a tela não mostra o resultado
+sozinha (convite enviado, membro excluído, tag trocada). Não use quando a ação já
+leva a uma tela de confirmação (envio do questionário, login, cadastro).
+
+- Só no **sucesso**: depois do `await` (`.unwrap()`), nunca no clique.
+- Se a ação falha e **não há onde mostrar** o erro na tela, `toast.error`. Se há (o
+  diálogo de confirmação aberto), o erro fica lá e não sai toast.
+- Sempre com o X para fechar e **sem "desfazer"**. Título curto do que aconteceu;
+  descrição com o nome de quem ou do quê.
+
+## 5. Padrões do design system
+
+Decididos na revisão do design system (2026-11). Valem para componente novo e para o
+que for mexido.
+
+### Botões
+
+| Variante | Para |
+|---|---|
+| `default` | a ação principal da tela ou do bloco |
+| `outline` | a ação secundária; desabilitado, perde a borda roxa e fica igual aos outros |
+| `ghost` | ação de ícone ou dentro de lista/menu |
+| `destructive-solid` | excluir, rejeitar — sempre com confirmação |
+| `link` | navegação em texto |
+
+- **Não existem mais `secondary` nem `destructive`** (o vermelho claro). Não recrie
+  pelo `className`: classe de cor ou de altura em `Button` é sinal de variante faltando.
+- `className` em `Button` é para **layout** (`w-full`, `mt-*`), não para cor, peso,
+  altura ou espaçamento interno.
+- **Exceção aceita:** a lixeira das tabelas (`DeleteRowButton`) é ícone vermelho sem
+  fundo, e não `destructive-solid` — um bloco vermelho em toda linha pesaria demais.
+
+### Altura de campo e botão
+
+**40px no celular, 32px do `md` para cima**, definidos no próprio componente
+(`Button` tamanho `default`, `Input`, `InputGroup`, `SelectTrigger`, `ComboboxChips`).
+Não force `h-10`/`min-h-10` na tela. Campo e botão têm sempre a mesma altura.
+
+> Cuidado: com a altura responsiva, um componente que redefine a altura do `Button`
+> por baixo precisa repetir com `md:` (o `tailwind-merge` só troca `md:h-8` por outra
+> classe `md:`). Ver `inputGroupButtonVariants`.
+
+### Cards
+
+Todo bloco branco de conteúdo é `Card` (`rounded-2xl`, padding 24px, `shadow-sm`),
+com o conteúdo num `CardContent`. Um card, uma informação: não junte dois cards num só
+para economizar espaço — ajuste tamanho e densidade.
+
+### Títulos
+
+| Papel | Constante | Celular → `md` |
+|---|---|---|
+| Página (`h1`) | `pageTitleClassName` | `text-2xl` → `text-3xl` |
+| Seção (`h2`) | `sectionTitleClassName` | `text-xl` → `text-2xl` |
+| Card (`h3`) | `cardTitleClassName` | `text-lg` → `text-xl` |
+
+Todos em negrito e `text-heading`. Sobre o roxo da marca, acrescente `text-inherit`
+(o título herda o branco do bloco). Seção nunca menor que o card dentro dela.
+
+### Estados de uma seção
+
+Carregando, erro e vazio usam `LoadingState`, `ErrorState` e `EmptyState` — não
+redesenhe o bloco na tela. O esboço do `LoadingState` (os `Skeleton`) é de cada seção.
+
+### Cor
+
+- **Sem cor com transparência**, inclusive em aviso e borda: o tema tem tokens
+  sólidos para isso (`destructive-surface`, `destructive-border`, `warning-surface`,
+  `warning-border`, `primary-soft`). Faltou um tom? Ele entra no `index.css`, com
+  `color-mix`, e não no componente.
+- **Exceção:** o anel de foco (`ring-ring/50`, e `ring-destructive/20` no campo
+  inválido) é o do shadcn em todos os primitivos e continua assim.
+- Setores: tokens `--department-*` (🟡 P-065).
+
+### Menu do topo
+
+Uma linha só em qualquer largura. No celular: acima do título, na largura toda, só o
+símbolo da marca. Do `sm` ao `lg`: acima do título, centralizado, com a marca inteira.
+Do `lg` para cima: à direita do título.
+
+## 6. Antes de dar o componente por pronto
 
 - [ ] Existe mesmo? (`grep` antes de criar — componente duplicado é o erro mais comum em lote)
 - [ ] Mora no lugar certo: usado por mais de uma feature → `src/components/`; só por uma → dentro da feature; primitivo → `src/components/ui/` via CLI do shadcn.
 - [ ] Sem texto hardcoded: tudo em `src/i18n/locales/`, nos dois idiomas.
 - [ ] Sem cor fora dos tokens do tema — inclusive no hover (nada de `primary/10`).
+- [ ] Botão, card, título e estados no padrão do §5 — e conferido no `/design-system`.
 - [ ] Animação com `motion-reduce:animate-none`, e curta se for se repetir (§4).
 - [ ] Conferido em 375, 768 e 1280.
 - [ ] Teste ao lado do componente, no molde de `SeletorIdioma.test.tsx`.
