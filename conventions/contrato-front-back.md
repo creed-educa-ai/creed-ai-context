@@ -38,7 +38,7 @@ seção por domínio.
 |---|---|---|
 | `authentication` | todos | `authentication` |
 | `users` | admin | `users` |
-| `links` | admin | `links` |
+| `links` | admin cria o vínculo; admin e gestor trocam o setor dos membros (o gestor só na própria organização, P-066) | `links` |
 | `participants` | admin | `participants` |
 | `organizacoes` | admin; o gestor lê a própria | `organizations` |
 | `department` | admin cria; leitura autenticada | `departments` |
