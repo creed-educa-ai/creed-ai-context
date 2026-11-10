@@ -20,7 +20,7 @@ FastAPI. Organização **por domínio** (ADR-002 §2.1). Cada `app/domains/<nome
 |---|---|---|
 | `users` | `POST /users`, `DELETE /users/{id}` | **molde** — domínio-exemplo completo (tabela `user`, CREED-23). Convite de membro e reenvio estão em branches abertas |
 | `authentication` | `POST /authentication/login`, `POST /authentication/renew`, `GET /authentication/session` | via Keycloak; sem tabela própria. `password-reset` está em branch aberta |
-| `links` | `POST /organizations/{id}/links` | tabela `links` |
+| `links` | `POST /organizations/{id}/links`, `PATCH /organizations/{id}/members/{link_id}` (troca de setor, CREED-6910) | tabela `links`. As rotas de membros ficam num segundo router (`router_members.py`) e leem o membro por JOIN (adendo ao ADR-0004) |
 | `participants` | `POST /participants`, `GET /participants/{id}` | tabela `participants` |
 | `organizacoes` | `POST`, `GET` (paginado), `GET /{id}`, `PATCH /{id}` em `/organizacoes` | tabela `organizations`. Pasta e rota em português |
 | `department` | `POST /department`, `GET /department/{id}` | tabela `departments`. Pasta e rota no singular |

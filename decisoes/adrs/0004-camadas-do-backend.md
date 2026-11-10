@@ -173,3 +173,23 @@ Cada item é independente:
 - Item 7 é um PR: reverter é `git revert`.
 
 Nenhum item cria dependência nova nem passo de build.
+
+## Adendo — `links` lê o membro por JOIN (2026-11-09, CREED-6910)
+
+O item 4 dava a leitura entre domínios só a domínios de leitura (`dashboards`,
+`relatorios`). A troca de setor do membro (C-1) e a listagem de membros (M-2) precisam
+do **membro**: o vínculo junto com o nome do participante, o e-mail do login e o tipo do
+setor. A M-2 exige isso numa consulta só, e não uma por pessoa.
+
+**Decidido pelo Enzo, na task 2 da CREED-6910:** `links/repository.py` lê
+`participants`, `user` e `departments` por JOIN, e `links` entra em
+`LEITURA_ENTRE_DOMINIOS` no `tests/test_arquitetura.py`. A regra que vale continua sendo
+a do item 4: **ler, sim; escrever fora do próprio domínio, nunca.** O setor novo da
+empresa é criado pelo `DepartmentService.get_or_create`, não pelo repository de `links`.
+
+**Descartado:** compor pelos services, como `users` e `demographics` fazem. Seriam três
+consultas por membro, o que a M-2 não aceita. Além disso, o e-mail exigiria chamar o
+`UserService`, que já importa o `LinkService`, e a volta seria um import circular.
+
+**Como reverter:** tirar `links` da lista e trocar o JOIN do `get_member` por chamadas
+aos services donos. Service e router não mudam, só a forma de montar o membro.
