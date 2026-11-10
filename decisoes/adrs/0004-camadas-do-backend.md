@@ -193,3 +193,10 @@ consultas por membro, o que a M-2 não aceita. Além disso, o e-mail exigiria ch
 
 **Como reverter:** tirar `links` da lista e trocar o JOIN do `get_member` por chamadas
 aos services donos. Service e router não mudam, só a forma de montar o membro.
+
+**Ampliado na CREED-697 (M-2, listar membros):** o mesmo repository lê também `form`
+(os períodos da organização) e `form_responses` (quem já enviou a resposta), em duas
+consultas fixas. A escolha do período de cada membro não é SQL: é o `pick_period`, uma
+função do `forms/service.py` que o service de `links` chama por composição. O
+`links/schemas.py` usa o `PeriodStatus` de `forms`, declarado em
+`SCHEMA_DE_SAIDA_DE_OUTRO_DOMINIO`.
