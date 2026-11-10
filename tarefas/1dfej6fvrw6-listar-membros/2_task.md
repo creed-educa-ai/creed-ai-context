@@ -97,3 +97,21 @@ na C-1, ou pelo `curl` da spec depois da task 3.
 - P-068: o período via `pick_period`.
 - P-069: só a resposta enviada conta.
 - P-070: sem paginação, ordem por nome.
+
+## Como ficou (diferenças do plano acima)
+
+- **`pick_period` devolve `DatedPeriod`** (o formulário com as duas datas garantidas), e
+  não o `Form`. O service de `links` não pode citar `Form` nem `PeriodStatus` nas
+  anotações, porque só importa o *service* de `forms`. Com o `DatedPeriod`, ele lê as
+  datas sem conferir nulo de novo.
+- **O `MemberWithPeriod` guarda o schema `MemberPeriod`** (do próprio `links`), montado
+  no service, e não o `Form` com campos soltos. É o que o `FormService.list_periods` faz
+  com o `PeriodRead`.
+- **A consulta de períodos se chama `list_organization_periods`**, para não confundir
+  com o `FormRepository.list_periods`.
+- **A tupla do membro tem nome: `MemberRow`**, e a consulta-base é a constante de módulo
+  `_MEMBER_QUERY`, sem anotação de `Select`. O hook do `mypy` no pre-commit instala o
+  SQLAlchemy sem versão fixa (hoje 2.1), e o projeto fixa `<2.1`. O tipo genérico de
+  `Select` mudou entre as duas versões, e uma anotação que passa numa quebra na outra.
+- **O `DatedPeriod` carrega a situação** (`status`), para o service não calcular de
+  novo (sugestão da revisão).

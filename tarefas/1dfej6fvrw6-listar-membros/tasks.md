@@ -8,9 +8,9 @@ Branch: `feat/697-listar-membros`, saída da `feat/6910-trocar-setor-membro` (C-
 
 ## Progresso
 
-- [ ] 1 — Escolher o período de um membro · `creed-backend`
-- [ ] 2 — Listar os membros com o período (service e repository de `links`) · `creed-backend`
-- [ ] 3 — Rota `GET /organizations/{organization_id}/members` · `creed-backend`
+- [x] 1 — Escolher o período de um membro · `creed-backend`
+- [x] 2 — Listar os membros com o período (service e repository de `links`) · `creed-backend`
+- [x] 3 — Rota `GET /organizations/{organization_id}/members` · `creed-backend`
 
 Marque aqui ao concluir cada task (`workflows/tasks-to-code.md`).
 

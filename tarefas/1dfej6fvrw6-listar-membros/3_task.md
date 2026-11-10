@@ -72,3 +72,13 @@ andamento, e `?type=mentoria`. O `curl` com o Keycloak da spec fica para o human
 ## Premissas aplicáveis
 
 - P-066, P-068, P-069 e P-070 (aplicadas no service; a rota só as expõe).
+
+## Como ficou (diferenças do plano acima)
+
+- **O parâmetro se chama `link_type`, com `alias="type"`.** A URL continua
+  `?type=mentoria`. Um parâmetro chamado `type` esconderia o builtin do Python dentro da
+  função.
+- **`LinkType` chega ao router pelo `__all__` do `links/schemas.py`**, com `links` em
+  `REEXPORT_DE_TIPO_PERMITIDO`, como `questions` faz com o `QuestionSection`.
+- **O 401 e o 403 do `GET` reaproveitam os textos do `PATCH`** (`_ERRORS`). O 404 e o
+  422 têm texto próprio (`_LIST_ERRORS`).
