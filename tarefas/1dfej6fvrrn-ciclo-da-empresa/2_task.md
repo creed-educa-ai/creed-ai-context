@@ -29,7 +29,7 @@ A rota fica num **segundo router** do domínio, com o prefixo em inglês `/organ
 | `name` | 1 a 200, sem caractere de controle |
 | `document` | depois de tirar tudo o que não é letra nem número: 11 ou 14 dígitos |
 | `email` | `EmailStr`; o service grava em minúsculas |
-| `contact_name` | 1 a 200, sem caractere de controle |
+| `contact_name` | 2 a 200, sem caractere de controle (🟡 Premissa P-082: o `UserBase.name` do convite exige no mínimo 2) |
 | `phone` | 1 a 30, sem caractere de controle |
 
 | Status | Quando |
@@ -82,7 +82,7 @@ A rota fica num **segundo router** do domínio, com o prefixo em inglês `/organ
 - `app/domains/links/router_members.py`: segundo router de um domínio.
 - `OrganizationService.create` e `OrganizationRepository.create`: o `None` da constraint
   única virando 409.
-- `PasswordResetRequest` na branch do creed-backend#52
+- `PasswordResetRequest` na `dev`, vinda do creed-backend#52
   (`app/domains/authentication/schemas.py`): schema de rota pública com `EmailStr`.
 
 ## Critérios de aceite
@@ -111,7 +111,7 @@ Com a API e o banco local de pé (migration temporária da task 1 aplicada):
 
 ```bash
 API=http://localhost:8000/api/v1
-CORPO='{"name":"Empresa Teste","document":"12.345.678/0001-90","email":"Gestora@Empresa.test","contact_name":"Gestora Teste","phone":"51 99999-0000"}'
+CORPO='{"name":"Empresa Teste","document":"12.345.678/0001-90","email":"Gestora@Empresa.com.br","contact_name":"Gestora Teste","phone":"51 99999-0000"}'
 curl -s -X POST "$API/organizations/sign-up" -H "Content-Type: application/json" -d "$CORPO"
 # de novo, sem pontuação → 409
 curl -s -o /dev/null -w "%{http_code}\n" -X POST "$API/organizations/sign-up" \

@@ -71,7 +71,6 @@ e o dado fictício mora no `<feature>Api.ts` (mock).
 
 | Tela | Forma da tela | O que o back tem | O que falta decidir |
 |---|---|---|---|
-| Empresas (super adm) e cadastro público | `Company`: nome, e-mail, documento (número), responsável, telefone; status `ativo`/`pendente` | `OrganizationResponse`: `name`, `address`, `document_id`; status `active`/`inactive`; sem rota pública de cadastro | rota pública, onde moram e-mail/responsável/telefone e o estado "pendente" (CREED-591/595) |
 | Membros (painel da empresa) | `Member`: status `ativo`/`pendente`, `tag` = setor (`DepartmentType`) | `UserResponse` (`RecordStatus`); setor em `links.department_id` | rota que liste e remova membros; "pendente" = convite não aceito? |
 | Mentorandos (super adm) | `Mentee`: `hasAnsweredCurrent` | participante com vínculo `mentoria`; nada sobre "respondeu o atual" | rota que liste; de onde vem "respondeu" |
 | Adicionar mentorando | só e-mail | convite exige `name`, `email`, `role` e a organização | o nome entra na tela? qual organização? |
@@ -86,6 +85,8 @@ do `.dbml` (`plasticidade_humana`, `empreendedorismo`…). Passou a usar o enum 
 do back (`seguranca_psicologica`, `lideranca_adaptativa`, `cultura_empreendedora`,
 `adaptabilidade_cognitiva`, `neuroinovacao_prisma`), que vem do material do produto
 sobre a composição dos prismas (SP, LA, CE, AC, NP).
+
+**Resolvido em 2026-11-10:** empresas do super adm e cadastro público (CREED-69, E-1 a E-6). O back ganhou o status `pending` da organização, o e-mail, o responsável e o telefone do cadastro, o número do documento na leitura, e as rotas `POST /organizations/sign-up` (pública), `POST /organizations/{id}/approval` e `DELETE /organizations/{id}` (que também rejeita, P-078). O tipo provisório `Company` saiu: a tabela, o modal de aceite e o cadastro leem `OrganizationResponse` e `OrganizationSignUp`, e o mock saiu do `organizationsApi.ts`. O mesmo recurso responde em dois prefixos: `GET` e `PATCH` em `/organizacoes/{id}`, `DELETE` e aprovação em `/organizations/{id}`.
 
 ### O molde é forma, não campo
 

@@ -4,8 +4,8 @@
 **Subtarefa:** [694 · Integração (E4-E5)](https://app.clickup.com/t/1dfej6fvrvu)
 **Branch:** a mesma da task 6 (`feat/694-integracao-empresas`), em outro commit
 **Depende de:** task 6 (tipos novos de `OrganizationResponse`). Para o teste no navegador:
-tasks 1, 4 e 5 na `dev` do back. Para a verificação do "Esqueci minha senha": o
-**[creed-backend#52](https://github.com/creed-educa-ai/creed-backend/pull/52) na `dev`**.
+tasks 1, 4 e 5 na `dev` do back. A rota do "Esqueci minha senha",
+[creed-backend#52](https://github.com/creed-educa-ai/creed-backend/pull/52), já está na `dev`.
 
 ## Objetivo
 
@@ -68,8 +68,9 @@ no back.
     slice devolveu.
 - `src/features/organizations/CompanyTable.tsx`: props com `OrganizationResponse[]`;
   `name`, `email ?? ''` na busca e na coluna; status: `pending` → botão "Pendente",
-  `active` → `StatusPill tone="success"` "Ativo", `inactive` → `StatusPill` sem tom
-  "Inativo". As pendentes continuam no topo.
+  `active` → `StatusPill tone="success"` "Ativo", `inactive` → `StatusPill tone="destructive"`
+  "Inativo" (como a `MenteesTable`, `src/features/users/MenteesTable.tsx:62`). As
+  pendentes continuam no topo.
 - `src/components/modals/CompanyApprovalModal.tsx`: `empresa: OrganizationResponse |
   null`; mostra `name`, `document.value`, `email`, `contact_name`, `phone`, com "—" no
   nulo.
@@ -93,7 +94,9 @@ no back.
 - `requestPasswordReset` em `src/features/authentication/authenticationSlice.ts`:
   `rejectWithValue` com chave de i18n a partir do `ApiError.status`.
 - `src/test/stubFetch.ts` e os testes atuais de `organizationsApi.test.ts`.
-- `StatusPill` em `src/components/table/tablePills.tsx` (sem `tone` é o neutro).
+- `StatusPill` em `src/components/table/tablePills.tsx` (sem `tone`, o selo fica com texto
+  branco e sem fundo, invisível no tema claro; o precedente de "Inativo" é
+  `tone="destructive"`, na `MenteesTable`, linha 62).
 
 ## Critérios de aceite
 
@@ -124,7 +127,7 @@ No navegador (`npm run dev`, back com as tasks 1 a 5, Mailpit de pé), o fluxo d
 1. `/sign-up` com um e-mail novo → `/awaiting-confirmation`.
 2. Entre como admin, abra `/control-panel/admin`, clique em "Pendente", aceite.
 3. Abra o convite em `http://localhost:8025`, defina a senha, entre como gestor.
-4. **"Esqueci minha senha"** (com o #52 na `dev`): em `/login`, clique no link, peça com
+4. **"Esqueci minha senha"** (o #52 já está na `dev`): em `/login`, clique no link, peça com
    o e-mail do gestor, confira o segundo e-mail no Mailpit e defina uma senha nova.
 5. Cadastre outra empresa e rejeite. Exclua a primeira e confira que o gestor não entra
    mais.

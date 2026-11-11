@@ -5,9 +5,8 @@
 **Branch:** `feat/693-aprovar-empresa`, saída da `feat/696-excluir-empresa`
 **Depende de:** task 1 (status `pending` e dados de contato), task 4 (o
 `router_organizations.py` com a exclusão, que é a rejeição) e o
-**[creed-backend#51](https://github.com/creed-educa-ai/creed-backend/pull/51) na `dev`**
-(o `MemberService`). Antes de começar, mescle a `dev` na branch (`git merge`, nunca
-rebase).
+**[creed-backend#51](https://github.com/creed-educa-ai/creed-backend/pull/51)**, já na
+`dev` (o `MemberService`).
 
 ## Objetivo
 

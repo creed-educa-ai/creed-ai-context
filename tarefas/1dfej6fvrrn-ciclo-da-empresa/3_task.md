@@ -107,7 +107,7 @@ apaga as alternativas antes das perguntas).
 
 ```bash
 cd creed-backend
-pytest tests/domains/users tests/domains/links tests/domains/forms tests/domains/responses tests/domains/department tests/domains/participants tests/domains/documents tests/domains/organizacoes tests/test_arquitetura.py -q
+pytest tests/domains/users tests/domains/links tests/domains/forms tests/domains/responses tests/domains/sector tests/domains/participants tests/domains/documents tests/domains/organizacoes tests/test_arquitetura.py -q
 ruff check . && ruff format --check .
 pre-commit run mypy --all-files
 ```
