@@ -104,15 +104,17 @@ No código, empresa é **organização** (`Organization`, tabela `organizations`
 **Migration.** Pela regra do projeto, o PR **não** traz arquivo em `alembic/versions/`: quem gera a migration consolidada da sprint é o AGES III. Gere a migration no seu banco local para testar, **escreva à mão** a troca de tipo (o autogenerate não a escreve direito), teste, rode `alembic downgrade` e só então apague o arquivo. A seção "Banco" do PR copia estes passos:
 
 ```
-1. CREATE TYPE organization_status AS ENUM ('pending', 'active', 'inactive')
+1. CREATE TYPE organization_status AS ENUM ('PENDING', 'ACTIVE', 'INACTIVE')
 2. ALTER TABLE organizations ALTER COLUMN status TYPE organization_status
    USING status::text::organization_status
 3. add_column: email String(320), contact_name String(200), phone String(30),
    todas nullable, sem server_default
-4. downgrade: UPDATE organizations SET status = 'inactive' WHERE status = 'pending';
+4. downgrade: UPDATE organizations SET status = 'INACTIVE' WHERE status = 'PENDING';
    ALTER de volta para recordstatus com o mesmo USING; drop das três colunas;
    DROP TYPE organization_status. Nenhuma linha é apagada na volta.
 ```
+
+Os rótulos ficam em maiúsculas porque o SQLAlchemy grava o nome do membro, como no `recordstatus` e no `doc_type`. A API continua mostrando `pending`.
 
 ### Onde isso encosta no código
 
@@ -155,7 +157,7 @@ Permalinks (abrem o arquivo na versão da `dev` usada nesta especificação):
 ```json
 { "id": "uuid", "name": "Empresa Teste", "address": "[A informar]",
   "document_id": "uuid", "document": { "type": "cnpj", "value": "12345678000190" },
-  "status": "pending", "email": "gestora@empresa.test",
+  "status": "pending", "email": "gestora@empresa.com.br",
   "contact_name": "Gestora Teste", "phone": "51 99999-0000",
   "created_at": "2026-11-10T14:30:00Z", "updated_at": null }
 ```
@@ -199,7 +201,7 @@ O `pre-commit run mypy` é o que o CI usa: o `mypy` do `.venv` local pode passar
 
 ### Atenção
 
-- O `scripts/convidar_primeiro_admin.py` do creed-backend#53 (aberto) também grava `RecordStatus.ACTIVE` na organização da CREED, perto da linha 159. Quem mergear por último troca para `OrganizationStatus.ACTIVE`. Diga isso no PR.
+- O `scripts/convidar_primeiro_admin.py` do creed-backend#53 (já na `dev`) também grava `RecordStatus.ACTIVE` na organização da CREED, perto da linha 159. Troque para `OrganizationStatus.ACTIVE` nesta entrega. Diga isso no PR.
 
 ### Depende de
 
@@ -266,7 +268,7 @@ No código, empresa é **organização** (`Organization`, tabela `organizations`
 | Segundo router de um domínio | `app/domains/links/router_members.py` | forma do arquivo, da docstring e dos `responses=` |
 | `OrganizationRepository.create` | `app/domains/organizacoes/repository.py`, linhas 39 a 55 | o `None` da constraint única virando 409 no service |
 | `sem_caractere_de_controle` | `app/shared/validators.py` | validação de texto livre, como nos outros schemas |
-| `PasswordResetRequest` | `app/domains/authentication/schemas.py`, na branch do creed-backend#52 | schema de rota pública com `EmailStr` |
+| `PasswordResetRequest` | `app/domains/authentication/schemas.py`, na `dev` (veio do creed-backend#52) | schema de rota pública com `EmailStr` |
 
 Permalinks (abrem o arquivo na versão usada nesta especificação):
 
@@ -285,11 +287,11 @@ Permalinks (abrem o arquivo na versão usada nesta especificação):
 
 ```json
 { "name": "Empresa Teste", "document": "12.345.678/0001-90",
-  "email": "gestora@empresa.test", "contact_name": "Gestora Teste",
+  "email": "gestora@empresa.com.br", "contact_name": "Gestora Teste",
   "phone": "51 99999-0000" }
 ```
 
-`name` e `contact_name`: 1 a 200. `phone`: 1 a 30. Os três sem caractere de controle e sem espaço nas pontas.
+`name`: 1 a 200. `contact_name`: 2 a 200 (🟡 Premissa P-082: o `UserBase.name` do convite exige no mínimo 2). `phone`: 1 a 30. Os três sem caractere de controle e sem espaço nas pontas.
 
 **Erros**
 
@@ -316,7 +318,7 @@ pytest tests/domains/organizacoes tests/domains/documents tests/test_openapi.py 
 pre-commit run mypy --all-files
 
 API=http://localhost:8000/api/v1
-CORPO='{"name":"Empresa Teste","document":"12.345.678/0001-90","email":"Gestora@Empresa.test","contact_name":"Gestora Teste","phone":"51 99999-0000"}'
+CORPO='{"name":"Empresa Teste","document":"12.345.678/0001-90","email":"Gestora@Empresa.com.br","contact_name":"Gestora Teste","phone":"51 99999-0000"}'
 curl -s -X POST "$API/organizations/sign-up" -H "Content-Type: application/json" -d "$CORPO"
 # de novo, sem pontuação: 409
 curl -s -o /dev/null -w "%{http_code}\n" -X POST "$API/organizations/sign-up" -H "Content-Type: application/json" -d "${CORPO/12.345.678\/0001-90/12345678000190}"
@@ -456,7 +458,7 @@ Permalinks (abrem o arquivo na versão da `dev` usada nesta especificação):
 
 ```bash
 cd creed-backend
-pytest tests/domains/users tests/domains/organizacoes tests/domains/links tests/domains/forms tests/domains/responses tests/domains/department tests/domains/participants tests/domains/documents tests/test_openapi.py tests/test_arquitetura.py -q
+pytest tests/domains/users tests/domains/organizacoes tests/domains/links tests/domains/forms tests/domains/responses tests/domains/sector tests/domains/participants tests/domains/documents tests/test_openapi.py tests/test_arquitetura.py -q
 pre-commit run mypy --all-files
 
 docker compose up -d db keycloak mailpit
@@ -523,7 +525,7 @@ Termos: **gestor** é o papel de quem administra uma empresa na plataforma; **ad
 
 ### Como pretendemos fazer
 
-- O convite de membro já faz tudo numa chamada (creed-backend#51, ainda aberto): `MemberService.invite_member_service` cria a pessoa, o vínculo e o acesso, e manda o e-mail. Se algo falha, o banco é desfeito no fim da requisição, e o próprio service desfaz o que criou no Keycloak.
+- O convite de membro já faz tudo numa chamada (creed-backend#51, já na `dev`): `MemberService.invite_member_service` cria a pessoa, o vínculo e o acesso, e manda o e-mail. Se algo falha, o banco é desfeito no fim da requisição, e o próprio service desfaz o que criou no Keycloak.
 - A aprovação troca o status para ativa e chama esse mesmo convite, com o nome e o e-mail do cadastro, papel `gestor` e vínculo `emprego`. As duas coisas estão na mesma transação: se o convite falha, a troca de status também é desfeita.
 - Não se aprova pelo `PATCH` de status: ele passaria a fazer duas coisas, e qualquer outro caminho que mudasse o status pularia o convite. Por isso a 691 faz o `PATCH` recusar a pendente.
 - O service fica em `users`, ao lado do `MemberService`, porque `users` já depende de `organizacoes`.
@@ -556,11 +558,11 @@ Termos: **gestor** é o papel de quem administra uma empresa na plataforma; **ad
 
 | Já existe | Onde | Para quê |
 |---|---|---|
-| `MemberService.invite_member_service` e `MemberInvite` | `app/domains/users/service.py`, na branch do creed-backend#51, linhas 379 a 439 | chamado sem mudar |
-| Testes do convite | `tests/domains/users/test_member_service.py`, na branch do creed-backend#51 | dublês de participante, vínculo e acesso |
+| `MemberService.invite_member_service` e `MemberInvite` | `app/domains/users/service.py`, do creed-backend#51 (já na `dev`), linhas 379 a 439 no commit do permalink | chamado sem mudar |
+| Testes do convite | `tests/domains/users/test_member_service.py`, do creed-backend#51 (já na `dev`) | dublês de participante, vínculo e acesso |
 | `delete_member` | `app/domains/links/router_members.py`, linhas 271 a 320 | tradução de erros em status |
 
-Permalinks (os do #51 apontam para o commit da branch aberta):
+Permalinks (os do #51 apontam para o commit do PR, já mergeado na `dev`):
 
 - [app/domains/users/service.py, no creed-backend#51, linhas 379 a 439](https://github.com/creed-educa-ai/creed-backend/blob/998d872708a69877b18388db1cf93a5acc07701d/app/domains/users/service.py#L379-L439)
 - [tests/domains/users/test_member_service.py, no creed-backend#51](https://github.com/creed-educa-ai/creed-backend/blob/998d872708a69877b18388db1cf93a5acc07701d/tests/domains/users/test_member_service.py)
@@ -624,9 +626,9 @@ O convite aparece em `http://localhost:8025` (Mailpit, a caixa de e-mail falsa d
 ### Depende de
 
 - Subtarefas **691** e **696** (o `router_organizations.py` com a exclusão, que é a rejeição).
-- **creed-backend#51 na `dev`**: é onde está o `MemberService`. Sem ele, dá para escrever o código contra a branch do #51, mas não para subir.
+- **creed-backend#51**, já na `dev`: é onde está o `MemberService`.
 
-Branch `feat/693-aprovar-empresa`, saída da `feat/696-excluir-empresa`. Antes de começar, mescle a `dev` com o #51 na branch (`git merge`, nunca rebase).
+Branch `feat/693-aprovar-empresa`, saída da `feat/696-excluir-empresa`.
 
 Fora do board: em produção, aprovar dá 503 até o e-mail da EC2 existir (creed-infrastructure#10).
 
@@ -635,7 +637,7 @@ Fora do board: em produção, aprovar dá 503 até o e-mail da EC2 existir (cree
 | Material | Situação |
 |---|---|
 | Contrato | ✅ colado acima |
-| Arquivos de referência | ✅ permalinks acima (os do #51 apontam para o commit da branch aberta) |
+| Arquivos de referência | ✅ permalinks acima (os do #51 apontam para o commit do PR, já mergeado na `dev`) |
 | O que está de pé no `docker-compose` local | ✅ colado acima (Mailpit em `localhost:8025`) |
 
 ### Rastreio
@@ -683,11 +685,11 @@ O 409 da aprovação tem duas causas (outra pessoa já aprovou, ou o e-mail já 
 | `src/types/api.ts` | commit 1: `OrganizationStatus`, `OrganizationDocument`, `OrganizationSignUp`, e os campos novos de `OrganizationResponse`. Commit 2: saem `Company`, `CompanyRegistration`, `CompanyStatus` |
 | `src/features/organizations/organizationsApi.ts` | commit 1: `signUp(body)`, sai o mock `registerCompany` e o `SIGN_UP_DELAY_MS`. Commit 2: sai todo o mock de empresas; nascem `approveOrganization(id)` e `deleteOrganization(id)` |
 | `src/features/organizations/organizationsSlice.ts` | commit 1: `signUpOrganization` no lugar do `registerCompany`. Commit 2: estado `organizations: OrganizationResponse[]`, `loadOrganizations` (página a página), `approveOrganization`, `deleteOrganization` |
-| `src/lib/validators.ts` | `signUpSchema`: e-mail com `z.email`, documento com 11 ou 14 dígitos depois de limpar, tamanhos máximos 200, 200 e 30 |
+| `src/lib/validators.ts` | `signUpSchema`: e-mail com `z.email`, documento com 11 ou 14 dígitos depois de limpar, tamanhos máximos 200, 200 e 30, e nome completo com no mínimo 2 (P-082) |
 | `src/features/organizations/SignUpView.tsx` | corpo com os nomes do back; 409 no campo "Documento"; outros erros num `<p role="alert">` abaixo do botão |
 | `src/features/organizations/AwaitingConfirmationView.tsx` | só o texto, via i18n |
 | `src/features/organizations/CompaniesSection.tsx` | filtro da organização da sessão (`state.authentication.user?.organization_id`); toasts de aprovar, rejeitar e excluir |
-| `src/features/organizations/CompanyTable.tsx` | lê `OrganizationResponse`; "Pendente" (botão), "Ativo" (`StatusPill tone="success"`), "Inativo" (`StatusPill` sem tom) |
+| `src/features/organizations/CompanyTable.tsx` | lê `OrganizationResponse`; "Pendente" (botão), "Ativo" (`StatusPill tone="success"`), "Inativo" (`StatusPill tone="destructive"`, como a `MenteesTable`, `src/features/users/MenteesTable.tsx:62`) |
 | `src/components/modals/CompanyApprovalModal.tsx` | mostra `name`, `document.value`, `email`, `contact_name`, `phone`, com "—" no vazio |
 | `src/i18n/locales/pt-BR.ts`, `en.ts`, `es.ts` | `cadastro.erros.{documentoInvalido, documentoJaCadastrado, envioIndisponivel}`, `aguardeConfirmacao.mensagem`, `empresas.status.inativo`, `empresas.toasts.naoAprovadaDescricao`, `empresas.toasts.erroExcluir`, `empresas.confirmarExclusao.descricao` |
 | testes da feature | `SignUpView.test.tsx`, `AwaitingConfirmationView.test.tsx`, `organizationsApi.test.ts`, `CompaniesSection.test.tsx`, `CompanyTable.test.tsx` e um `organizationsSlice.test.ts` novo |
@@ -706,7 +708,7 @@ O 409 da aprovação tem duas causas (outra pessoa já aprovou, ou o e-mail já 
 | `PasswordResetView` | `src/features/authentication/PasswordResetView.tsx` | erro do campo × aviso do envio |
 | `stubFetch` e `lastCall` | `src/test/stubFetch.ts` | o teste passa pelo `apiClient` de verdade e confere URL, método e corpo |
 | Testes atuais da API | `src/features/organizations/organizationsApi.test.ts` | formato das URLs esperadas (`/api/v1/...`) |
-| `StatusPill` | `src/components/table/tablePills.tsx`, linha 13 | sem `tone`, é o selo neutro |
+| `StatusPill` | `src/components/table/tablePills.tsx`, linha 13 | sem `tone`, o selo fica com texto branco e sem fundo, invisível no tema claro; o precedente de "Inativo" é `tone="destructive"`, na `MenteesTable` (`src/features/users/MenteesTable.tsx:62`) |
 | `apiClient` | `src/lib/apiClient.ts` | o `post` exige corpo: na aprovação, passe `undefined`. O `delete` não tem genérico (204 sem corpo) |
 
 Permalinks (abrem o arquivo na versão da `dev` do front usada nesta especificação):
@@ -776,7 +778,7 @@ No navegador, com o back das subtarefas 691, 692, 696 e 693 de pé e o Mailpit (
 
 - Para o código e os testes: nada. Eles andam contra o contrato acima, com o `stubFetch`.
 - Para o teste no navegador: subtarefas **692** (commit 1) e **691, 696, 693** (commit 2) na `dev` do back.
-- Para o passo 4: **creed-backend#52 na `dev`** (a rota de "esqueci minha senha"; a tela já está na `dev` do front).
+- Para o passo 4: o creed-backend#52 já está na `dev` (a rota de "esqueci minha senha"; a tela já está na `dev` do front).
 
 Branch `feat/694-integracao-empresas`, saída da `dev` do front.
 

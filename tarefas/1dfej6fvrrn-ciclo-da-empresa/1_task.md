@@ -71,11 +71,14 @@ número de organizações.
 tipo (o autogenerate não a escreve direito), teste, faça `alembic downgrade` e só então
 apague o arquivo. A seção "Banco" do PR copia os quatro passos da spec (Dados):
 `CREATE TYPE`, `ALTER ... USING status::text::organization_status`, as três colunas sem
-`server_default`, e o downgrade que troca `pending` por `inactive` antes de voltar o tipo.
+`server_default`, e o downgrade que troca `PENDING` por `INACTIVE` antes de voltar o tipo.
+O `CREATE TYPE` leva os rótulos em maiúsculas (`'PENDING', 'ACTIVE', 'INACTIVE'`), porque o
+SQLAlchemy grava o nome do membro, como no `recordstatus` e no `doc_type`; a API continua
+mostrando `pending`.
 
 ⚠️ **Divergência conhecida:** `scripts/convidar_primeiro_admin.py`, do creed-backend#53
-(aberto), também grava `RecordStatus.ACTIVE` na organização da CREED (linha ~159). Quem
-mergear por último troca para `OrganizationStatus.ACTIVE`. Diga isso no PR.
+(já na `dev`), também grava `RecordStatus.ACTIVE` na organização da CREED (linha ~159).
+Troque para `OrganizationStatus.ACTIVE` nesta task. Diga isso no PR.
 
 ## Molde
 
