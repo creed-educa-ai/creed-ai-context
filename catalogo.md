@@ -20,7 +20,7 @@ FastAPI. Organização **por domínio** (ADR-002 §2.1). Cada `app/domains/<nome
 |---|---|---|
 | `users` | `POST /users`, `DELETE /users/{id}` | **molde** — domínio-exemplo completo (tabela `user`, CREED-23). Convite de membro e reenvio estão em branches abertas |
 | `authentication` | `POST /authentication/login`, `POST /authentication/renew`, `GET /authentication/session` | via Keycloak; sem tabela própria. `password-reset` está em branch aberta |
-| `links` | `POST /organizations/{id}/links`, `PATCH /organizations/{id}/members/{link_id}` (troca de setor, CREED-6910) | tabela `links`. As rotas de membros ficam num segundo router (`router_members.py`) e leem o membro por JOIN (adendo ao ADR-0004) |
+| `links` | `POST /organizations/{id}/links`; membros: `GET /organizations/{id}/members` (lista, M-2), `PATCH /organizations/{id}/members/{link_id}` (troca de setor, CREED-6910) e `DELETE /organizations/{id}/members/{link_id}` (exclusão, M-3) | tabela `links`. As rotas de membros ficam num segundo router (`router_members.py`) e leem o membro por JOIN (adendo ao ADR-0004) |
 | `participants` | `POST /participants`, `GET /participants/{id}` | tabela `participants` |
 | `organizacoes` | `POST`, `GET` (paginado), `GET /{id}`, `PATCH /{id}` em `/organizacoes` | tabela `organizations`. Pasta e rota em português |
 | `department` | `POST /department`, `GET /department/{id}` | tabela `departments`. Pasta e rota no singular |
@@ -59,9 +59,9 @@ A rota é transcrita como o back a expõe.
 | `authentication` | `authentication` | **molde** — login, sessão e "esqueci a senha", ligada ao backend |
 | `responses` | `responses` (+ `forms`, `questions`) | questionário: onboarding, perguntas, revisão e enviado. Ligado ao backend; as objetivas ainda são de demonstração (P-039) |
 | `forms`, `questions` | `forms`, `questions` | só `Api.ts` (consumido pelo questionário) e, em `forms`, o período do questionário do painel da empresa |
-| `users` | `users` | membros (painel da empresa) e mentorandos (painel do super adm). Listas em **mock no `usersApi.ts`**; convite já transcrito |
+| `users` | `users` | membros (painel da empresa) e mentorandos (painel do super adm). Os membros ainda em **mock no `usersApi.ts`** (C-2); os mentorandos ligados ao back (M-4): lista e exclusão pelo `linksApi`, convite pelo `usersApi` |
 | `organizations` | `organizacoes` | empresas do super adm, cadastro público e "aguarde confirmação". Empresas em **mock no `organizationsApi.ts`**; rotas reais transcritas |
-| `participants`, `links`, `departments` | idem | só `Api.ts`, ainda sem tela |
+| `participants`, `links`, `departments` | idem | só `Api.ts`, ainda sem tela própria. O `linksApi` já é usado pela tabela de mentorandos (`users`) |
 | `demographics` | `demographics` | as 3 etapas de dados demográficos; campos com os nomes do `DemographicCreate`. Sem `Api.ts`: o back não tem rota |
 | `dashboards` | `dashboards` | dashboards individual e da empresa. Dados em **mock no `dashboardsApi.ts`** |
 | `controlPanel` | — | páginas de composição (painel da empresa e do super adm): juntam seções de outras features |

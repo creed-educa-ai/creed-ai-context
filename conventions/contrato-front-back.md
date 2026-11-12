@@ -38,7 +38,7 @@ seção por domínio.
 |---|---|---|
 | `authentication` | todos | `authentication` |
 | `users` | admin | `users` |
-| `links` | admin cria o vínculo; admin e gestor trocam o setor dos membros (o gestor só na própria organização, P-066) | `links` |
+| `links` | admin cria o vínculo; admin e gestor listam os membros e trocam o setor deles (o gestor só na própria organização, P-066); gestor e admin excluem membro só na organização do próprio vínculo (P-071) | `links` |
 | `participants` | admin | `participants` |
 | `organizacoes` | admin; o gestor lê a própria | `organizations` |
 | `department` | admin cria; leitura autenticada | `departments` |
@@ -46,10 +46,11 @@ seção por domínio.
 | `questions` | idem | `questions` |
 | `responses` | quem abriu a resposta | `responses` |
 
-Em **branches abertas** do back, já transcritas no front porque as telas dependem
-delas: `POST /organizations/{id}/members` (convite de membro),
-`POST /users/{id}/invitation` (reenvio) e `POST /authentication/password-reset`
-(`feat/86e35vhxm-*`).
+No `dev` do back desde 2026-11-10 (PRs #51 a #53, `feat/86e35vhxm-*`), e já
+transcritas no front: `POST /organizations/{id}/members` (convite de membro),
+`POST /users/{id}/invitation` (reenvio) e `POST /authentication/password-reset`.
+O convite é o único `POST` em `/organizations/{id}/members`: ele mora em
+`users`, e o `GET`, o `PATCH` e o `DELETE` do mesmo caminho moram em `links`.
 
 Com tabela e schema, **sem rota**: `demographics`, `insights`, `dashboards` (router
 stub) e `documents` (só tabela). `prismas`, `prognosticos` e `relatorios` são stubs
@@ -73,11 +74,16 @@ e o dado fictício mora no `<feature>Api.ts` (mock).
 |---|---|---|---|
 | Empresas (super adm) e cadastro público | `Company`: nome, e-mail, documento (número), responsável, telefone; status `ativo`/`pendente` | `OrganizationResponse`: `name`, `address`, `document_id`; status `active`/`inactive`; sem rota pública de cadastro | rota pública, onde moram e-mail/responsável/telefone e o estado "pendente" (CREED-591/595) |
 | Membros (painel da empresa) | `Member`: status `ativo`/`pendente`, `tag` = setor (`DepartmentType`) | `UserResponse` (`RecordStatus`); setor em `links.department_id` | rota que liste e remova membros; "pendente" = convite não aceito? |
-| Mentorandos (super adm) | `Mentee`: `hasAnsweredCurrent` | participante com vínculo `mentoria`; nada sobre "respondeu o atual" | rota que liste; de onde vem "respondeu" |
-| Adicionar mentorando | só e-mail | convite exige `name`, `email`, `role` e a organização | o nome entra na tela? qual organização? |
 | Período do questionário (painel da empresa) | início e término (data e hora) | `FormRead` tem só `status` | onde o período mora |
 | Dashboards | pedido por recorte (`period`, `department` ou `member_id`; sem nada, o período mais recente da organização inteira) e devolvido com o recorte resolvido; payload montado para a tela: períodos, notas dos prismas e das sete dimensões (`Dimension`), resumo, setores (`DepartmentType`) e membros para o recorte, e as comparações, uma por combinação de período e escopo (`scope`: um setor ou `organization`, a empresa toda; o nulo é "o mesmo que está sendo exibido"; o setor exibido também entra), com as notas de prismas e dimensões da referência, a variação já calculada e o período padrão de comparação (`default_period`, o anterior ao exibido); os períodos de comparação (`comparison_options.periods`) incluem o exibido, que a tela só deixa escolher junto de um setor; no resumo do Creed.ai, a análise, a recomendação, um texto curto por prisma e quais prismas são destaque e oportunidade; só na empresa, o alinhamento (pessoas por faixa de nota, P-061/P-062) e o mapa setores × prismas, sempre da organização inteira no período pedido (o recorte não o muda), com a diferença de cada setor já calculada | `DashboardResponse`: `user_id`, `form_id`, `is_private` | contrato de leitura dos dashboards (com `prismas` e `insights`); se o back manda todas as combinações ou responde a uma por vez; texto por prisma contraria a P-042 (um insight por resposta), e insight de setor ou organização ainda não existe |
 | Demográficos | `name` e `perspective` junto do rascunho | `DemographicCreate` não tem nenhum dos dois; `name` é do `Participant` | rota de gravação e onde mora a `perspective` |
+
+**Resolvido em 2026-11-12 (M-4, CREED-699):** a tabela de mentorandos lê
+`GET /organizations/{id}/members?type=mentoria` (`MemberListItem`, da M-2) com a
+organização da sessão, e o tipo provisório `Mentee` saiu. "Respondeu o atual" é o
+`period.has_answered` que o back calcula (P-068, P-069), e a tabela não tem mais
+status. O "Adicionar mentorando" pede nome e e-mail e convida com papel
+`respondente`, tipo `mentoria` e a organização da sessão (a da CREED, P-048).
 
 **Resolvido em 2026-11-02:** a tag do membro é o setor do vínculo (`DepartmentType`), com a mesma tag e a mesma cor em toda tela (`src/components/department/DepartmentTag.tsx`; cores placeholder em `src/lib/departmentColors.ts`). "Vendas" deixou de existir, porque o back não tem esse setor.
 
