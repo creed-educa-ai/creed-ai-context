@@ -1,8 +1,9 @@
-# (sem ID) — Esteira de insights por IA: do envio da resposta ao dashboard
+# 1dfej6fwdaj — CREED - 80 · Esteira de insights por IA: do envio da resposta ao dashboard
 
-> Spec escrita em 2026-11-14 a pedido do Luís (AGES III, arquiteto), **sem tarefa no
-> ClickUp**. A pasta ganha o prefixo do ID quando o épico for publicado
-> (`<id>-esteira-de-insights`). Implementa o
+> Spec escrita em 2026-11-14 a pedido do Luís (AGES III, arquiteto), antes de existir
+> tarefa no ClickUp. O épico foi publicado no mesmo dia como
+> [CREED - 80](https://app.clickup.com/t/1dfej6fwdaj), com as subtarefas 801 a 8016
+> ([`clickup.md`](clickup.md)), e a pasta ganhou o ID. Implementa o
 > [ADR-0010](../../decisoes/adrs/0010-esteira-de-ia-outbox-e-worker.md), que segue
 > **Proposto**, e o emenda em sete pontos ("Divergências do ADR-0010", abaixo), já
 > registrados no [adendo de 2026-11-14](../../decisoes/adrs/0010-esteira-de-ia-outbox-e-worker.md#adendo--a-esteira-de-ponta-a-ponta-2026-11-14)
@@ -789,8 +790,8 @@ Seguem valendo: P-042 (um insight por resposta) e P-044 (sem "tentar de novo").
 - [ ] Combinar com o Leo os campos novos do `creed_summary` (`insight_status`,
       `generated_at`).
 - [x] Decompor em tasks: [`tasks.md`](tasks.md), 16 tasks, em 2026-11-14.
-- [ ] Publicar o épico no ClickUp (skill `publicar-no-clickup`) e renomear esta pasta
-      com o ID.
+- [x] Publicar o épico no ClickUp e renomear esta pasta com o ID: [CREED - 80](https://app.clickup.com/t/1dfej6fwdaj),
+      subtarefas 801 a 8016, em 2026-11-14.
 - [ ] Atualizar a seção "Esteira de IA" da `arquitetura.md` e o mapa tabela → domínio do
       `modelo-de-dados.md`: `Insight` mora em `insights`, não em `prismas`.
 

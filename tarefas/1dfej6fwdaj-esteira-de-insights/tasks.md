@@ -1,4 +1,4 @@
-# Tasks — (sem ID) · Esteira de insights por IA
+# Tasks — 1dfej6fwdaj · CREED - 80 · Esteira de insights por IA
 
 Spec: [`spec.md`](spec.md)
 
@@ -14,11 +14,32 @@ Decomposição aprovada pelo Luís em 2026-11-14, com três decisões tomadas an
 
 ## Branches
 
-Os nomes saem quando o épico for publicado no ClickUp, porque a branch precisa do ID. As
+Uma branch e um PR por subtarefa do [épico CREED - 80](https://app.clickup.com/t/1dfej6fwdaj),
+com o número da subtarefa como ID, no padrão do board (`feat/691-empresa-pendente`). As
 tasks do `creed-backend` vão **empilhadas** (modo AGES III, item 5): cada uma sai da
 anterior depois do commit dela, e o PR aponta para a branch de baixo até ela entrar na
-`dev`. As tasks de N8N (6, 8 e 15) e o dossiê (7) mexem só em `docker/n8n/`, então podem
-sair da `dev` e correr em paralelo com o back.
+`dev`. As tasks de N8N (6, 8 e 15) e o dossiê (7) mexem só em `docker/n8n/`, então saem
+da `dev` e correm em paralelo com o back. Os nomes abaixo são proposta: quem pega a
+subtarefa pode ajustar o contexto, nunca o número.
+
+| Subtarefa | Task | Repo | Branch | Sai de |
+|---|---|---|---|---|
+| [801](https://app.clickup.com/t/1dfej6fwdak) | 1 | back | `feat/801-contrato-da-esteira` | `dev` |
+| [802](https://app.clickup.com/t/1dfej6fwdam) | 2 | back | `feat/802-envio-grava-pedido` | `feat/801-contrato-da-esteira` |
+| [803](https://app.clickup.com/t/1dfej6fwdan) | 3 | back | `feat/803-pedido-e-client-n8n` | `feat/802-envio-grava-pedido` |
+| [804](https://app.clickup.com/t/1dfej6fwdaq) | 4 | back | `feat/804-worker-de-insights` | `feat/803-pedido-e-client-n8n` |
+| [805](https://app.clickup.com/t/1dfej6fwdar) | 5 | back | `feat/805-volta-do-n8n` | `feat/802-envio-grava-pedido` |
+| [806](https://app.clickup.com/t/1dfej6fwdau) | 6 | back (`docker/n8n/`) | `feat/806-workflow-insight-v1` | `dev`, depois da 801 |
+| [807](https://app.clickup.com/t/1dfej6fwdav) | 7 | back (`docker/n8n/`) | `docs/807-dossie-teorico` | `dev` |
+| [808](https://app.clickup.com/t/1dfej6fwdaw) | 8 | back (`docker/n8n/`) | `feat/808-prompts-e-avaliacao` | `feat/806-workflow-insight-v1` |
+| [809](https://app.clickup.com/t/1dfej6fwdax) | 9 | infra | `feat/809-worker-em-producao` | `dev` |
+| [8010](https://app.clickup.com/t/1dfej6fwday) | 10 | back | `feat/8010-dashboard-le-insight` | `dev`, depois da 805 e da CREED - 74 |
+| [8011](https://app.clickup.com/t/1dfej6fwdaz) | 11 | front | `feat/8011-estados-do-creed-ai` | `dev` |
+| [8012](https://app.clickup.com/t/1dfej6fwdb0) | 12 | infra | `docs/8012-roteiro-da-esteira` | `dev` |
+| [8013](https://app.clickup.com/t/1dfej6fwdb1) | 13 | back | `feat/8013-insight-da-empresa` | `dev`, depois da 804 e da CREED - 74 |
+| [8014](https://app.clickup.com/t/1dfej6fwdb2) | 14 | back | `feat/8014-dashboard-da-empresa` | `feat/8013-insight-da-empresa` |
+| [8015](https://app.clickup.com/t/1dfej6fwdb3) | 15 | back (`docker/n8n/`) | `feat/8015-ramo-da-empresa` | `dev`, depois da 808 |
+| [8016](https://app.clickup.com/t/1dfej6fwdb4) | 16 | front | `feat/8016-texto-da-empresa` | `dev`, depois da 8011 |
 
 ## Progresso
 
