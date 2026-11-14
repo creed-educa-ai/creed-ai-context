@@ -4,7 +4,7 @@
 > ClickUp**. A pasta ganha o prefixo do ID quando o épico for publicado
 > (`<id>-esteira-de-insights`). Implementa o
 > [ADR-0010](../../decisoes/adrs/0010-esteira-de-ia-outbox-e-worker.md), que segue
-> **Proposto**, e o emenda em seis pontos ("Divergências do ADR-0010", abaixo), já
+> **Proposto**, e o emenda em sete pontos ("Divergências do ADR-0010", abaixo), já
 > registrados no [adendo de 2026-11-14](../../decisoes/adrs/0010-esteira-de-ia-outbox-e-worker.md#adendo--a-esteira-de-ponta-a-ponta-2026-11-14)
 > do ADR.
 >
@@ -33,6 +33,18 @@
 >    continua anônimo para ela, como o dashboard já faz ("o resultado individual é
 >    anônimo para a empresa", `CompanyViewFilter.tsx`).
 > 2. Uma resposta gera um insight só, com o conteúdo em **JSON validado** pelo back.
+>
+> **Decisões do Luís na decomposição (2026-11-14):**
+>
+> 3. O N8N é o **da AWS**, uma instância self-hosted que já está pronta e não nasce da
+>    publicação do back. O workflow é montado direto nela, com a credencial do Bedrock
+>    que já está lá. Não há N8N local para a esteira.
+> 4. **Não há integração entre o back local e a AWS.** O back se testa sozinho, com um
+>    N8N falso, e a ida e a volta reais são testadas depois da publicação.
+> 5. As pontas se validam antes da publicação por um **kit de contrato** que os dois
+>    lados usam ("Abordagem técnica", item 5).
+>
+> As tasks estão em [`tasks.md`](tasks.md).
 
 ## Calibragem
 
@@ -69,12 +81,14 @@ não chama o Bedrock, e ninguém recebe a volta.
 1. **Ida (back).** O envio grava o pedido de insight individual na mesma transação e
    agenda o da empresa quando o período atinge o piso. Um worker dedicado monta o
    payload e dispara o N8N no ritmo do ADR-0010.
-2. **Esteira (N8N + Bedrock).** Um workflow com uma entrada e dois ramos (individual e
-   empresa). Cada ramo faz uma chamada ao Claude no Bedrock, com o dossiê teórico em
-   cache e saída em JSON com schema, e devolve o resultado por um callback assinado. Um
-   workflow de erro cobre as falhas.
+2. **Esteira (N8N da AWS + Bedrock).** Montada no N8N que já roda na EC2: um workflow
+   com uma entrada e dois ramos (individual e empresa). Cada ramo faz uma chamada ao
+   Claude no Bedrock, com a credencial que já existe, o dossiê teórico em cache e saída
+   em JSON com schema, e devolve o resultado por um callback assinado. Um workflow de
+   erro cobre as falhas. Os workflows exportados ficam registrados no git.
 3. **Base de conhecimento.** O dossiê, escrito pelo time a partir da bibliografia da
-   cliente, e os prompts dos dois ramos, versionados no git.
+   cliente, e os prompts dos dois ramos, versionados no git e colados no workflow, com
+   um teste que confere que os dois textos são iguais.
 4. **Volta (back).** Callback assinado e idempotente e validação do conteúdo. O
    insight individual fica ligado à resposta e, por ela, ao vínculo e à organização; o
    da empresa fica ligado à organização e ao período.
@@ -83,10 +97,14 @@ não chama o Bedrock, e ninguém recebe a volta.
 6. **Front.** O `ResultText` ganha os estados "em preparo" e "indisponível" e mostra a
    data do texto. O slice faz polling enquanto o insight está em preparo, e a
    confirmação do envio avisa que o insight vem a seguir.
-7. **Infra.** O `insight-worker` entra nos dois compose e no `deploy.sh`. A credencial do
-   Bedrock entra no N8N, e o Caddy passa a responder 404 ao callback vindo de fora.
-8. **Avaliação.** Um conjunto de perfis sintéticos com critérios checáveis, rodado
-   antes de ligar a esteira em produção.
+7. **Infra.** O `insight-worker` entra nos dois compose e no `deploy.sh`, e o Caddy
+   passa a responder 404 ao callback vindo de fora. O serviço `n8n` não muda.
+8. **Avaliação.** Um conjunto de perfis sintéticos com critérios checáveis, rodado num
+   workflow de avaliação no próprio N8N antes de ligar a esteira.
+9. **Kit de contrato.** Schemas, exemplos e um vetor de assinatura que o back e o N8N
+   usam como verdade única.
+10. **Integração depois da publicação.** Um roteiro que uma pessoa executa em produção,
+    com uma organização de teste, e apaga no fim.
 
 **Não entra:**
 
@@ -111,14 +129,21 @@ não chama o Bedrock, e ninguém recebe a volta.
 - Notificação por e-mail ou push quando o insight fica pronto.
 - Painel de observabilidade. O sinal continua sendo o log e a contagem de `pending`
   antigos (ADR-0010).
+- N8N local, modo simulado, túnel, e qualquer chamada entre o back local e a AWS
+  (decisão 4). O serviço `n8n` do compose local fica como está, sem uso pela esteira.
+- Mudanças no serviço `n8n` da EC2: compose, variáveis, a credencial do Bedrock e
+  `N8N_CONCURRENCY_PRODUCTION_LIMIT`. Quem regula o ritmo é só o `INSIGHT_MAX_IN_FLIGHT`
+  do worker.
+- Usuário IAM por modelo: fica a credencial que já existe no N8N.
 
 ## Repos afetados
 
 | Repo | O que muda |
 |---|---|
-| creed-backend | domínio `insights` (model, migration, schemas, repository, service, router); `responses` (compõe no envio); `dashboards` (lê o insight); `prismas` (cálculo sem usuário logado); `app/external_services/n8n/`; `app/workers/insights.py`; `app/core/database.py` (unidade de trabalho); `app/core/security.py` (assinatura); `config.py`; compose local. O workflow, os prompts e o dossiê ficam em `docker/n8n/` |
+| creed-backend | domínio `insights` (model, migration, schemas, repository, service, router); `responses` (compõe no envio); `dashboards` (lê o insight); `prismas` (cálculo sem usuário logado); `app/external_services/n8n/`; `app/workers/insights.py`; `app/core/database.py` (unidade de trabalho); `app/core/security.py` (assinatura); `config.py`; o `insight-worker` no compose local. Em `docker/n8n/` ficam o registro dos workflows exportados, os prompts, o dossiê, a avaliação e o kit de contrato |
 | creed-frontend | feature `dashboards` (`ResultText`, tipos do `creed_summary`, polling no slice); feature `responses` (`SubmissionConfirmationView` avisa que o insight está em preparo) |
-| creed-infrastructure | `ec2/docker-compose.yml` (worker e variáveis do N8N e do back), `ec2/deploy.sh`, `ec2/Caddyfile` |
+| creed-infrastructure | `ec2/docker-compose.yml` (worker e variáveis do back; o serviço `n8n` não muda), `ec2/deploy.sh`, `ec2/Caddyfile`, e o roteiro de integração |
+| N8N da AWS | os workflows de entrada, geração, erro e avaliação, montados no editor; as credenciais do token e do segredo da volta. A credencial do Bedrock não muda |
 | creed-ai-context | esta spec, o ledger, a emenda do ADR-0010, `arquitetura.md` e `modelo-de-dados.md` |
 
 Nome do domínio: `insights` no back. **No front não há feature `insights`, de
@@ -484,9 +509,14 @@ Os prompts e o dossiê ficam versionados em `creed-backend/docker/n8n/`:
 O `prompt_version` gravado em cada insight combina as versões, por exemplo
 `individual-v1+dossie-v1`.
 
+Os `.md` são a fonte. O texto é colado nos nós do workflow no N8N da AWS, e o JSON
+exportado volta ao git. Um teste do back falha se o texto dentro do JSON for diferente
+do texto dos `.md`, para que o que roda e o que foi revisado sejam o mesmo.
+
 #### 2.4 O modelo e a chamada
 
-- **Modelo:** Claude Opus 5.5 (`anthropic.claude-opus-5-5` no Bedrock), com esforço
+- **Modelo:** o que a credencial do Bedrock que já está no N8N libera. A recomendação é
+  o Claude Opus 5.5 (`anthropic.claude-opus-5-5` no Bedrock), com esforço
   `medium` explícito. É o padrão desse modelo, mas fica escrito. O pensamento é
   adaptativo e, no Opus 5.5, não desliga. Trocar por um modelo mais barato é decisão do
   time depois de medir com o conjunto de avaliação; o `model_id` gravado em cada
@@ -502,9 +532,9 @@ O `prompt_version` gravado em cada insight combina as versões, por exemplo
   - `refusal` vira callback `failed` com `retryable: false`. O Bedrock não tem o
     fallback de servidor da API da Anthropic.
   - `max_tokens` vira `failed` com `retryable: true`.
-- **Como chamar:** um nó HTTP Request com credencial AWS (assinatura SigV4) contra o
-  endpoint de Messages do Claude no Bedrock. O corpo é montado num nó Code a partir dos
-  arquivos versionados.
+- **Como chamar:** um nó HTTP Request com a credencial AWS que já está no N8N
+  (assinatura SigV4), contra o endpoint de Messages do Claude no Bedrock. O corpo é
+  montado num nó Code, com o texto dos prompts e do dossiê.
 
   **Descartados:** os nós LangChain do N8N (AWS Bedrock Chat Model e Structured Output
   Parser). Eles escondem `cache_control`, `output_config` e `effort`, e o prompt fica
@@ -525,13 +555,14 @@ O `prompt_version` gravado em cada insight combina as versões, por exemplo
 
 #### 2.5 Segurança na esteira
 
-- O webhook exige um token (Header Auth do N8N), além de estar na rede interna e atrás
-  do basic auth do Caddy na porta 5679.
+- O webhook exige um token (Header Auth do N8N). Além disso, ele só responde pela rede
+  interna da EC2, e de fora tudo na porta 5679 passa pela senha do editor. Nada disso
+  muda: o back de produção chama pela rede interna.
 - A URL do callback é fixa no workflow (`http://back:8000/api/v1/insights/callback`) e
   nunca vem do payload.
-- Os segredos ficam fora do JSON exportado: numa credencial do N8N ou em variável de
-  ambiente do container, conforme o que a 2.43.4 permitir nos nós usados (a task
-  confere). Nunca ficam como literal num nó.
+- Os segredos ficam fora do JSON exportado, em credenciais do N8N. Nunca ficam como
+  literal num nó. Variável de ambiente do container está fora, porque o serviço `n8n`
+  não muda.
 - A resposta aberta entra como dado: entre marcadores, com instrução explícita, numa
   chamada sem ferramentas e com saída restrita por schema.
 - O nó que assina recebe a string exata que vai no corpo. Assinar um objeto e mandar
@@ -543,7 +574,8 @@ O `prompt_version` gravado em cada insight combina as versões, por exemplo
 |---|---|
 | Webhook, nó de validação e resposta imediata | fica a estrutura |
 | `docker/n8n/examples/` e `tests/n8n/` (testes sobre o JSON do workflow) | fica a forma, com o contrato novo |
-| Gerador determinístico | fica como **modo simulado**, para o ambiente local e o teste de carga; não vai a produção |
+| Gerador determinístico | **sai**: não há N8N local. Antes da publicação, quem prova o contrato é o kit (item 5) |
+| `docker-compose.yml` montando `./docker/n8n/workflows` no N8N local | **sai**: o workflow é montado no N8N da AWS e só o export vem ao git |
 | Recalcular a matriz dentro do N8N | **sai**: fere o princípio 1, duplica a fórmula, e a POC ainda usa 3,5 quando falta uma dimensão |
 | `callback_url` vindo no payload | **sai**: a URL fica fixa no workflow |
 | header `X-Creed-Webhook-Secret` com o segredo escrito no JSON do workflow | **sai**: HMAC com o segredo fora do git |
@@ -590,6 +622,36 @@ Descartadas na volta:
   chegam a 5 respostas, então a organização da CREED não recebe insight agregado. Isso
   é coerente com o anonimato.
 
+### 5. Como as pontas se validam antes da publicação
+
+O N8N é o da AWS, e o back local não fala com ele (decisões 3 e 4). A ida e a volta
+reais só se encontram em produção. Para que esse encontro não seja a primeira vez que os
+dois lados comparam o contrato, os dois usam um **kit de contrato**, em
+`creed-backend/docker/n8n/contrato/`:
+
+| Arquivo | Quem usa | Para quê |
+|---|---|---|
+| `ida.schema.json`, `volta.schema.json` | o back gera, o N8N lê | os contratos, gerados dos modelos Pydantic |
+| `exemplo-ida-individual.json` | back e N8N | o back confere que o payload que monta tem essa forma; o N8N roda com ele fixado |
+| `exemplo-volta-done.json`, `exemplo-volta-failed.json` | back | a rota de volta aceita os dois, assinados |
+| `vetor-hmac.json` | back e N8N | segredo de teste, timestamp, corpo e assinatura esperada: os dois lados precisam chegar ao mesmo valor |
+| `saida-n8n.json` | o N8N grava, o back testa | o corpo que o N8N produziu de verdade, validado pelo schema do back |
+
+Um teste do back falha se os schemas commitados divergirem dos modelos Pydantic. Quem
+muda o contrato regera os arquivos, e o diff mostra a mudança aos dois lados.
+
+**Descartadas:**
+
+| Alternativa | Por que não |
+|---|---|
+| Liberar o webhook na porta 5679 para o back local, com túnel para a volta | decisão 4: nenhuma integração entre o local e a AWS. Também exigiria mudar o Caddy e manter um túnel por dev |
+| Um N8N local com o workflow importado | uma segunda cópia da esteira, que diverge da de produção. Era o caminho da POC |
+| Nenhuma validação antes da produção | o primeiro desencontro de contrato, ou de assinatura, apareceria com o produto no ar |
+
+**Depois da publicação**, um roteiro executado por uma pessoa em produção prova a ida e
+a volta reais (task 12). Ele usa uma organização de teste, só com dados sintéticos, e a
+apaga no fim pela exclusão de empresa.
+
 ## Divergências do ADR-0010 (registradas no adendo de 2026-11-14)
 
 | ADR-0010 | Esta spec | Por quê |
@@ -600,6 +662,7 @@ Descartadas na volta:
 | callback com o `N8N_CALLBACK_SECRET` | HMAC com timestamp, e a ida com token (`N8N_WEBHOOK_TOKEN`) | proteção contra replay; o webhook deixa de atender a qualquer um que alcance a rede |
 | o `GET /form-responses/{id}/insight` alimenta a tela de resultado | o texto aparece no dashboard, e a rota fica para o polling | o dashboard já desenha o texto (`ResultText`) |
 | todo `failed` volta a tentar | `retryable: false` encerra | uma recusa do modelo não muda com nova tentativa |
+| `N8N_CONCURRENCY_PRODUCTION_LIMIT` ligado "nos dois compose"; teste de carga contra um N8N simulado | o serviço `n8n` não muda e não há N8N local; o teste de carga vira o teste de concorrência do worker contra Postgres (task 4), e a integração é provada depois da publicação (task 12) | decisões 3 e 4 do Luís, na decomposição |
 
 ## Critérios de aceite
 
@@ -629,6 +692,11 @@ Descartadas na volta:
 - [ ] A rota do callback responde 404 vinda de fora (Caddy) e atende pela rede interna.
 - [ ] O JSON exportado do workflow não contém segredo, e o workflow não usa URL vinda
       do payload.
+- [ ] O kit de contrato está commitado, e os dois lados passam nele: o payload do back
+      valida contra o `ida.schema.json`, a `saida-n8n.json` valida contra o
+      `volta.schema.json`, e o back e o N8N reproduzem a assinatura do `vetor-hmac.json`.
+- [ ] O roteiro de integração da task 12 passa em produção, nas duas partes, e a
+      organização de teste é apagada no fim.
 - [ ] O conjunto de avaliação passa nos critérios automáticos em todos os perfis, e a
       leitura humana aprova ("Como verificar", passo 5).
 - [ ] `pytest`, `ruff`, `mypy` e `tests/test_arquitetura.py` ficam verdes com a rede
@@ -640,21 +708,17 @@ Descartadas na volta:
    - o service (backoff, varredura, idempotência, gatilho da empresa);
    - a assinatura do callback;
    - a arquitetura (`tests/test_arquitetura.py`).
-2. **Ponta a ponta local, em modo simulado.**
-   1. Subir o compose com `db`, `n8n`, `back` e `insight-worker`.
-   2. Importar o workflow com o gerador determinístico no lugar do Bedrock.
-   3. Enviar uma resposta pelo front.
-   4. Ver `pending → dispatched → done` no banco e o texto no dashboard.
-3. **Falhas.**
-   - Parar o N8N, enviar uma resposta, ver o backoff no banco e religar o N8N.
-   - Matar o worker no meio de um disparo e ver a varredura devolver o insight a
-     `pending` (com o setting do timeout baixado para o teste).
-4. **Carga** (pendência do ADR-0010). Fazer 50 a 100 envios simultâneos em modo
-   simulado e conferir:
-   - nenhum insight perdido nem duplicado;
-   - `dispatched` nunca acima de `INSIGHT_MAX_IN_FLIGHT`;
-   - o webhook responde de imediato.
-5. **Bedrock, com o custo aprovado antes.**
+2. **Kit de contrato.** O back valida o próprio payload e a `saida-n8n.json` contra os
+   schemas do kit, e reproduz o `vetor-hmac.json`. No N8N, o workflow roda com o
+   exemplo de ida fixado e o nó que assina chega à mesma assinatura do vetor.
+3. **Falhas, no back.** Com o client falso: falha de disparo vira backoff e, no limite,
+   `failed`. Um `dispatched` esquecido volta a `pending` pela varredura (com o setting
+   do timeout baixado no teste).
+4. **Concorrência** (a pendência de carga do ADR-0010). Contra Postgres, com
+   `RUN_POSTGRES_TESTS=1`: 100 insights `pending`, dois ciclos do worker ao mesmo tempo
+   e um client falso. Nenhum se perde, nenhum é despachado duas vezes, e `dispatched`
+   nunca passa de `INSIGHT_MAX_IN_FLIGHT`.
+5. **Bedrock, no workflow de avaliação do N8N, com o custo aprovado antes.**
    1. **Chamada de fumaça:** o schema é respeitado, e `cache_read_input_tokens > 0` na
       segunda chamada.
    2. **Conjunto de avaliação, ~20 perfis individuais sintéticos:**
@@ -671,8 +735,16 @@ Descartadas na volta:
    4. **Leitura humana:** AGES III e IV leem todos os textos com uma ficha de quatro
       perguntas. É fiel ao número? Usa o dossiê? A recomendação é praticável? O tom é
       de desenvolvimento?
-6. **Infra.** Subir o compose local com o worker e ensaiar o `deploy.sh` sem tocar a
-   EC2.
+6. **Infra.** Validar o compose da EC2 com `docker compose config` e o `deploy.sh` com
+   `bash -n`, sem tocar a EC2. No local, o `insight-worker` sobe e fica parado, porque
+   não há `N8N_WEBHOOK_URL`.
+7. **Integração, depois da publicação.** Uma pessoa executa o roteiro da task 12 em
+   produção, com uma organização de teste e dados sintéticos:
+   - a ida e a volta (`pending → dispatched → done`);
+   - o workflow desativado gerando backoff, e a volta ao normal;
+   - o 404 do callback vindo de fora;
+   - o cache na segunda chamada;
+   - a limpeza no fim.
 
 ## Premissas
 
@@ -696,41 +768,33 @@ Seguem valendo: P-042 (um insight por resposta) e P-044 (sem "tentar de novo").
 |---|---|
 | **O dossiê é o produto.** Um dossiê raso gera insight genérico, e nenhum teste automático pega isso | a leitura humana reprova a pergunta "usa o dossiê?" |
 | Respostas abertas com dado pessoal (nome de colega, saúde) chegam ao Bedrock | nomes aparecem nos textos dos perfis de avaliação; P-091 na pauta |
-| O modelo pode não estar disponível em `sa-east-1`, e o dado do respondente sairia do país (LGPD) | a região do Bedrock escolhida pelo dono de infra; vai para a pauta |
+| A credencial do Bedrock que já está no N8N pode apontar para uma região fora do país, e o dado do respondente sairia do Brasil (LGPD) | a região que a credencial usa, conferida na task 6; vai para a pauta |
+| **A integração só é provada em produção.** O primeiro encontro real entre o back e o N8N acontece com o produto no ar | o roteiro da task 12 falhando; o kit de contrato reduz esse risco, mas não o elimina (rede, credenciais, variáveis da EC2) |
 | A cota do Bedrock é desconhecida, então `INSIGHT_MAX_IN_FLIGHT` é um chute | throttling no log do N8N e `attempts` subindo |
 | Cache frio em todo envio multiplica o custo | `cache_creation_input_tokens` alto em quase todas as chamadas |
 | O modelo recalcula ou contradiz uma nota | o critério automático "número fora do payload" |
 | O insight da empresa fica desatualizado: excluir uma pessoa não o regera | a data do texto anterior à exclusão |
 | O `creed_summary` muda enquanto a `feat/4-dashboard` não entrou | conflito no PR do Leo; a leitura do insight só entra depois do merge dela |
 | Um segredo é exportado por engano no JSON do workflow | grep do segredo no diff do PR |
-| Os passos humanos em produção ficam para trás: importar o workflow, o dossiê e os prompts; criar a credencial AWS; recriar o worker | `pending` envelhecendo em produção |
+| Os passos humanos em produção ficam para trás: os segredos no `.env` da EC2 e nas credenciais do N8N, colar no workflow a versão revisada dos prompts e do dossiê, recriar o worker | `pending` envelhecendo em produção; o teste de igualdade entre o JSON exportado e os `.md` falhando |
 
 ## Pendências e decisões abertas
 
-- [x] Registrar a emenda no ADR-0010: adendo de 2026-11-14, itens A1 a A6.
+- [x] Registrar a emenda no ADR-0010: adendo de 2026-11-14, itens A1 a A7.
 - [ ] Aceitar o ADR-0010 em reunião interna, com o adendo.
-- [ ] Com o dono de infra: a região do Bedrock, o perfil de inferência, a cota e um
-      usuário IAM só com `bedrock:InvokeModel` no modelo escolhido. A IA não roda `aws`.
+- [ ] Conferir o que a credencial do Bedrock que já está no N8N libera: o modelo, a
+      região e a cota. **Sem mudar a credencial** (task 6). A IA não roda `aws`.
 - [ ] Inventário da bibliografia: onde estão os PDFs e planilhas da cliente e quem
       escreve o dossiê.
 - [ ] Combinar com o Leo os campos novos do `creed_summary` (`insight_status`,
       `generated_at`).
-- [ ] Publicar o épico no ClickUp (`/tasks`, depois a skill `publicar-no-clickup`) e
-      renomear esta pasta com o ID.
+- [x] Decompor em tasks: [`tasks.md`](tasks.md), 16 tasks, em 2026-11-14.
+- [ ] Publicar o épico no ClickUp (skill `publicar-no-clickup`) e renomear esta pasta
+      com o ID.
 - [ ] Atualizar a seção "Esteira de IA" da `arquitetura.md` e o mapa tabela → domínio do
       `modelo-de-dados.md`: `Insight` mora em `insights`, não em `prismas`.
 
-## Entregas (esboço para o `/tasks`)
+## Entregas
 
-| # | Entrega | Repo | Depende de |
-|---|---|---|---|
-| 1 | Model e migration temporária de `insights`, e o `InsightContent` | back | ADR-0010 aceito |
-| 2 | Ida individual: o envio grava o `pending`; unidade de trabalho, client do N8N, worker com backoff e varredura | back | 1 |
-| 3 | Volta: `core/security.py`, o callback e o `GET` de status | back | 1 |
-| 4 | Workflow `insight-v1` individual: webhook, modo simulado, chamada ao Bedrock, assinatura e error workflow | back (`docker/n8n/`) | o contrato desta spec |
-| 5 | Dossiê v1, prompts v1 e conjunto de avaliação | back (`docker/n8n/`) e time | inventário |
-| 6 | Infra: worker nos dois compose, `deploy.sh`, Caddy, variáveis e credencial | infra | 2, 3 |
-| 7 | Os dashboards leem o insight (`creed_summary`) | back | 3 e a `feat/4-dashboard` na `dev` |
-| 8 | Front: estados e data no `ResultText`, polling e aviso na confirmação do envio | front | 7 |
-| 9 | Insight da empresa: gatilho, payload agregado, ramo no workflow e prompt | back | 2 a 7 |
-| 10 | Front: o texto da empresa | front | 8, 9 |
+A decomposição está em [`tasks.md`](tasks.md): 16 tasks, aprovadas pelo Luís em
+2026-11-14. O esboço de 10 entregas que estava aqui foi substituído por ela.

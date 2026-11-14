@@ -22,7 +22,8 @@
 >
 > *Emendado em 2026-11-14:* segue **Proposto**. A spec da esteira de insights ligou as
 > três pontas (back, N8N com Bedrock e volta) e mudou seis pontos deste texto, sem mexer
-> no mecanismo. As mudanças estão no
+> no mecanismo. Na decomposição em tasks, no mesmo dia, entrou um sétimo: o N8N é o da
+> AWS, sem cópia local (A7). As mudanças estão no
 > [adendo](#adendo--a-esteira-de-ponta-a-ponta-2026-11-14), e cada item afetado tem um
 > aviso. O aceite em reunião interna vale para o texto **com o adendo**.
 
@@ -167,6 +168,10 @@ GET  /api/v1/form-responses/{id}/insight   → {status, content, created_at}, co
    On Fail* para o throttling, e um *error workflow* avisa a falha pelo mesmo callback,
    com `status = failed`.
 
+   > **Emendado em 2026-11-14:** o serviço `n8n` não muda, e a válvula
+   > `N8N_CONCURRENCY_PRODUCTION_LIMIT` não é ligada. Quem regula o ritmo é só o
+   > `INSIGHT_MAX_IN_FLIGHT` ([adendo, A7](#a7--o-n8n-é-o-da-aws-sem-cópia-local-itens-3-e-5-e-pendências)).
+
 6. **O callback entra pelo domínio `insights`.** A rota `POST /api/v1/insights/callback`
    fica em `insights/router.py`, e a assinatura é conferida por um `Depends` em
    `app/core/security.py`, com `hmac.compare_digest` e o `N8N_CALLBACK_SECRET` (o
@@ -305,7 +310,10 @@ desenho, porque a tela precisa delas.
 - [ ] **Teste de carga local** antes do aceite: 50 a 100 envios simultâneos contra um N8N
       com o Bedrock simulado. Precisa mostrar nenhum insight perdido, nenhum duplicado,
       `dispatched` nunca acima de `INSIGHT_MAX_IN_FLIGHT`, e que o webhook com o limite
-      de concorrência ligado continua respondendo de imediato.
+      de concorrência ligado continua respondendo de imediato. *Trocado em 2026-11-14
+      (adendo, A7):* sem N8N local, vira o teste de concorrência do worker contra
+      Postgres e um client falso (task 4 da esteira). A parte do webhook sai junto com a
+      válvula. A integração real é provada depois da publicação (task 12).
 - [ ] **Documentos que este ADR desatualiza, quando for Aceito:** a seção "Esteira de IA"
       da `arquitetura.md` passa a apontar para cá, e o mapa tabela → domínio do
       `modelo-de-dados.md` ainda põe `Insight` em `prismas`, mas o domínio no código é
@@ -329,8 +337,8 @@ worker em container próprio, `SKIP LOCKED`, backoff, varredura e callback idemp
 continuam como acima. O texto original fica como foi escrito; onde ele diverge, vale este
 adendo.
 
-A1 e A2 foram decididos pelo Luís em 2026-11-14. A3 a A6 saíram da spec, escrita a pedido
-dele.
+A1, A2 e A7 foram decididos pelo Luís em 2026-11-14. A3 a A6 saíram da spec, escrita a
+pedido dele.
 
 ### A1 — `content` vira `jsonb` (item 2)
 
@@ -442,6 +450,34 @@ respondente lia o insight (P-043).
   gestora não lê o insight individual de ninguém, só o agregado da empresa. É a P-086,
   que revê a P-043.
 
+### A7 — o N8N é o da AWS, sem cópia local (itens 3 e 5, e pendências)
+
+**Antes:** o item 5 ligava `N8N_CONCURRENCY_PRODUCTION_LIMIT` "nos dois compose", e a
+pendência de carga pedia um N8N local com o Bedrock simulado.
+
+**Agora:**
+
+- O N8N é a instância self-hosted que já roda na EC2, com a credencial do Bedrock que já
+  está nela. Ele não nasce da publicação do back, e o serviço `n8n` dos compose **não
+  muda**: nem variável, nem válvula, nem credencial.
+- O workflow é montado direto no N8N da AWS. O git guarda o export, os prompts, o
+  dossiê e um **kit de contrato** (schemas, exemplos e um vetor de assinatura) que o
+  back e o N8N usam como verdade única.
+- **Não há integração entre o back local e a AWS.** O `insight-worker` do compose local
+  fica parado sem `N8N_WEBHOOK_URL`, e o back se testa com um client falso.
+- Quem regula o ritmo é só o `INSIGHT_MAX_IN_FLIGHT` do worker.
+- A pendência de carga vira um teste de concorrência do worker contra Postgres. A ida e
+  a volta reais são provadas depois da publicação, por um roteiro executado em produção
+  com uma organização de teste.
+
+**Por quê:** a esteira já existe e funciona onde está. Uma cópia local seria uma segunda
+esteira, que diverge da de produção. E ligar o back local à AWS exigiria abrir o webhook
+para fora e manter um túnel por dev para a volta.
+
+**Custo aceito:** o primeiro encontro real entre o back e o N8N acontece em produção. O
+kit de contrato diminui esse risco: se os nomes de campo ou a assinatura não baterem, um
+teste falha antes. Mas o kit não cobre rede, credenciais nem as variáveis da EC2.
+
 ### Premissas do adendo
 
 | ID | Premissa | Reverter | Vai para |
@@ -485,3 +521,6 @@ moram só na spec.
 - **A3 a A5:** schemas do provedor, nós do N8N e o `Depends` de `core/security.py`. Não
   tocam em dado.
 - **A6:** guarda de rota e um campo do `creed_summary`.
+- **A7:** ligar a válvula é uma variável no serviço `n8n`. Um N8N local é o serviço que
+  o compose do back já tem, mais o workflow importado do export. Nenhum dos dois toca
+  em dado.
