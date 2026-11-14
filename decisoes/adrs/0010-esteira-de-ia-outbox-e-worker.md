@@ -8,6 +8,7 @@
   · [ADR-0004](0004-camadas-do-backend.md) · [ADR-0007](0007-amplify-e-ec2-no-lugar-do-eks.md)
   · [ADR-0009](0009-migration-consolidada-por-sprint.md) · tarefa do workflow:
   [CREED-55 — Desenvolvimento da esteira do n8n](https://app.clickup.com/t/86e3m2qft)
+  · spec ponta a ponta: [`tarefas/esteira-de-insights/spec.md`](../../tarefas/esteira-de-insights/spec.md)
 
 > **Quando vale.** Este ADR é implementado **na tarefa que ligar o N8N ao back**, e só
 > nela. Nada do que existe hoje muda por causa dele: a CREED-52 (`Insight`), o envio de
@@ -18,6 +19,12 @@
 > Vira **Aceito** quando o time confirmar em reunião interna. As premissas P-041 a P-044
 > (no fim deste documento) não bloqueiam o aceite: o mecanismo não muda com elas, só o
 > que a tela mostra e o que o payload leva.
+>
+> *Emendado em 2026-11-14:* segue **Proposto**. A spec da esteira de insights ligou as
+> três pontas (back, N8N com Bedrock e volta) e mudou seis pontos deste texto, sem mexer
+> no mecanismo. As mudanças estão no
+> [adendo](#adendo--a-esteira-de-ponta-a-ponta-2026-11-14), e cada item afetado tem um
+> aviso. O aceite em reunião interna vale para o texto **com o adendo**.
 
 ## Contexto
 
@@ -93,6 +100,9 @@ GET  /api/v1/form-responses/{id}/insight   → {status, content, created_at}, co
    coisas ficam gravadas ou nenhuma fica. Nenhuma chamada ao N8N acontece no caminho
    da requisição.
 
+   > **Emendado em 2026-11-14:** o envio também agenda o insight da empresa quando o
+   > período chega a 5 respostas enviadas ([adendo, A2](#a2--o-insight-da-empresa-entra-itens-1-2-e-3)).
+
 2. **O status mora no `Insight`.** A tabela `insights` ganha:
 
    | Coluna | Tipo | Para quê |
@@ -113,6 +123,11 @@ GET  /api/v1/form-responses/{id}/insight   → {status, content, created_at}, co
 
    O `unique` não atrapalha o insight de organização ([C24], `form_response_id` nulo):
    no Postgres, `NULL` não colide com `NULL`.
+
+   > **Emendado em 2026-11-14:** `content` vira `jsonb`, e entram `model_id`,
+   > `prompt_version` e `completed_at` ([adendo, A1](#a1--content-vira-jsonb-item-2)).
+   > Também entram `organization_id` e `form_id`, e `form_response_id` vira nulável
+   > ([adendo, A2](#a2--o-insight-da-empresa-entra-itens-1-2-e-3)).
 
 3. **Um worker dedicado, em container próprio.** O serviço `insight-worker` entra nos
    **dois** compose (o local do `creed-backend` e o de produção da EC2), com a mesma
@@ -142,6 +157,9 @@ GET  /api/v1/form-responses/{id}/insight   → {status, content, created_at}, co
    > correlação: `insight_id` e `form_response_id` na ida; `insight_id`, `status`
    > (`done`/`failed`) e `content` na volta. Confirmar com quem montar o workflow.
 
+   > **Emendado em 2026-11-14:** o contrato é o `insight-v1`, e a P-087 substitui a
+   > P-041 ([adendo, A3](#a3--o-contrato-insight-v1-substitui-a-p-041-item-4)).
+
 5. **O N8N recebe e devolve, sem fazer a fila.** O nó Webhook usa `Respond:
    Immediately`, e o POST do worker volta em milissegundos. `N8N_CONCURRENCY_PRODUCTION_LIMIT`
    fica ligado nos dois compose, com valor maior ou igual a `INSIGHT_MAX_IN_FLIGHT`: quem
@@ -161,6 +179,10 @@ GET  /api/v1/form-responses/{id}/insight   → {status, content, created_at}, co
    | `failed` | `pending` ou `dispatched` | a mesma regra de falha do disparo: backoff, ou `failed` no limite |
    | qualquer um | inexistente | 404 definido e testado |
 
+   > **Emendado em 2026-11-14:** a ida passa a levar token, e a assinatura da volta passa
+   > a incluir um timestamp ([adendo, A4](#a4--a-ida-leva-token-e-a-volta-hmac-com-timestamp-itens-5-e-6)).
+   > A tabela acima ganha três linhas ([adendo, A5](#a5--a-tabela-de-idempotência-ganha-três-linhas-item-6)).
+
 7. **A tela pergunta, o back responde.** `GET /api/v1/form-responses/{form_response_id}/insight`
    fica em `insights/router.py`, rota aninhada como a de `links`
    (`/organizations/{organization_id}/links`). O front vê três estados: `pending` (que
@@ -169,6 +191,11 @@ GET  /api/v1/form-responses/{id}/insight   → {status, content, created_at}, co
 
    > 🟡 **Premissa P-043** — só o próprio respondente lê o seu insight individual, com
    > a conferência de dono das respostas. Confirmar na próxima reunião.
+
+   > **Emendado em 2026-11-14:** o texto aparece no dashboard, e a rota fica para o
+   > polling. A P-086 revê a P-043: a administradora da CREED lê o insight dos
+   > mentorandos, e a gestora lê só o agregado da empresa
+   > ([adendo, A6](#a6--quem-lê-e-onde-item-7)).
 
    > 🟡 **Premissa P-044** — esgotadas as tentativas, a tela diz que o insight não ficou
    > disponível, sem "tentar de novo", e o resultado do cálculo continua na tela.
@@ -260,14 +287,19 @@ desenho, porque a tela precisa delas.
 
 ## Pendências
 
-- [ ] **Levar o contrato da P-041 à CREED-55**, que monta o workflow (atribuída a
+- [x] **Levar o contrato da P-041 à CREED-55**, que monta o workflow (atribuída a
       Gustavo Amaro, em andamento, sem descrição no board em 2026-10-24). É lá que o
-      payload de ida se define e a P-041 fecha.
+      payload de ida se define e a P-041 fecha. *Resolvido em 2026-11-14 de outro jeito:*
+      a CREED-55 fechou sem PR, e o contrato saiu da spec, como `insight-v1` (adendo, A3;
+      P-087). A POC dela entra como estrutura do `docker/n8n/`.
 - [ ] **A cota do Bedrock** para o modelo escolhido (requisições e tokens por minuto), que
       é o que acerta `INSIGHT_MAX_IN_FLIGHT`. É do dono de infra: a IA não executa `aws`.
-- [ ] **Onde nasce o cálculo** cujo resultado vai no payload. Ele ainda não existe, e as
+- [x] **Onde nasce o cálculo** cujo resultado vai no payload. Ele ainda não existe, e as
       objetivas dependem da CREED-37. Se o dono do cálculo precisar ler `insights`, o
-      ciclo de import volta e esta tabela de encaixe precisa ser revista.
+      ciclo de import volta e esta tabela de encaixe precisa ser revista. *Resolvido em
+      2026-11-14:* o cálculo individual é o da CREED-71 (`prismas`), e o agregado é o de
+      `dashboards`. `insights` compõe com os dois, e `dashboards` lê `insights` por JOIN,
+      sem ciclo (adendo, A3).
 - [x] **O tamanho da EC2** com o quinto container (ADR-0007). Resolvido em 2026-10-28
       com a `t4g.medium`.
 - [ ] **Teste de carga local** antes do aceite: 50 a 100 envios simultâneos contra um N8N
@@ -283,7 +315,173 @@ desenho, porque a tela precisa delas.
 
 | ID | Premissa | Reverter | Vai para |
 |---|---|---|---|
-| [P-041](../premissas.md) | Contrato só de correlação: `insight_id` e `form_response_id` na ida; `insight_id`, `status` e `content` na volta | baixo | quem monta o workflow (é técnica, não vai para a pauta da cliente) |
+| [P-041](../premissas.md) | Contrato só de correlação: `insight_id` e `form_response_id` na ida; `insight_id`, `status` e `content` na volta. *Substituída pela P-087 (adendo, A3)* | baixo | quem monta o workflow (é técnica, não vai para a pauta da cliente) |
 | [P-042](../premissas.md) | Uma resposta enviada, um insight, uma vez só | médio | pauta da cliente |
-| [P-043](../premissas.md) | Só o próprio respondente lê o seu insight individual | baixo | pauta da cliente |
+| [P-043](../premissas.md) | Só o próprio respondente lê o seu insight individual. *Revista pela P-086 (adendo, A6)* | baixo | pauta da cliente |
 | [P-044](../premissas.md) | Esgotadas as tentativas, a tela diz que o insight não ficou disponível, sem "tentar de novo" | baixo | pauta da cliente |
+
+## Adendo — a esteira de ponta a ponta (2026-11-14)
+
+A [spec da esteira de insights](../../tarefas/esteira-de-insights/spec.md) liga as três
+pontas: o back dispara, o N8N chama o Claude no Bedrock, e o back recebe a volta. Ao
+fazer isso, ela muda seis pontos deste ADR. **O mecanismo não muda:** outbox na tabela,
+worker em container próprio, `SKIP LOCKED`, backoff, varredura e callback idempotente
+continuam como acima. O texto original fica como foi escrito; onde ele diverge, vale este
+adendo.
+
+A1 e A2 foram decididos pelo Luís em 2026-11-14. A3 a A6 saíram da spec, escrita a pedido
+dele.
+
+### A1 — `content` vira `jsonb` (item 2)
+
+**Antes:** `content` em texto nulável.
+
+**Agora:** `content` em `jsonb` nulável, validado pelo back no callback com o
+`InsightContent`: `analise` (parágrafos), `prismas` (um texto por prisma, as cinco chaves
+do enum) e `recomendacao` (parágrafos). O `CHECK` e o `unique` do item 2 continuam.
+Entram também:
+
+- `model_id` e `prompt_version`, para responder "de onde saiu este texto?";
+- `completed_at`, a data que a tela mostra ao lado do texto.
+
+**Por quê:** o front (`ResultText`, `CreedSummary`) desenha análise, recomendação e um
+texto por prisma. Com um texto único, a tela teria de recortá-lo.
+
+**Descartado:** vários insights por resposta, ligados por `insight_prismas`. Derruba a
+P-042 e é a reversão mais cara deste ADR ("Como reverter").
+
+### A2 — o insight da empresa entra (itens 1, 2 e 3)
+
+**Antes:** só o insight individual; o [C24] ficava para depois.
+
+**Agora:**
+
+- `insights` ganha `organization_id` e `form_id`, os dois `not null`. No insight
+  individual, são copiados do formulário e da resposta.
+- `form_response_id` vira nulável. Nulo quer dizer insight da empresa, um por período.
+- O envio, além de gravar o individual, agenda o da empresa quando o período tem 5 ou
+  mais respostas enviadas: grava um `pending` com `next_attempt_at = agora + 30 min`.
+- Fica no máximo um `pending` por (organização, período). Quem garante é um índice
+  único parcial, com a gravação por `ON CONFLICT DO NOTHING`, para a corrida entre dois
+  envios não derrubar nenhum dos dois.
+- O worker não muda: o insight da empresa é mais uma linha `pending`.
+- A tabela está vazia desde a consolidação `b54ed78ef041`. A migration **confere** isso,
+  em vez de preencher `status = done` como dizia a linha "Migration" da tabela de
+  encaixe.
+
+| Setting novo | Inicial |
+|---|---|
+| `INSIGHT_ORG_MIN_RESPONSES` | `5` |
+| `INSIGHT_ORG_DEBOUNCE_SECONDS` | `1800` |
+
+**Por quê:** a empresa precisa de texto no dashboard consolidado, e o insight individual
+continua anônimo para a gestora (A6). Diverge do [C24], que não recortava o insight da
+organização por formulário, porque o dashboard da empresa passou a ser por período
+(P-089).
+
+### A3 — o contrato `insight-v1` substitui a P-041 (item 4)
+
+**Ida:** um POST por insight, com:
+
+- `scope`, `insight_id`, `attempt` e `language`;
+- as notas de 0 a 100 já calculadas, o destaque e a oportunidade;
+- as respostas abertas, no individual, ou os números agregados, na empresa.
+
+O `form_response_id` sai da ida: o N8N só precisa do `insight_id`.
+
+**Volta:** `status`, `content`, `model_id` e `prompt_version`; ou `failed`, com `error` e
+`retryable`.
+
+O contrato completo está na spec, seção "Contrato" (P-087).
+
+**Quem monta o payload:** o `PrismaService` (individual) e o `DashboardService`
+(empresa), por composição a partir de `insights`. `dashboards` lê a tabela `insights`
+por JOIN e **nunca** importa `insights.service`. Assim, o ciclo que a pendência "onde
+nasce o cálculo" temia não se forma.
+
+### A4 — a ida leva token e a volta, HMAC com timestamp (itens 5 e 6)
+
+**Antes:** só o callback era assinado, com o `N8N_CALLBACK_SECRET`.
+
+**Agora:**
+
+- A ida manda `Authorization: Bearer {N8N_WEBHOOK_TOKEN}` (setting novo), e o Header Auth
+  do nó Webhook confere.
+- A volta assina `"{timestamp}.{corpo cru}"` com HMAC-SHA256, no header
+  `X-Creed-Signature`. O `X-Creed-Timestamp` precisa estar a menos de 5 min; fora disso,
+  ou sem assinatura, a resposta é 401.
+- A URL do callback é fixa no workflow e nunca vem do payload.
+- Nenhum segredo fica no JSON exportado do workflow.
+
+**Por quê:** sem o timestamp, um callback capturado pode ser reenviado. Sem o token,
+qualquer um que alcance a rede interna dispara chamadas pagas ao Bedrock. A POC da
+CREED-55 recebia a URL no payload e tinha o segredo escrito no JSON.
+
+### A5 — a tabela de idempotência ganha três linhas (item 6)
+
+| Chega | Com o insight em | Faz |
+|---|---|---|
+| `done` | `failed` | grava e marca `done`: um texto atrasado vale mais que "indisponível" |
+| `failed` com `retryable: false` | `pending` ou `dispatched` | marca `failed` direto: uma recusa do modelo não muda com nova tentativa |
+| corpo fora do contrato, inclusive `content` fora do schema | qualquer | 422, sem mudar nada; a varredura devolve o insight a `pending` |
+
+As outras linhas do item 6 continuam. As respostas de sucesso passam a ser 204, sem
+corpo.
+
+### A6 — quem lê, e onde (item 7)
+
+**Antes:** o `GET /form-responses/{id}/insight` alimentava a tela de resultado, e só o
+respondente lia o insight (P-043).
+
+**Agora:**
+
+- O texto aparece no **dashboard**, pelo `creed_summary` de `/dashboards/me`,
+  `/members/{id}` e `/company`, que ganha `insight_status` e `generated_at`.
+- O `GET` fica para o polling e devolve `completed_at` no lugar de `created_at`.
+- O respondente lê o seu insight, e a administradora da CREED lê o dos mentorandos. A
+  gestora não lê o insight individual de ninguém, só o agregado da empresa. É a P-086,
+  que revê a P-043.
+
+### Premissas do adendo
+
+| ID | Premissa | Reverter | Vai para |
+|---|---|---|---|
+| [P-086](../premissas.md) | Lê o insight individual o respondente, e a administradora lê o dos mentorandos; a gestora, não. Revê a P-043 | baixo | pauta da cliente |
+| [P-087](../premissas.md) | Contrato `insight-v1`, ida e volta. Substitui a P-041 | baixo | quem monta o workflow (é técnica) |
+| [P-088](../premissas.md) | O insight tem análise, um texto por prisma e recomendação; destaque e oportunidade vêm do cálculo | baixo | pauta da cliente |
+| [P-089](../premissas.md) | Insight da empresa por período, com 5 ou mais respostas, regerado no máximo a cada 30 min | médio | pauta da cliente |
+| [P-090](../premissas.md) | Nenhum texto livre de respondente no insight da empresa | baixo | pauta da cliente |
+| [P-091](../premissas.md) | O payload individual não leva dado pessoal, e o questionário não avisa que as respostas abertas passam por IA | médio | pauta da cliente |
+
+As P-092 a P-094 tratam do texto e do conhecimento do modelo (idioma, dossiê, tom) e
+moram só na spec.
+
+### Consequências do adendo
+
+**Boas:**
+
+- O texto chega ao dashboard, que já sabia desenhá-lo.
+- Cada insight diz de que modelo e de que versão do prompt saiu.
+- A empresa recebe texto sem expor nenhuma pessoa.
+
+**Ruins — e aceitas:**
+
+- O worker depende de `prismas` e `dashboards` para montar o payload. Uma mudança no
+  cálculo muda o que o N8N recebe; é de propósito, para ser o mesmo número da tela.
+- O insight da empresa fica até ~30 min atrás do período e não é regerado quando alguém
+  é excluído.
+- Índice único parcial e `ON CONFLICT` no envio: SQL que o time ainda não usa.
+- O custo por insight deixa de ser desconhecido: entre ~US$ 0,09 e ~US$ 0,40, pela
+  estimativa da spec (item 2.4).
+- A exclusão de empresa (E-6) passa a apagar também os insights da empresa.
+
+### Como reverter o adendo
+
+- **A1:** `jsonb` → `text` é migration com conversão, e o front volta a receber um texto
+  só.
+- **A2:** apagar as linhas com `form_response_id` nulo, voltar a coluna a `not null` e
+  tirar o gatilho do envio. `organization_id` e `form_id` podem ficar, como cópia
+  inofensiva.
+- **A3 a A5:** schemas do provedor, nós do N8N e o `Depends` de `core/security.py`. Não
+  tocam em dado.
+- **A6:** guarda de rota e um campo do `creed_summary`.
