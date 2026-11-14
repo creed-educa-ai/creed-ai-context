@@ -4,7 +4,9 @@
 > ClickUp**. A pasta ganha o prefixo do ID quando o épico for publicado
 > (`<id>-esteira-de-insights`). Implementa o
 > [ADR-0010](../../decisoes/adrs/0010-esteira-de-ia-outbox-e-worker.md), que segue
-> **Proposto**, e o emenda em seis pontos ("Divergências do ADR-0010", abaixo).
+> **Proposto**, e o emenda em seis pontos ("Divergências do ADR-0010", abaixo), já
+> registrados no [adendo de 2026-11-14](../../decisoes/adrs/0010-esteira-de-ia-outbox-e-worker.md#adendo--a-esteira-de-ponta-a-ponta-2026-11-14)
+> do ADR.
 >
 > **Estado lido nesta data, com os cinco repositórios atualizados com o remoto:**
 >
@@ -588,7 +590,7 @@ Descartadas na volta:
   chegam a 5 respostas, então a organização da CREED não recebe insight agregado. Isso
   é coerente com o anonimato.
 
-## Divergências do ADR-0010 (emenda a registrar antes do aceite)
+## Divergências do ADR-0010 (registradas no adendo de 2026-11-14)
 
 | ADR-0010 | Esta spec | Por quê |
 |---|---|---|
@@ -705,7 +707,8 @@ Seguem valendo: P-042 (um insight por resposta) e P-044 (sem "tentar de novo").
 
 ## Pendências e decisões abertas
 
-- [ ] Aceitar o ADR-0010 em reunião interna, com a emenda acima.
+- [x] Registrar a emenda no ADR-0010: adendo de 2026-11-14, itens A1 a A6.
+- [ ] Aceitar o ADR-0010 em reunião interna, com o adendo.
 - [ ] Com o dono de infra: a região do Bedrock, o perfil de inferência, a cota e um
       usuário IAM só com `bedrock:InvokeModel` no modelo escolhido. A IA não roda `aws`.
 - [ ] Inventário da bibliografia: onde estão os PDFs e planilhas da cliente e quem
