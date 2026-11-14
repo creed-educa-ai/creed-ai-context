@@ -8,7 +8,7 @@
   · [ADR-0004](0004-camadas-do-backend.md) · [ADR-0007](0007-amplify-e-ec2-no-lugar-do-eks.md)
   · [ADR-0009](0009-migration-consolidada-por-sprint.md) · tarefa do workflow:
   [CREED-55 — Desenvolvimento da esteira do n8n](https://app.clickup.com/t/86e3m2qft)
-  · spec ponta a ponta: [`tarefas/esteira-de-insights/spec.md`](../../tarefas/esteira-de-insights/spec.md)
+  · spec ponta a ponta: [`tarefas/1dfej6fwdaj-esteira-de-insights/spec.md`](../../tarefas/1dfej6fwdaj-esteira-de-insights/spec.md)
 
 > **Quando vale.** Este ADR é implementado **na tarefa que ligar o N8N ao back**, e só
 > nela. Nada do que existe hoje muda por causa dele: a CREED-52 (`Insight`), o envio de
@@ -330,7 +330,7 @@ desenho, porque a tela precisa delas.
 
 ## Adendo — a esteira de ponta a ponta (2026-11-14)
 
-A [spec da esteira de insights](../../tarefas/esteira-de-insights/spec.md) liga as três
+A [spec da esteira de insights](../../tarefas/1dfej6fwdaj-esteira-de-insights/spec.md) liga as três
 pontas: o back dispara, o N8N chama o Claude no Bedrock, e o back recebe a volta. Ao
 fazer isso, ela muda seis pontos deste ADR. **O mecanismo não muda:** outbox na tabela,
 worker em container próprio, `SKIP LOCKED`, backoff, varredura e callback idempotente
