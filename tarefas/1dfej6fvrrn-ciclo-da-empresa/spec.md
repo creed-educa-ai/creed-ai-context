@@ -30,6 +30,8 @@
 > (`998d872`, convite de membro) e [#52](https://github.com/creed-educa-ai/creed-backend/pull/52)
 > (`0af70c1`, reenvio e "esqueci minha senha"); `dev` do front em `68d8fb8`; `main` do
 > harness em `d859177`.
+>
+> **Atualização 2026-11-10:** o #51, o #52 e o #53 foram mergeados na `dev` (b3720d5).
 
 ## Calibragem
 
@@ -37,7 +39,7 @@
 
 | Eixo | Nível | Sinal observado |
 |---|---|---|
-| Produto | P3 | **Regra de ciclo de vida nova:** a empresa nasce pendente, vira ativa ao ser aprovada e some ao ser rejeitada ou excluída. **Regra de quem pode nova:** aprovar, rejeitar e excluir empresa. Saem **7 premissas novas** (P-075 a P-081), uma delas de custo médio (P-080, exclusão irreversível). Aplica a P-053, também de custo médio. |
+| Produto | P3 | **Regra de ciclo de vida nova:** a empresa nasce pendente, vira ativa ao ser aprovada e some ao ser rejeitada ou excluída. **Regra de quem pode nova:** aprovar, rejeitar e excluir empresa. Saem **8 premissas novas** (P-075 a P-082), uma delas de custo médio (P-080, exclusão irreversível). Aplica a P-053, também de custo médio. |
 | Técnico | T3 | **Migration:** `organizations.status` troca de tipo (ganha `pending`) e a tabela ganha três colunas. **Contrato já consumido muda:** `OrganizationResponse`, que o front lê no cabeçalho do painel da empresa, ganha campos e um valor novo de status. **Dois repos** e quatro rotas novas, uma delas **pública**. A exclusão fala com o **Keycloak** fora da transação do banco. |
 
 Dispensadas nesta calibragem: nenhuma.
@@ -51,9 +53,8 @@ o e-mail, o responsável e o telefone do cadastro, nem rota pública, de aprova�
 exclusão.
 
 E o épico cortou o botão de reenviar convite: quem perdeu o e-mail usa "Esqueci minha
-senha" na tela de login. O front já chama `POST /authentication/password-reset`, mas
-essa rota está só na branch do creed-backend#52, ainda aberta. Na `dev` de hoje, o link
-termina em 404.
+senha" na tela de login. O front já chama `POST /authentication/password-reset`, e essa
+rota já está na `dev` do back, com o creed-backend#52 (mergeado em 2026-11-10).
 
 ## Quem usa
 
@@ -93,8 +94,8 @@ termina em 404.
   senha". A confirmação de exclusão avisa que não dá para desfazer.
 - **"Esqueci minha senha" de ponta a ponta.** A tela e a chamada já estão na `dev` do
   front ([creed-frontend#52](https://github.com/creed-educa-ai/creed-frontend/pull/52)).
-  Falta a rota do back chegar à `dev` com o creed-backend#52. Esta entrega **depende**
-  do #52 e **verifica** o fluxo com o gestor recém-aprovado; não reescreve a rota.
+  A rota do back já está na `dev`, com o creed-backend#52. Esta entrega **verifica** o
+  fluxo com o gestor recém-aprovado; não reescreve a rota.
 - Documentação: `catalogo.md` (rotas de `organizacoes`), `glossario.md` (Organização
   com status pendente), `conventions/contrato-front-back.md` (a linha "Empresas" vira
   resolvida) e o ledger.
@@ -157,7 +158,7 @@ controle):
 | `name` | 1 a 200 | "Nome da empresa" |
 | `document` | 1 a 100; o back guarda só letras e números e deduz o tipo (P-076) | "Documento (CPF/CNPJ)" |
 | `email` | `EmailStr`, gravado em minúsculas | "E-mail da empresa" |
-| `contact_name` | 1 a 200 | "Seu nome completo" |
+| `contact_name` | 2 a 200 (🟡 Premissa P-082: o `UserBase.name` do convite exige no mínimo 2) | "Seu nome completo" |
 | `phone` | 1 a 30, texto livre | "Telefone" |
 
 `OrganizationResponse` ganha, sem perder nenhum campo:
@@ -187,10 +188,12 @@ P-047).
 consolidação vai precisar, porque o autogenerate **não escreve a troca de tipo de enum**
 direito:
 
-1. `CREATE TYPE organization_status AS ENUM ('pending', 'active', 'inactive')`;
+1. `CREATE TYPE organization_status AS ENUM ('PENDING', 'ACTIVE', 'INACTIVE')`. Os rótulos
+   ficam em maiúsculas porque o SQLAlchemy grava o nome do membro, como no `recordstatus` e
+   no `doc_type`; a API continua mostrando `pending`;
 2. `ALTER TABLE organizations ALTER COLUMN status TYPE organization_status USING status::text::organization_status`;
 3. `add_column` das três colunas, sem `server_default`;
-4. **downgrade:** `UPDATE organizations SET status = 'inactive' WHERE status = 'pending'`,
+4. **downgrade:** `UPDATE organizations SET status = 'INACTIVE' WHERE status = 'PENDING'`,
    o `ALTER` de volta para `recordstatus` com o mesmo `USING`, o `drop_column` das três e
    o `DROP TYPE organization_status`. Nenhuma linha é apagada na volta.
 
@@ -299,12 +302,11 @@ Ordem de entrega e por onde começar. Back e front são entregas separadas.
 | 1 | **E-1** · Empresa pendente | back | — (sai da `dev`) | `app/domains/organizacoes/models.py` | o `GET /organizacoes` devolve `status`, `email`, `contact_name`, `phone` e `document`, e o `PATCH` de `status` numa pendente dá 409 |
 | 2 | **E-2** · Cadastro público | back | 1 | `app/domains/organizacoes/router_organizations.py` (novo), com `app/domains/organizacoes/service.py` ao lado | o `curl` sem token do "Como verificar" cria uma empresa pendente, e o documento repetido dá 409 |
 | 3 | **E-6** · Excluir (e rejeitar) | back | 1; a M-3 já está na `dev` | `app/domains/users/service.py`, na classe `MemberRemovalService` | excluir uma empresa com membros apaga tudo e os logins somem do realm; com o Keycloak parado, 503 e nada some |
-| 4 | **E-3** · Aprovar | back | 1, 3 e o **creed-backend#51 na `dev`** | `app/domains/users/service.py`, na classe `MemberService` | aprovar põe o convite no Mailpit, e o link leva ao login como gestor |
-| 5 | **E-4/E-5** · Integração | front | 2, 3, 4 na `dev`; para o "Esqueci minha senha", o **creed-backend#52 na `dev`** | `src/features/organizations/organizationsApi.ts` | o fluxo do "Como verificar", da tela de cadastro até a exclusão, roda no navegador sem mock |
+| 4 | **E-3** · Aprovar | back | 1 e 3 (o creed-backend#51 já está na `dev`) | `app/domains/users/service.py`, na classe `MemberService` | aprovar põe o convite no Mailpit, e o link leva ao login como gestor |
+| 5 | **E-4/E-5** · Integração | front | 2, 3, 4 na `dev` (o creed-backend#52, do "Esqueci minha senha", já está nela) | `src/features/organizations/organizationsApi.ts` | o fluxo do "Como verificar", da tela de cadastro até a exclusão, roda no navegador sem mock |
 
-As entregas 1 a 4 são uma pilha de branches no back (modo AGES III, item 5). A 4 só sai
-quando o #51 estiver na `dev`. Até lá, dá para escrever a aprovação contra o
-`MemberService` da branch dele, mas não para subir.
+As entregas 1 a 4 são uma pilha de branches no back (modo AGES III, item 5). O #51 já
+está na `dev`, então a 4 só espera a 1 e a 3.
 
 ## Critérios de aceite
 
@@ -386,7 +388,7 @@ quando o #51 estiver na `dev`. Até lá, dá para escrever a aprovação contra 
 
 **"Esqueci minha senha" de ponta a ponta**
 
-- [ ] Com o creed-backend#52 na `dev`, o gestor recém-aprovado pede o link em
+- [ ] O gestor recém-aprovado pede o link em
       `/reset-password`, o e-mail chega ao Mailpit, e o link define uma senha nova.
 
 ## Como verificar
@@ -408,7 +410,7 @@ a migration temporária aplicada **só no banco local**, a API rodando
 
 ```bash
 API=http://localhost:8000/api/v1
-CORPO='{"name":"Empresa Teste","document":"12.345.678/0001-90","email":"gestora@empresa.test","contact_name":"Gestora Teste","phone":"51 99999-0000"}'
+CORPO='{"name":"Empresa Teste","document":"12.345.678/0001-90","email":"gestora@empresa.com.br","contact_name":"Gestora Teste","phone":"51 99999-0000"}'
 
 # E-2: cadastro sem token → 201, "status": "pending"
 curl -s -X POST "$API/organizations/sign-up" -H "Content-Type: application/json" -d "$CORPO"
@@ -435,9 +437,9 @@ curl -s -o /dev/null -w "%{http_code}\n" -X POST "$API/organizations/$ORG/approv
 ```
 
 Abra o e-mail no Mailpit, defina a senha pelo link e entre em
-`http://localhost:5173/login` como `gestora@empresa.test`. Depois, peça o link de novo em
-`http://localhost:5173/reset-password` e confira o segundo e-mail no Mailpit (este passo
-precisa do #52 na `dev`).
+`http://localhost:5173/login` como `gestora@empresa.com.br`. Depois, peça o link de novo em
+`http://localhost:5173/reset-password` e confira o segundo e-mail no Mailpit (o #52 já
+está na `dev`).
 
 ```bash
 # E-6: excluir a própria organização → 409 (ORG_CREED = organization_id da sessão do admin)
@@ -483,6 +485,7 @@ no Mailpit; cadastre outra e rejeite; exclua uma ativa. Repita em 375 px de larg
 | P-079 | Aprovar, rejeitar e excluir empresa é só do `admin`, que não exclui a organização do próprio vínculo (409) | baixo |
 | P-080 | Excluir a empresa apaga cada membro como a M-3 e, depois, os questionários da organização, os setores, a organização e o documento dela, se nenhum participante apontar para ele | médio |
 | P-081 | A tabela de empresas não mostra a organização da sessão (a da CREED); as outras aparecem em qualquer status, inativa como "Inativo" | baixo |
+| P-082 | O nome do responsável no cadastro tem de 2 a 200 caracteres, a regra que o back já cobra de todo nome de pessoa (`UserBase.name`); com 1, a aprovação quebraria ao montar o convite | baixo |
 
 O texto completo, com o motivo de cada uma, está em `decisoes/premissas.md`. Onde cada
 uma vale no código:
@@ -496,6 +499,8 @@ uma vale no código:
 > 🟡 **Premissa P-079** — a guarda das duas rotas e o 409 da própria organização.
 > 🟡 **Premissa P-081** — `CompaniesSection.tsx`: o filtro pela sessão e o rótulo
 > "Inativo".
+> 🟡 **Premissa P-082** — `OrganizationSignUp.contact_name` e o `signUpSchema` do front:
+> 2 a 200 caracteres.
 
 Aplicadas sem mudar: P-008 (a empresa pede, a cliente aprova), P-047 (vínculo
 `emprego`), P-049 (link de 72 h), P-057 (organização inativa recebe convite), P-072 e
@@ -503,10 +508,6 @@ P-073 (o que a M-3 apaga e quando chama o Keycloak).
 
 ## Riscos
 
-- **A E-3 e o "Esqueci minha senha" dependem de PRs abertos.** O creed-backend#51
-  (convite) e o #52 (reset) estão com mudanças pedidas e conflitos com a `dev`, e há
-  uma sessão trabalhando neles agora. O sinal é a entrega 4 pronta sem poder subir.
-  Enquanto isso, as entregas 1, 2 e 3 andam.
 - **Em produção, aprovar dá 503 até o e-mail da EC2 existir.** O SMTP de produção é o
   creed-infrastructure#10, aberto. Sem ele, o Keycloak não manda o convite, e a
   aprovação desfaz tudo. O sinal é o 503 na primeira aprovação real.

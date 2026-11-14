@@ -60,6 +60,8 @@ A tabela da administradora (task 7) ainda usa o mock; esta task **não** apaga o
   - `documento`: depois de tirar o que não é letra nem número, 11 ou 14 dígitos
     (`cadastro:erros.documentoInvalido`). Mesma regra do back (P-076).
   - Tamanhos máximos do back: 200 (`nomeEmpresa`, `nomeCompleto`), 30 (`telefone`).
+  - `nomeCompleto` com no mínimo 2 caracteres, como o `contact_name` do back
+    (🟡 Premissa P-082).
 - `src/features/organizations/SignUpView.tsx`: monta o `OrganizationSignUp` com os
   nomes do back. No 409, `setError('documento', ...)`. Nos outros erros, um
   `<p role="alert">` abaixo do botão, como o `PasswordResetView`.
