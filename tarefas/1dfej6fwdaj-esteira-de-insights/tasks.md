@@ -43,22 +43,22 @@ subtarefa pode ajustar o contexto, nunca o número.
 
 ## Progresso
 
-- [ ] 1 — Kit do contrato · `creed-backend`
-- [ ] 2 — `insights` com status, e o envio grava o pedido · `creed-backend`
-- [ ] 3 — Payload individual e client do N8N · `creed-backend`
-- [ ] 4 — O worker · `creed-backend`
-- [ ] 5 — Volta: callback assinado e leitura de status · `creed-backend`
+- [x] 1 — Kit do contrato · `creed-backend` (2026-11-14; PR #77, base `dev`)
+- [x] 2 — `insights` com status, e o envio grava o pedido · `creed-backend` (2026-11-15; PR #78, empilhado no #77; migration temporária testada e apagada, ajustes na seção Banco do PR)
+- [x] 3 — Payload individual e client do N8N · `creed-backend` (2026-11-15; PR #79, empilhado no #78, commit `074c668`; o desempate foi para `prismas.service.highest_and_lowest`)
+- [x] 4 — O worker · `creed-backend` (2026-11-15; PR #80, empilhado no #79, commit `aba8b2a` e `5e2d3ea` da revisão da pilha; o teto vale com trava `pg_advisory_xact_lock`, e o `attempt` do pedido passou a ser o `attempts` já somado na reivindicação, como manda o ADR)
+- [x] 5 — Volta: callback assinado e leitura de status · `creed-backend` (2026-11-15; PR #81, empilhado no #80, base `feat/804-worker-de-insights`; o `complete` reaproveita `_retry_or_fail`, `get_for_update` e `database_now` da 804, então a branch da 805 sai da 804 e não da 802 como diz a tabela acima; `RUN_POSTGRES_TESTS=1` nos testes de insights: 23 passed, com os 3 novos; sem a trava do `get_for_update`, o do "primeiro `done` vence" falha)
 - [ ] 6 — Workflow `insight-v1` no N8N da AWS · N8N (registro em `creed-backend`)
 - [ ] 7 — Dossiê v1 · time (registro em `creed-backend`)
 - [ ] 8 — Prompts v1 e avaliação · N8N (registro em `creed-backend`)
 - [ ] 9 — Produção do back · `creed-infrastructure`
-- [ ] 10 — Dashboards leem o insight individual · `creed-backend`
-- [ ] 11 — Front: estados do Creed.ai · `creed-frontend`
+- [x] 10 — Dashboards leem o insight individual · `creed-backend` (2026-11-15; PR #83, empilhado no #82, base `feat/8013-insight-da-empresa`, commit `c3e69a1`; o commit também corrige três erros antigos do hook do mypy em `test_repository.py` e `test_repository_postgres.py` do dashboards, que barravam o commit; pedida pela 14, que depende dela e a encontrou desmarcada, então a branch da 8010 sai da 8013 e não da `dev` como diz a tabela acima, e a 14 sai da 8010; o combinado dos dois campos novos com o Leo foi dado como feito pelo Luís; `/company` e o retrato seguem em `none` até a 14; suíte inteira com `RUN_POSTGRES_TESTS=1`: 1599 passed, 1 skipped)
+- [x] 11 — Front: estados do Creed.ai · `creed-frontend` (2026-11-15; creed-frontend#74, base `dev`, commit `c1b462b`; mergear depois da pilha do back, #77 a #84, que traz os campos e a rota que ela lê; decisão do Luís: a repetição da busca mora num hook da tela (`src/hooks/useRepeatWhile.ts`), e não num thunk que repete no slice como dizia a spec, e o mesmo hook serve à confirmação (5 s) e à task 16; o `CreedSummary` continua em `dashboardsApi.ts`, onde já morava, e não em `types/api.ts`; o id da resposta vai da revisão à confirmação pelo `state` da rota; P-095 para o `failed` na confirmação; `npm run check`: lint, prettier e tipos verdes, e 649 passed na segunda rodada da suíte, porque a primeira teve 3 timeouts de 5 s em arquivos que o diff não toca e que passam isolados; conferido no navegador em 375, 768 e 800 px, com as rotas respondidas pela fixture)
 - [ ] 12 — Integração na AWS, depois da publicação · `creed-infrastructure` (roteiro executado por uma pessoa)
-- [ ] 13 — Insight da empresa: gatilho e payload · `creed-backend`
-- [ ] 14 — Insight da empresa: leitura e exclusão · `creed-backend`
+- [x] 13 — Insight da empresa: gatilho e payload · `creed-backend` (2026-11-15; PR #82, empilhado no #81, base `feat/805-volta-do-n8n`; decisões do Luís: trava por período (`pg_advisory_xact_lock(8013, hashtext(form_id))`) antes de contar, e o piso e a espera como constantes da P-089 no service, sem `INSIGHT_ORG_*` em `config.py`; o `claim_due` passou a pegar o insight da empresa; `RUN_POSTGRES_TESTS=1`: 31 passed nos de insights, e sem a trava o caso de 3 enviadas + 2 simultâneos fica sem pedido)
+- [x] 14 — Insight da empresa: leitura e exclusão · `creed-backend` (2026-11-15; PR #84, empilhado no #83, base `feat/8010-dashboard-le-insight`, commit `9045c48`; "mais recente" é o último pedido (`created_at`), em duas consultas no repository (o último pronto, e senão o último de todos); a E-6 apaga só os insights da empresa, por organização, logo depois dos das respostas; sem a chamada nova, 3 testes da E-6 quebram com o insight da empresa ainda apontando para o questionário; suíte inteira com `RUN_POSTGRES_TESTS=1`: 1612 passed, 1 skipped)
 - [ ] 15 — Ramo da empresa no N8N · N8N (registro em `creed-backend`)
-- [ ] 16 — Front: texto da empresa · `creed-frontend`
+- [x] 16 — Front: texto da empresa · `creed-frontend` (2026-11-15; creed-frontend#75, empilhado no #74, base `feat/8011-estados-do-creed-ai`, commit `6367ffb`; a visão da empresa usa o `useRepeatWhile` da 11 com o `loadCompanyDashboard`, que já repassava o `signal` e ignorava o cancelado, então o slice e o `ResultText` não mudaram; a fixture da empresa passou a mandar `none` sem texto no recorte por setor ou pessoa, como o back da 8014, e o teste que esperava o texto de Marketing virou o contrário; a administradora é coberta pela tela dela, com `organization_id` na busca repetida; `AdminDashboardView.test.tsx` e a fixture da empresa tinham trechos da 11 e da 16, separados na hora de subir, com a suíte rodada no estado só da 11; `npm run check`: lint, prettier e tipos verdes, 656 passed; sem o hook, os 4 testes de repetição quebram; conferido no navegador em 800 e 375 px)
 
 Marque aqui ao concluir cada task (`workflows/tasks-to-code.md`).
 
