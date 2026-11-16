@@ -250,7 +250,8 @@ Regras da ida:
   pt-BR. Se a pessoa não respondeu nenhuma, a lista vai vazia.
 - `departments` só traz setores com 5 ou mais respostas enviadas (P-089, mesmo piso da
   P-063).
-- `attempt` serve ao log do N8N e não muda o texto.
+- `attempt` não muda o texto, e a volta o devolve igual: é por ele que o back sabe se
+  um `failed` é da tentativa que ainda espera a volta.
 
 ### Volta: N8N → back
 
@@ -264,6 +265,7 @@ Regras da ida:
 {
   "contract_version": "insight-v1",
   "insight_id": "0b4e1f2a-…",
+  "attempt": 1,
   "status": "done",
   "content": {
     "analise": ["<parágrafo>", "<parágrafo>"],
@@ -282,8 +284,11 @@ Regras da ida:
 ```
 
 ```json
-{ "contract_version": "insight-v1", "insight_id": "0b4e1f2a-…", "status": "failed", "error": "bedrock_throttled", "retryable": true }
+{ "contract_version": "insight-v1", "insight_id": "0b4e1f2a-…", "attempt": 1, "status": "failed", "error": "bedrock_throttled", "retryable": true }
 ```
+
+O `insight_id` e o `attempt` voltam iguais aos da ida, no `done` e no `failed`. Os dois
+são obrigatórios.
 
 O `content` (`InsightContent`, em `insights/schemas.py`) é o mesmo nos dois escopos. No
 individual, ele fala com a pessoa; no da empresa, fala do grupo com a gestão.
@@ -303,9 +308,18 @@ O que o back responde:
 | corpo fora do contrato, inclusive `content` fora do schema | qualquer | 422 | nenhum: o insight continua `dispatched`, e a varredura do ADR-0010 o devolve a `pending` |
 | `done` | `pending`, `dispatched` ou `failed` | 204 | grava e marca `done`; um texto atrasado vale mais que "indisponível" |
 | `done` ou `failed` | `done` | 204 | nenhum: o primeiro `done` vence |
-| `failed` com `retryable: true` | `pending` ou `dispatched` | 204 | backoff, ou `failed` no limite (ADR-0010) |
-| `failed` com `retryable: false` | `pending` ou `dispatched` | 204 | `failed` direto: recusa do modelo não muda tentando de novo |
-| `failed` | `failed` | 204 | nenhum |
+| `failed` com `retryable: true` | `dispatched`, na mesma tentativa | 204 | backoff, ou `failed` no limite (ADR-0010) |
+| `failed` com `retryable: false` | `dispatched`, na mesma tentativa | 204 | `failed` direto: recusa do modelo não muda tentando de novo |
+| `failed` | `pending`, `failed`, ou `dispatched` em outra tentativa | 204 | nenhum (log): a falha é de uma tentativa que já terminou |
+
+**Por que o `failed` confere a tentativa e o `done` não.** Se o N8N demora mais que o
+prazo da varredura, ela devolve o pedido à fila, e o worker manda a tentativa 2. Um
+`failed` atrasado da 1, aplicado, devolveria à fila um pedido em voo (disparo duplicado,
+teto furado). Com `retryable: false`, encerraria um pedido que ainda pode dar certo.
+Sobre `pending`, quem pôs o pedido lá (a varredura ou a falha do disparo) já contou a
+falha daquela tentativa. Já o `done` vale de qualquer tentativa: o texto é do mesmo
+pedido. Isso saiu da revisão do código da volta (creed-backend#81, 2026-11-16) e está no
+adendo A8 do ADR-0010.
 
 ### Leitura
 
@@ -368,7 +382,9 @@ Exclusões:
 - A exclusão de membro (M-3) não muda: o insight individual sai junto com as respostas.
 - A exclusão de empresa (E-6) passa a apagar também os insights da empresa
   (`form_response_id` nulo) da organização, antes dos questionários.
-- Excluir uma pessoa não regera o insight da empresa ("Riscos").
+- Excluir uma pessoa não regera o insight da empresa ("Riscos"). Se a exclusão cai na
+  espera de 30 min e deixa o período abaixo do piso, o pedido vira `failed` no disparo
+  ("Abordagem técnica", item 4).
 
 ## Abordagem técnica
 
@@ -616,7 +632,12 @@ Descartadas na volta:
   `dispatched`, um envio novo agenda o próximo, e por isso o índice parcial só olha
   `pending`. Na prática, um pico de 40 envios gera uma ou duas chamadas, e o texto
   acompanha o período com até ~30 min de atraso.
-- **Payload:** montado no disparo, com os números do `DashboardService`.
+- **Payload:** montado no disparo, com os números do `DashboardService`. **O piso é
+  conferido de novo nessa hora**, pela conta do dashboard: só o público do período, com
+  alternativa marcada. A conta do envio é outra (todas as enviadas do formulário), e nos
+  30 min de espera a exclusão de membro pode apagar respostas. Abaixo do piso, o pedido
+  vira `failed` sem travar a fila, e o envio que voltar ao piso agenda outro. Sem nenhum
+  texto pronto antes, a tela mostra "não ficou disponível".
 - **Leitura:** o `done` mais recente de (organização, período).
 - **Período fechado:** sem envio novo, não há disparo novo, e o último texto fica.
 - **Mentorandos:** os questionários individuais (um formulário por pessoa, P-048) nunca
@@ -663,6 +684,7 @@ apaga no fim pela exclusão de empresa.
 | callback com o `N8N_CALLBACK_SECRET` | HMAC com timestamp, e a ida com token (`N8N_WEBHOOK_TOKEN`) | proteção contra replay; o webhook deixa de atender a qualquer um que alcance a rede |
 | o `GET /form-responses/{id}/insight` alimenta a tela de resultado | o texto aparece no dashboard, e a rota fica para o polling | o dashboard já desenha o texto (`ResultText`) |
 | todo `failed` volta a tentar | `retryable: false` encerra | uma recusa do modelo não muda com nova tentativa |
+| o callback só traz o `insight_id` | traz também o `attempt`, e o `failed` só vale para a tentativa em voo (A8, 2026-11-16) | um `failed` atrasado devolvia à fila um pedido que já estava em outra tentativa |
 | `N8N_CONCURRENCY_PRODUCTION_LIMIT` ligado "nos dois compose"; teste de carga contra um N8N simulado | o serviço `n8n` não muda e não há N8N local; o teste de carga vira o teste de concorrência do worker contra Postgres (task 4), e a integração é provada depois da publicação (task 12) | decisões 3 e 4 do Luís, na decomposição |
 
 ## Critérios de aceite
@@ -681,11 +703,14 @@ apaga no fim pela exclusão de empresa.
 - [ ] `content` fora do schema responde 422, e a varredura devolve o insight a
       `pending`.
 - [ ] Uma recusa do modelo vira `failed` sem gastar as tentativas restantes.
+- [ ] Um `failed` de uma tentativa que a varredura já soltou não mexe no pedido, nem
+      com `retryable: false`.
 - [ ] O respondente lê o seu insight, e outro vínculo recebe 403. A administradora lê o
       de um mentorando. Nenhuma rota devolve insight individual à gestora.
 - [ ] Com 4 respostas enviadas no período, não existe insight da empresa. Na 5ª, nasce
       um `pending` para dali a 30 min, e outros 10 envios dentro da janela não criam
-      outro.
+      outro. Se uma exclusão na espera deixa o período abaixo de 5, o pedido vira
+      `failed` no disparo e nenhum texto sai.
 - [ ] O dashboard da empresa sem recorte mostra o último `done` do período, com a data.
       Com recorte por setor ou por pessoa, `insight_status` é `none`.
 - [ ] O `ResultText` mostra "em preparo", "não ficou disponível" e a data, nas três
@@ -774,14 +799,15 @@ Seguem valendo: P-042 (um insight por resposta) e P-044 (sem "tentar de novo").
 | A cota do Bedrock é desconhecida, então `INSIGHT_MAX_IN_FLIGHT` é um chute | throttling no log do N8N e `attempts` subindo |
 | Cache frio em todo envio multiplica o custo | `cache_creation_input_tokens` alto em quase todas as chamadas |
 | O modelo recalcula ou contradiz uma nota | o critério automático "número fora do payload" |
-| O insight da empresa fica desatualizado: excluir uma pessoa não o regera | a data do texto anterior à exclusão |
+| O insight da empresa fica desatualizado: excluir uma pessoa não o regera | a data do texto anterior à exclusão; se a exclusão caiu na espera e deixou o período abaixo do piso, um `failed` com "abaixo do piso" no `last_error` |
 | O `creed_summary` muda enquanto a `feat/4-dashboard` não entrou | conflito no PR do Leo; a leitura do insight só entra depois do merge dela |
 | Um segredo é exportado por engano no JSON do workflow | grep do segredo no diff do PR |
 | Os passos humanos em produção ficam para trás: os segredos no `.env` da EC2 e nas credenciais do N8N, colar no workflow a versão revisada dos prompts e do dossiê, recriar o worker | `pending` envelhecendo em produção; o teste de igualdade entre o JSON exportado e os `.md` falhando |
 
 ## Pendências e decisões abertas
 
-- [x] Registrar a emenda no ADR-0010: adendo de 2026-11-14, itens A1 a A7.
+- [x] Registrar a emenda no ADR-0010: adendo de 2026-11-14, itens A1 a A7, e o A8
+      (o `attempt` na volta) em 2026-11-16.
 - [ ] Aceitar o ADR-0010 em reunião interna, com o adendo.
 - [ ] Conferir o que a credencial do Bedrock que já está no N8N libera: o modelo, a
       região e a cota. **Sem mudar a credencial** (task 6). A IA não roda `aws`.
