@@ -49,7 +49,9 @@ No `creed-backend` (registro e testes):
 - [ ] Executado com o `exemplo-ida-individual.json` fixado, o nó de validação aceita o
       payload.
 - [ ] Sem um campo obrigatório, o payload vai para a volta como `failed`, com
-      `error: "invalid_payload"` e `retryable: false`.
+      `error: "invalid_payload"` e `retryable: false`. Se o que falta é o próprio
+      `insight_id` ou o `attempt`, a volta não tem como sair dentro do contrato (o back
+      a recusaria com 422): fica só o log, e a varredura do worker cuida do pedido.
 
 **Chamada ao Bedrock**
 
@@ -79,6 +81,10 @@ No `creed-backend` (registro e testes):
       `vetor-hmac.json`. A execução fica registrada no README.
 - [ ] O nó de volta faz `POST` em `http://back:8000/api/v1/insights/callback`, URL fixa.
       Nenhuma URL vem do payload.
+- [ ] Toda volta, `done` ou `failed`, inclusive a do error workflow, leva o `insight_id`
+      e o `attempt` iguais aos da ida. O back só aplica um `failed` à tentativa que ainda
+      espera a volta (spec, "Volta: N8N → back"; ADR-0010, A8). O error workflow
+      recupera o `attempt` do mesmo jeito que recupera o `insight_id`.
 - [ ] O segredo de produção fica numa credencial do N8N, nunca como literal num nó.
 - [ ] A `saida-n8n.json` é o corpo que o nó de volta montou na execução com o exemplo, e
       valida contra o `volta.schema.json`. O teste é do back.

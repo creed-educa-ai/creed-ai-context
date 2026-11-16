@@ -48,6 +48,20 @@ checklist e permalinks chegaram formatados, e o `Creed.ai` em código não virou
 Na próxima rodada, cada uma já tem a linha de rastreio: a regra do workflow volta a
 valer (atualiza o que mudou, deixa o que está igual).
 
+**Rodada de 2026-11-16: o `attempt` na volta.** A revisão do código da 805
+(creed-backend#81) fez a volta trazer o `attempt`, e o `failed` passou a valer só para a
+tentativa em voo (A8 do ADR-0010). Antes da rodada, o texto no ClickUp foi lido e estava
+igual a este arquivo.
+
+| # | Subtarefa | Ação | O que muda | Estado |
+|---|---|---|---|---|
+| 1 | CREED - 801 | atualizar | o `attempt` nos dois exemplos de volta, a frase sobre ele e a nota da atualização | ✅ atualizada e lida de volta |
+| 5 | CREED - 805 | atualizar | as três linhas de `failed` da tabela do callback, o parágrafo do porquê, a nota e um item no "Pronto quando" | ✅ atualizada e lida de volta |
+| 6 | CREED - 806 | atualizar | um item nos detalhes, o caso do pedido sem `insight_id` ou `attempt`, o contrato, a nota e um item no "Pronto quando" | ✅ atualizada e lida de volta |
+| as outras 13 e o épico | — | deixar | nada | — |
+
+Publicada em 2026-11-16, com o ok do Luís ("Ok, publica"). As três escritas responderam `success: true`, e as três foram lidas de volta: o texto novo chegou, as tabelas e os blocos de código vieram formatados, o rastreio ficou intacto, e os status não mudaram (a 801 e a 805 em "review", a 806 em "backlog").
+
 **Correção feita antes de publicar a 806:** no rascunho aprovado, a frase "E, nos três:"
 apresentava itens que não valem para os três workflows. Virou "Os detalhes:", com a linha
 em branco que a lista pede. Nenhuma outra parte mudou entre o ok e a publicação.
@@ -263,6 +277,7 @@ As notas vão de 0 a 100, a mesma escala da tela. `open_answers` vem vazia quand
 {
   "contract_version": "insight-v1",
   "insight_id": "0b4e1f2a-9c3d-4a5b-8e6f-7d8c9b0a1e2f",
+  "attempt": 1,
   "status": "done",
   "content": {
     "analise": ["<parágrafo>", "<parágrafo>"],
@@ -275,8 +290,12 @@ As notas vão de 0 a 100, a mesma escala da tela. `open_answers` vem vazia quand
 ```
 
 ```json
-{ "contract_version": "insight-v1", "insight_id": "0b4e1f2a-9c3d-4a5b-8e6f-7d8c9b0a1e2f", "status": "failed", "error": "bedrock_throttled", "retryable": true }
+{ "contract_version": "insight-v1", "insight_id": "0b4e1f2a-9c3d-4a5b-8e6f-7d8c9b0a1e2f", "attempt": 1, "status": "failed", "error": "bedrock_throttled", "retryable": true }
 ```
+
+O `insight_id` e o `attempt` voltam iguais aos do pedido, no `done` e no `failed`. É pelo `attempt` que o back sabe se uma falha é da tentativa que ainda espera a volta.
+
+**Atualizado em 2026-11-16:** o `attempt` na volta entrou depois desta entrega, pela CREED - 805, na revisão do código. Os exemplos acima já são o contrato atual.
 
 | Campo do `content` | Regra |
 |---|---|
@@ -749,9 +768,13 @@ Permalinks:
 | corpo fora do contrato, inclusive `content` fora do schema | qualquer | 422 | nenhum: o insight continua `dispatched`, e a varredura do worker o devolve à fila |
 | `done` | `pending`, `dispatched` ou `failed` | 204 | grava `content`, `model_id`, `prompt_version`, `completed_at` e marca `done` |
 | `done` ou `failed` | `done` | 204 | nenhum: o primeiro `done` vence |
-| `failed` com `retryable: true` | `pending` ou `dispatched` | 204 | nova tentativa com espera, ou `failed` no limite |
-| `failed` com `retryable: false` | `pending` ou `dispatched` | 204 | `failed` direto: uma recusa do modelo não muda tentando de novo |
-| `failed` | `failed` | 204 | nenhum |
+| `failed` com `retryable: true` | `dispatched`, na mesma tentativa | 204 | nova tentativa com espera, ou `failed` no limite |
+| `failed` com `retryable: false` | `dispatched`, na mesma tentativa | 204 | `failed` direto: uma recusa do modelo não muda tentando de novo |
+| `failed` | `pending`, `failed`, ou `dispatched` em outra tentativa | 204 | nenhum (fica no log): a falha é de uma tentativa que já terminou |
+
+**Por que a falha confere a tentativa, e o texto pronto não.** Se o N8N demora mais que o prazo, o worker devolve o pedido à fila e manda de novo, como tentativa 2. Se a falha da tentativa 1 chegasse depois e fosse aplicada, o pedido voltaria à fila com a 2 ainda em andamento e sairia duplicado. Com `retryable: false`, seria encerrado um pedido que ainda pode dar certo. Já o texto pronto (`done`) vale de qualquer tentativa, porque é do mesmo pedido.
+
+**Atualizado em 2026-11-16:** as três linhas de `failed` e o `attempt` na volta entraram na revisão do código desta entrega.
 
 **Erros da leitura**
 
@@ -766,6 +789,7 @@ Permalinks:
 - [ ] Os exemplos `done` e `failed` da CREED - 801, assinados com o segredo do vetor, recebem 204, e o `done` grava `content`, `model_id`, `prompt_version` e `completed_at`.
 - [ ] Assinatura ausente, assinatura errada ou timestamp a mais de 5 min dão 401, e nada muda no banco.
 - [ ] Cada linha da tabela do callback tem um teste.
+- [ ] Um `failed` de uma tentativa que o worker já mandou de novo não mexe no pedido, nem com `retryable: false`.
 - [ ] Corpo fora do contrato dá 422, e o insight continua `dispatched`.
 - [ ] A leitura devolve o status para quem respondeu (`dispatched` como `pending`), para a administradora quando a resposta é de mentorando, 403 para outro vínculo e 404 para resposta inexistente.
 - [ ] O OpenAPI descreve as duas rotas com os códigos de erro, e `tests/test_openapi.py` fica verde.
@@ -834,6 +858,7 @@ Os detalhes:
 - A chamada ao Bedrock é um nó HTTP Request com a credencial AWS que já está no N8N (assinatura SigV4). O corpo é montado num nó Code. Descartamos os nós LangChain do N8N (AWS Bedrock Chat Model e Structured Output Parser) porque eles escondem os três ajustes de que precisamos: o cache do conhecimento, a saída com formato garantido e o nível de esforço do modelo.
 - O modelo é o que a credencial libera. A recomendação é o Claude Opus 5.5 (`anthropic.claude-opus-5-5`), com esforço `medium`, `max_tokens` 16000, saída com `output_config.format` no formato do `content`, e o conhecimento marcado para cache de 1 hora. A primeira chamada confere qual endpoint do Bedrock aceita `output_config.format` e `cache_control` para esse modelo, e o README registra qual foi usado.
 - A volta vai sempre para `http://back:8000/api/v1/insights/callback`, pela rede interna da máquina. A URL nunca vem do pedido.
+- Toda volta, `done` ou `failed`, inclusive a do error workflow, leva o `insight_id` e o `attempt` iguais aos do pedido. O back só aplica uma falha à tentativa que ainda espera a volta. O error workflow recupera o `attempt` do mesmo jeito que recupera o `insight_id`.
 - Os segredos (o token da ida e o segredo da assinatura da volta) ficam em credenciais do N8N, nunca escritos num nó. É o que impede o segredo de ir parar no git quando o workflow é exportado.
 - O nó que assina recebe a string exata que vai no corpo. Assinar um objeto e mandar outro serializado quebra a assinatura.
 
@@ -846,6 +871,8 @@ Os detalhes:
 | o texto foi cortado (`stop_reason: max_tokens`) | `failed`, `retryable: true` |
 | o Bedrock recusa por excesso (throttling) | Retry On Fail com 3 tentativas; depois `failed`, `retryable: true` |
 | qualquer outro erro de nó | error workflow: `failed`, `retryable: true` |
+
+Se o campo que falta no pedido é o próprio `insight_id` ou o `attempt`, a volta não tem como sair no formato do contrato: o back a recusaria. Nesse caso fica só o registro no log do N8N, e o worker do back devolve o pedido à fila quando o prazo passa.
 
 ### Onde isso encosta no código
 
@@ -879,7 +906,9 @@ Permalinks e documentação:
 
 ### Contrato
 
-O workflow recebe a ida e devolve a volta da CREED - 801, sem mudar nenhum campo. O caminho do webhook é `POST /webhook/creed/insights/v1`, e ele responde `202` antes de processar.
+O workflow recebe a ida e devolve a volta da CREED - 801, sem mudar nenhum campo. O caminho do webhook é `POST /webhook/creed/insights/v1`, e ele responde `202` antes de processar. A volta leva o `attempt` igual ao do pedido; os exemplos da CREED - 801 e o `volta.schema.json` já mostram o campo.
+
+**Atualizado em 2026-11-16:** o `attempt` na volta entrou na revisão do código da CREED - 805, antes de este workflow existir.
 
 ### Pronto quando
 
@@ -889,6 +918,7 @@ O workflow recebe a ida e devolve a volta da CREED - 801, sem mudar nenhum campo
 - [ ] Cada linha da tabela de falhas foi exercitada pelo menos uma vez, e o resultado ficou no README.
 - [ ] Com o segredo de teste, o nó de assinatura reproduz exatamente a assinatura do `vetor-hmac.json`.
 - [ ] A volta vai para `http://back:8000/api/v1/insights/callback`, URL fixa.
+- [ ] Toda volta, inclusive a do error workflow, leva o `insight_id` e o `attempt` iguais aos do pedido.
 - [ ] A `saida-n8n.json` está no repositório e valida contra o `volta.schema.json` num teste do back.
 - [ ] Os JSON exportados não contêm segredo, nem outra URL de volta.
 

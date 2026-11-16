@@ -187,6 +187,9 @@ GET  /api/v1/form-responses/{id}/insight   → {status, content, created_at}, co
    > **Emendado em 2026-11-14:** a ida passa a levar token, e a assinatura da volta passa
    > a incluir um timestamp ([adendo, A4](#a4--a-ida-leva-token-e-a-volta-hmac-com-timestamp-itens-5-e-6)).
    > A tabela acima ganha três linhas ([adendo, A5](#a5--a-tabela-de-idempotência-ganha-três-linhas-item-6)).
+   >
+   > **Emendado em 2026-11-16:** a volta traz o `attempt`, e o `failed` só vale para a
+   > tentativa que ainda espera a volta ([adendo, A8](#a8--a-volta-devolve-o-attempt-item-6-e-a5)).
 
 7. **A tela pergunta, o back responde.** `GET /api/v1/form-responses/{form_response_id}/insight`
    fica em `insights/router.py`, rota aninhada como a de `links`
@@ -338,7 +341,8 @@ continuam como acima. O texto original fica como foi escrito; onde ele diverge, 
 adendo.
 
 A1, A2 e A7 foram decididos pelo Luís em 2026-11-14. A3 a A6 saíram da spec, escrita a
-pedido dele.
+pedido dele. A8 entrou em 2026-11-16: saiu da revisão do código da volta
+(creed-backend#81), feita pelo Enzo, e o Luís aceitou.
 
 ### A1 — `content` vira `jsonb` (item 2)
 
@@ -478,6 +482,31 @@ para fora e manter um túnel por dev para a volta.
 kit de contrato diminui esse risco: se os nomes de campo ou a assinatura não baterem, um
 teste falha antes. Mas o kit não cobre rede, credenciais nem as variáveis da EC2.
 
+### A8 — a volta devolve o `attempt` (item 6 e A5)
+
+**Antes:** a volta só dizia de qual insight era (A3), e um `failed` valia sobre
+`pending` ou `dispatched` (item 6 e A5).
+
+**Agora:**
+
+- A volta, `done` ou `failed`, traz o `attempt` igual ao da ida. O campo é obrigatório.
+- Um `failed` só vale com o insight `dispatched` **na mesma tentativa**. Fora disso
+  (`pending`, `failed`, ou `dispatched` em outra tentativa), responde 204, não muda
+  nada e fica no log.
+- O `done` não confere a tentativa: continua valendo sobre `pending`, `dispatched` ou
+  `failed`, como no A5.
+
+**Por quê:** o N8N demora mais que o prazo da varredura, ela devolve o pedido à fila, e o
+worker manda a tentativa 2. Aí chega o `failed` da 1. Pela tabela antiga, ele devolvia à
+fila um pedido em voo: o disparo saía duplicado, e o teto de pedidos em voo era furado.
+Com `retryable: false`, encerrava um pedido que ainda podia dar certo. Conferir só o
+status não basta, porque a tentativa 2 também está `dispatched`. Sobre `pending`, quem
+pôs o pedido lá (a varredura ou a falha do disparo) já contou a falha daquela tentativa.
+O worker já fazia a mesma conferência ao registrar a falha do disparo.
+
+**Custo aceito:** se a falha atrasada era uma recusa do modelo, a tentativa seguinte gasta
+uma chamada para ouvir a mesma recusa.
+
 ### Premissas do adendo
 
 | ID | Premissa | Reverter | Vai para |
@@ -521,6 +550,8 @@ moram só na spec.
 - **A3 a A5:** schemas do provedor, nós do N8N e o `Depends` de `core/security.py`. Não
   tocam em dado.
 - **A6:** guarda de rota e um campo do `creed_summary`.
+- **A8:** tirar o campo dos modelos de volta e a conferência do `complete`, e regerar o
+  kit. O workflow do N8N deixa de mandar o campo. Não toca em dado.
 - **A7:** ligar a válvula é uma variável no serviço `n8n`. Um N8N local é o serviço que
   o compose do back já tem, mais o workflow importado do export. Nenhum dos dois toca
   em dado.
